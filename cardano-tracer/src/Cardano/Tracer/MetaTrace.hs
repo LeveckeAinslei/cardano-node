@@ -14,25 +14,28 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE InstanceSigs #-}
+
 module Cardano.Tracer.MetaTrace
   ( module Cardano.Tracer.MetaTrace
   , Trace, SeverityF (..), SeverityS (..)
   , traceWith
   ) where
 
-import qualified "trace-dispatcher" Control.Tracer as T
-import           Data.Aeson (ToJSON (..))
-import qualified Data.Aeson as AE
-import           Data.Function
-import qualified Data.Map.Strict as Map
-import           Data.Text (Text)
-import qualified Data.Text as T
-import           GHC.Generics
-import qualified System.IO as Sys
+import "trace-dispatcher" Control.Tracer qualified as T
+import Data.Aeson (ToJSON (..), (.=), Encoding, pairs)
+import Data.Aeson qualified as AE
+import Data.Function
+import Data.Map.Strict qualified as Map
+import Data.Text (Text)
+import Data.Text qualified as T
+import GHC.Generics
+import System.IO qualified as Sys
 
-import           Cardano.Logging
+import Cardano.Logging
 
-import           Cardano.Tracer.Configuration
+import Cardano.Tracer.Configuration
 
 
 data TracerTrace
@@ -68,8 +71,72 @@ data TracerTrace
   deriving (Generic, Show)
 
 instance ToJSON TracerTrace where
+  toEncoding :: TracerTrace -> Encoding
+  toEncoding = \case
+    TracerParamsAre{..} -> pairs
+        ("ConfigPath" .= ttConfigPath 
+      <> "StateDir" .= ttStateDir 
+      <> "MinLogSeverity" .= ttMinLogSeverity 
+      <> "kind" .= ("TracerParamsAre" :: Text))
+    TracerConfigIs{..} -> pairs
+        ("Config" .= ttConfig 
+      <> "kind" .= ("TracerConfigIs" :: Text))
+    TracerInitStarted -> pairs
+        ("kind" .= ("TracerInitStarted" :: Text))
+    TracerInitEventQueues -> pairs
+        ("kind" .= ("TracerInitEventQueues" :: Text))
+    TracerInitDone -> pairs
+        ("kind" .= ("TracerInitDone" :: Text))
+    TracerStartedLogRotator -> pairs
+        ("kind" .= ("TracerStartedLogRotator" :: Text))
+    TracerStartedPrometheus -> pairs
+        ("kind" .= ("TracerStartedPrometheus" :: Text))
+    TracerStartedAcceptors{..} -> pairs
+        ("kind" .= ("TracerStartedAcceptors" :: Text)
+      <> "AcceptorsAddr" .= ttAcceptorsAddr)
+    TracerStartedRTView -> pairs
+        ("kind" .= ("TracerStartedRTView" :: Text))
+    TracerStartedReforwarder -> pairs
+        ("kind" .= ("TracerStartedReforwarder" :: Text))
+    TracerSockListen{..} -> pairs
+        ("kind" .= ("TracerSockListen" :: Text)
+      <> "ListenAt" .= ttListenAt)
+    TracerSockIncoming{..} -> pairs
+        ("kind" .= ("TracerSockIncoming" :: Text)
+      <> "ConnectionIncomingAt" .= ttConnectionIncomingAt
+      <> "Addr" .= ttAddr)
+    TracerSockConnecting{..} -> pairs
+        ("kind" .= ("TracerSockConnecting" :: Text)
+      <> "ConnectionIncomingAt" .= ttConnectingTo)
+    TracerSockConnected{..} -> pairs
+        ("kind" .= ("TracerSockConnected" :: Text)
+      <> "ConnectedTo" .= ttConnectedTo)
+    TracerShutdownInitiated -> pairs
+        ("kind" .= ("TracerShutdownInitiated" :: Text))
+    TracerShutdownHistBackup -> pairs
+        ("kind" .= ("TracerShutdownHistBackup" :: Text))
+    TracerShutdownComplete -> pairs
+        ("kind" .= ("TracerShutdownComplete" :: Text))
+    TracerError{..} -> pairs
+        ("kind" .= ("TracerError" :: Text)
+      <> "Error" .= ttError)
   toJSON = AE.genericToJSON jsonEncodingOptions
-  toEncoding = AE.genericToEncoding jsonEncodingOptions
+
+-- {"ConfigPath":"config.json","MinLogSeverity":null,"StateDir":null,"kind":"TracerParamsAre}"
+
+
+--   toJSON = AE.genericToJSON jsonEncodingOptions
+--   toEncoding = AE.genericToEncoding jsonEncodingOptions
+-- instance ToJSON TracerTrace where
+--   toJSON = AE.genericToJSON jsonEncodingOptions
+
+-- instance ToJSON Person where
+--     -- this generates a Value
+--     toJSON (Person name age) =
+--         object ["name" .= name, "age" .= age]
+
+--     -- this encodes directly to a bytestring Builder
+--     toEncoding (Person name age) =
 
 jsonEncodingOptions :: AE.Options
 jsonEncodingOptions = AE.defaultOptions

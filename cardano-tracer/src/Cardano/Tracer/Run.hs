@@ -6,24 +6,24 @@ module Cardano.Tracer.Run
   , runCardanoTracer
   ) where
 
-import           Control.Concurrent.Async.Extra (sequenceConcurrently)
-import           Control.Concurrent.Extra (newLock)
-import           Control.Concurrent.STM.TVar (newTVarIO)
-import           Control.Monad (void)
+import Control.Concurrent.Async.Extra (sequenceConcurrently)
+import Control.Concurrent.Extra (newLock)
+import Control.Concurrent.STM.TVar (newTVarIO)
+import Control.Monad (void)
 
-import           Cardano.Tracer.Acceptors.Run
-import           Cardano.Tracer.CLI
-import           Cardano.Tracer.Configuration
-import           Cardano.Tracer.Environment
-import           Cardano.Tracer.Handlers.Logs.Rotator
-import           Cardano.Tracer.Handlers.Metrics.Servers
-import           Cardano.Tracer.Handlers.ReForwarder
-import           Cardano.Tracer.Handlers.RTView.Run
-import           Cardano.Tracer.Handlers.RTView.State.Historical
-import           Cardano.Tracer.Handlers.RTView.Update.Historical
-import           Cardano.Tracer.MetaTrace
-import           Cardano.Tracer.Types
-import           Cardano.Tracer.Utils
+import Cardano.Tracer.Acceptors.Run
+import Cardano.Tracer.CLI
+import Cardano.Tracer.Configuration
+import Cardano.Tracer.Environment
+import Cardano.Tracer.Handlers.Logs.Rotator
+import Cardano.Tracer.Handlers.Metrics.Servers
+import Cardano.Tracer.Handlers.ReForwarder
+import Cardano.Tracer.Handlers.RTView.Run
+import Cardano.Tracer.Handlers.RTView.State.Historical
+import Cardano.Tracer.Handlers.RTView.Update.Historical
+import Cardano.Tracer.MetaTrace
+import Cardano.Tracer.Types
+import Cardano.Tracer.Utils
 
 
 -- | Top-level run function, called by 'cardano-tracer' app.
