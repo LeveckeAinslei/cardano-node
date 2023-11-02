@@ -26,6 +26,7 @@ import           Cardano.Api
 import qualified Cardano.Benchmarking.PlutusScripts.CustomCall as CustomCall
 import qualified Cardano.Benchmarking.PlutusScripts.EcdsaSecp256k1Loop as ECDSA
 import qualified Cardano.Benchmarking.PlutusScripts.Loop as Loop
+import qualified Cardano.Benchmarking.PlutusScripts.LoopV3 as LoopV3
 import qualified Cardano.Benchmarking.PlutusScripts.SchnorrSecp256k1Loop as Schnorr
 import           Cardano.Benchmarking.ScriptAPI
 
@@ -35,6 +36,7 @@ getAllScripts =
   [ CustomCall.script
   , ECDSA.script
   , Loop.script
+  , LoopV3.script
   , Schnorr.script
   ]
 
@@ -59,6 +61,7 @@ encodePlutusScript
   = \case
     ScriptInAnyLang (PlutusScriptLanguage PlutusScriptV1) s -> textEnvelopeToJSON Nothing s
     ScriptInAnyLang (PlutusScriptLanguage PlutusScriptV2) s -> textEnvelopeToJSON Nothing s
+    ScriptInAnyLang (PlutusScriptLanguage PlutusScriptV3) s -> textEnvelopeToJSON Nothing s
     _                                                       -> "{}"
 
 
