@@ -268,11 +268,13 @@ library demo-acceptor-lib
                       , extra
                       , filepath
                       , generic-data
+                      , list-t
                       , optparse-applicative-fork
                       , ouroboros-network-api
                       , stm
-                      , text
+                      , stm-containers
                       , tasty-quickcheck
+                      , text
                       , trace-forward
 
 executable demo-acceptor
