@@ -32,8 +32,8 @@ packages:
   trace-resources
   trace-forward
 
-program-options
-  ghc-options: -Werror
+-- program-options
+--   ghc-options: -Werror
 
 test-show-details: direct
 
@@ -60,6 +60,6 @@ package bitvec
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/cardano-api.git
-    tag: 0004fa2ba0a2887129dcf9eb84fdc6e581e54bea
+    tag: 1f28596fa68f65999c54525e762cdafe683d92f6
     subdir: cardano-api
 
