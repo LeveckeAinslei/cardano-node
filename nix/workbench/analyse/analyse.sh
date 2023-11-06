@@ -744,7 +744,7 @@ num_threads=$({ grep processor /proc/cpuinfo 2>/dev/null || echo -e '\n\n\n';
 
 throttle_shell_job_spawns() {
     sleep 0.5s
-    while ((${num_jobs@P} >= num_threads - 4))
+    while ((${num_jobs@P} >= 2))
     do wait -n; sleep 0.$(((RANDOM % 5) + 1))s; done
 }
 
