@@ -39,7 +39,7 @@ hprop_ledger_events = H.integrationRetryWorkspace 2 "shutdown-on-sigint" $ \temp
   conf <- H.noteShowM $  mkConf tempAbsBasePath'
 
   let fastTestnetOptions = cardanoDefaultTestnetOptions
-        { cardanoEpochLength = 50
+        { cardanoEpochLength = 100
         , cardanoSlotLength = 0.1
         }
 
@@ -81,7 +81,7 @@ foldBlocksAccumulator _ _ currentEvents _ acc =
   if any filterPoolReap currentEvents
   -- TODO: When we switch to a TChan in foldBlocks we won't have to keep track of
   -- the events ourselves.
-  then return (currentEvents ++ acc, StopFold)
+  then return (currentEvents ++ acc, DebugFold)
   else return (currentEvents ++ acc, ContinueFold)
  where
   -- We end the fold on PoolReap ledger event

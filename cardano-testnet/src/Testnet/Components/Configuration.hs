@@ -100,8 +100,7 @@ createSPOGenesisAndFiles testnetOptions startTime (TmpAbsolutePath tempAbsPath')
  -- 50 second epochs
  -- Epoch length should be "10 * k / f" where "k = securityParam, f = activeSlotsCoeff"
   H.rewriteJsonFile createStakedInitialGenesisFile $ J.rewriteObject
-      ( HM.insert "securityParam"          (toJSON @Int 5)    -- TODO: USE config p arameter
-      . HM.adjust
+      ( HM.adjust
           (J.rewriteObject
               $ HM.adjust
                 (J.rewriteObject (HM.insert "major" (toJSON @Int 8)))
