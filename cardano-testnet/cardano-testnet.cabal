@@ -46,20 +46,26 @@ library
                       , cardano-ledger-byron
                       , cardano-ledger-shelley
                       , cardano-node
+                      , cardano-ping
+                      , contra-tracer
                       , containers
                       , data-default-class
+                      , cborg
                       , directory
                       , exceptions
                       , filepath
                       , hedgehog
                       , hedgehog-extras ^>= 0.4.7.0
                       , mtl
+                      , network
+                      , network-mux
                       , optparse-applicative-fork
                       , ouroboros-network ^>= 0.9.1
                       , process
                       , resourcet
                       , safe-exceptions
                       , scientific
+                      , si-timers
                       , stm
                       , tasty
                       , tasty-expected-failure
