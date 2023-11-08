@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -91,6 +90,7 @@ import qualified Network.Mux.Timeout as NM
 import           Network.Mux.Types (MuxSDU, MuxSDUHeader (..), RemoteClockModel (..))
 import qualified Network.Mux.Types as NM
 import qualified Network.Socket as Socket
+import           Ouroboros.Network.NodeToClient (withIOManager)
 
 data TestnetRuntime = TestnetRuntime
   { configurationFile :: FilePath
@@ -275,23 +275,41 @@ startNode tp node port nodeCmd = GHC.withFrozenCallStack $ do
         sduTimeout = 30 :: MT.DiffTime
         handshakeNum = MiniProtocolNum 0
     peer:_ <- liftIO $ Socket.getAddrInfo (Just hints) (Just "localhost") (Just (show port))
-    liftIO $ bracket
-      (Socket.socket (Socket.addrFamily peer) Socket.Stream Socket.defaultProtocol)
-      Socket.close
-      (\sd -> NM.withTimeoutSerial $ \timeoutfn -> do
-        when (Socket.addrFamily peer /= Socket.AF_UNIX) $ do
-          Socket.setSocketOption sd Socket.NoDelay 1
-          Socket.setSockOpt sd Socket.Linger
-            Socket.StructLinger
-              { sl_onoff  = 1
-              , sl_linger = 0
-              }
-          bearer <- getBearer makeSocketBearer sduTimeout nullTracer sd
-          !t1_s <- NM.write bearer timeoutfn $ wrap handshakeNum InitiatorDir (handshakeReq versions pingOptsHandshakeQuery)
-          (msg, !t1_e) <- nextMsg bearer timeoutfn handshakeNum
 
-          pure ()
-      )
+    withIOManager $ \iomgr ->
+      connectToNode
+        (Snocket.localSnocket iomgr)
+        makeLocalBearer
+        mempty
+        unversionedHandshakeCodec
+        noTimeLimitsHandshake
+        unversionedProtocolDataCodec
+        nullNetworkConnectTracers
+        (HandshakeCallbacks acceptableVersion queryVersion)
+        (simpleSingletonVersions
+           UnversionedProtocol
+           UnversionedProtocolData
+           app)
+        Nothing
+        (localAddressFromPath sockPath)
+
+
+    -- liftIO $ bracket
+    --   (Socket.socket (Socket.addrFamily peer) Socket.Stream Socket.defaultProtocol)
+    --   Socket.close
+    --   (\sd -> NM.withTimeoutSerial $ \timeoutfn -> do
+    --     when (Socket.addrFamily peer /= Socket.AF_UNIX) $ do
+    --       Socket.setSocketOption sd Socket.NoDelay 1
+    --       Socket.setSockOpt sd Socket.Linger
+    --         Socket.StructLinger
+    --           { sl_onoff  = 1
+    --           , sl_linger = 0
+    --           }
+    --       bearer <- getBearer makeSocketBearer sduTimeout nullTracer sd
+    --       runHandshakeClient bearer ()
+    --
+    --       pure ()
+    --   )
 
     return $ NodeRuntime node sprocket stdIn nodeStdoutFile nodeStderrFile hProcess
   else left $ NodeExecutableError stdErrContents
@@ -306,114 +324,6 @@ wrap ptclNum ptclDir blob = NM.MuxSDU
     }
   , msBlob = blob
   }
-
-handshakeReqEnc :: NonEmpty NodeVersion -> Bool -> CBOR.Encoding
-handshakeReqEnc versions query =
-      CBOR.encodeListLen 2
-  <>  CBOR.encodeWord 0
-  <>  CBOR.encodeMapLen (fromIntegral $ L.length versions)
-  <>  mconcat [ encodeVersion (fixupVersion v)
-              | v <- toList versions
-              ]
-  where
-    -- Query is only available for NodeToNodeVersionV11 and higher, for smaller
-    -- versions we send `InitiatorAndResponder`, in which case the remote side
-    -- will do the handshake negotiation but it will reply with the right data.
-    -- We shutdown the connection right after query, in most cases the remote
-    -- side will not even have a chance to start using this connection as
-    -- duplex (which could be possible if the node is using
-    -- `NodeToNodeVersionV10`).
-    fixupVersion :: NodeVersion -> NodeVersion
-    fixupVersion v | not query = v
-    fixupVersion (NodeToNodeVersionV4 a _)  = NodeToNodeVersionV4 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV5 a _)  = NodeToNodeVersionV5 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV6 a _)  = NodeToNodeVersionV6 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV7 a _)  = NodeToNodeVersionV7 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV8 a _)  = NodeToNodeVersionV8 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV9 a _)  = NodeToNodeVersionV9 a InitiatorAndResponder
-    fixupVersion (NodeToNodeVersionV10 a _) = NodeToNodeVersionV10 a InitiatorAndResponder
-    fixupVersion v = v
-
-
-    encodeVersion :: NodeVersion -> CBOR.Encoding
-
-    -- node-to-client
-    encodeVersion (NodeToClientVersionV9 magic) =
-          CBOR.encodeWord (9 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV10 magic) =
-          CBOR.encodeWord (10 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV11 magic) =
-          CBOR.encodeWord (11 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV12 magic) =
-          CBOR.encodeWord (12 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV13 magic) =
-          CBOR.encodeWord (13 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV14 magic) =
-          CBOR.encodeWord (14 `setBit` nodeToClientVersionBit)
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToClientVersionV15 magic) =
-          CBOR.encodeWord (15 `setBit` nodeToClientVersionBit)
-      <> nodeToClientDataWithQuery magic
-    encodeVersion (NodeToClientVersionV16 magic) =
-          CBOR.encodeWord (16 `setBit` nodeToClientVersionBit)
-      <>  nodeToClientDataWithQuery magic
-
-    -- node-to-node
-    encodeVersion (NodeToNodeVersionV1 magic) =
-          CBOR.encodeWord 1
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToNodeVersionV2 magic) =
-          CBOR.encodeWord 2
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToNodeVersionV3 magic) =
-          CBOR.encodeWord 3
-      <>  CBOR.encodeInt (fromIntegral magic)
-    encodeVersion (NodeToNodeVersionV4  magic mode) = encodeWithMode 4  magic mode
-    encodeVersion (NodeToNodeVersionV5  magic mode) = encodeWithMode 5  magic mode
-    encodeVersion (NodeToNodeVersionV6  magic mode) = encodeWithMode 6  magic mode
-    encodeVersion (NodeToNodeVersionV7  magic mode) = encodeWithMode 7  magic mode
-    encodeVersion (NodeToNodeVersionV8  magic mode) = encodeWithMode 8  magic mode
-    encodeVersion (NodeToNodeVersionV9  magic mode) = encodeWithMode 9  magic mode
-    encodeVersion (NodeToNodeVersionV10 magic mode) = encodeWithMode 10 magic mode
-    encodeVersion (NodeToNodeVersionV11 magic mode) = encodeWithMode 11 magic mode
-    encodeVersion (NodeToNodeVersionV12 magic mode) = encodeWithMode 12 magic mode
-
-    nodeToClientDataWithQuery :: Word32 -> CBOR.Encoding
-    nodeToClientDataWithQuery magic
-      =  CBOR.encodeListLen 2
-      <> CBOR.encodeInt (fromIntegral magic)
-      <> CBOR.encodeBool query
-
-    encodeWithMode :: Word -> Word32 -> InitiatorOnly -> CBOR.Encoding
-    encodeWithMode vn magic mode
-      | vn >= 12 =
-          CBOR.encodeWord vn
-       <> CBOR.encodeListLen 4
-       <> CBOR.encodeInt (fromIntegral magic)
-       <> CBOR.encodeBool (modeToBool mode)
-       <> CBOR.encodeInt 0 -- NoPeerSharing
-       <> CBOR.encodeBool query
-      | vn >= 11 =
-          CBOR.encodeWord vn
-       <> CBOR.encodeListLen 4
-       <> CBOR.encodeInt (fromIntegral magic)
-       <> CBOR.encodeBool (modeToBool mode)
-       <> CBOR.encodeInt 0 -- NoPeerSharing
-       <> CBOR.encodeBool query
-      | otherwise =
-          CBOR.encodeWord vn
-      <>  CBOR.encodeListLen 2
-      <>  CBOR.encodeInt (fromIntegral magic)
-      <>  CBOR.encodeBool (modeToBool mode)
-
-handshakeReq :: [NodeVersion] -> Bool -> LBS.ByteString
-handshakeReq []     _     = LBS.empty
-handshakeReq (v:vs) query = CBOR.toLazyByteString $ handshakeReqEnc (v:|vs) query
 
 createDirectoryIfMissingNew :: HasCallStack => FilePath -> IO FilePath
 createDirectoryIfMissingNew directory = GHC.withFrozenCallStack $ do

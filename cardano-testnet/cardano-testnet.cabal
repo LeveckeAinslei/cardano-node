@@ -61,6 +61,7 @@ library
                       , network-mux
                       , optparse-applicative-fork
                       , ouroboros-network ^>= 0.9.1
+                      , ouroboros-network-framework
                       , process
                       , resourcet
                       , safe-exceptions
