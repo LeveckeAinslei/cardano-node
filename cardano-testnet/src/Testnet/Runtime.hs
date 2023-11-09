@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
@@ -83,14 +84,25 @@ import qualified Codec.CBOR.Write as CBOR
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.List as L
 import           Data.List.NonEmpty (NonEmpty)
+import           Data.Void
 import           Data.Word (Word32)
 import           Network.Mux (MiniProtocolNum (..))
 import           Network.Mux.Compat (MiniProtocolDir (..))
-import qualified Network.Mux.Timeout as NM
-import           Network.Mux.Types (MuxSDU, MuxSDUHeader (..), RemoteClockModel (..))
-import qualified Network.Mux.Types as NM
+import           Network.Mux.Types (MuxMode (..), MuxSDU, MuxSDUHeader (..), RemoteClockModel (..))
 import qualified Network.Socket as Socket
-import           Ouroboros.Network.NodeToClient (withIOManager)
+import           Ouroboros.Network.Mux (OuroborosApplicationWithMinimalCtx)
+import           Ouroboros.Network.NodeToClient (simpleSingletonVersions, withIOManager)
+import qualified Ouroboros.Network.NodeToClient as Snocket
+import           Ouroboros.Network.Protocol.Handshake.Codec (noTimeLimitsHandshake)
+import           Ouroboros.Network.Protocol.Handshake.Unversioned
+                   (UnversionedProtocol (UnversionedProtocol),
+                   UnversionedProtocolData (UnversionedProtocolData), unversionedHandshakeCodec,
+                   unversionedProtocolDataCodec)
+import           Ouroboros.Network.Protocol.Handshake.Version (Acceptable (..),
+                   Queryable (queryVersion))
+import           Ouroboros.Network.Snocket (LocalAddress, localAddressFromPath, makeLocalBearer)
+import           Ouroboros.Network.Socket (HandshakeCallbacks (..), connectToNode,
+                   nullNetworkConnectTracers)
 
 data TestnetRuntime = TestnetRuntime
   { configurationFile :: FilePath
@@ -294,6 +306,7 @@ startNode tp node port nodeCmd = GHC.withFrozenCallStack $ do
         (localAddressFromPath sockPath)
 
 
+
     -- liftIO $ bracket
     --   (Socket.socket (Socket.addrFamily peer) Socket.Stream Socket.defaultProtocol)
     --   Socket.close
@@ -313,17 +326,37 @@ startNode tp node port nodeCmd = GHC.withFrozenCallStack $ do
 
     return $ NodeRuntime node sprocket stdIn nodeStdoutFile nodeStderrFile hProcess
   else left $ NodeExecutableError stdErrContents
+  where
+    app :: OuroborosApplicationWithMinimalCtx
+             InitiatorMode LocalAddress LBS.ByteString IO () Void
+    app = demoProtocol0 pingPongInitiator
 
-wrap :: MiniProtocolNum -> MiniProtocolDir -> LBS.ByteString -> MuxSDU
-wrap ptclNum ptclDir blob = NM.MuxSDU
-  { msHeader = MuxSDUHeader
-    { mhTimestamp = RemoteClockModel 0
-    , mhNum       = ptclNum
-    , mhDir       = ptclDir
-    , mhLength    = fromIntegral $ LBS.length blob
-    }
-  , msBlob = blob
-  }
+    pingPongInitiator | pipelined =
+      InitiatorProtocolOnly $
+      mkMiniProtocolCbFromPeerPipelined $ \_ctx ->
+        ( tracer
+        , codecPingPong
+        , pingPongClientPeerPipelined (pingPongClientPipelinedMax 5)
+        )
+
+      | otherwise =
+      InitiatorProtocolOnly $
+      mkMiniProtocolCbFromPeer $ \_ctx ->
+        ( contramap show stdoutTracer
+        , codecPingPong
+        , pingPongClientPeer (pingPongClientCount 5)
+        )
+
+-- wrap :: MiniProtocolNum -> MiniProtocolDir -> LBS.ByteString -> MuxSDU
+-- wrap ptclNum ptclDir blob = MuxSDU
+--   { msHeader = MuxSDUHeader
+--     { mhTimestamp = RemoteClockModel 0
+--     , mhNum       = ptclNum
+--     , mhDir       = ptclDir
+--     , mhLength    = fromIntegral $ LBS.length blob
+--     }
+--   , msBlob = blob
+--   }
 
 createDirectoryIfMissingNew :: HasCallStack => FilePath -> IO FilePath
 createDirectoryIfMissingNew directory = GHC.withFrozenCallStack $ do
