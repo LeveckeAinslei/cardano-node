@@ -37,6 +37,7 @@ import Cardano.Logging
 
 import Cardano.Tracer.Configuration
 
+import Cardano.Logging.Resources
 
 data TracerTrace
   = TracerParamsAre
@@ -68,6 +69,8 @@ data TracerTrace
   | TracerShutdownComplete
   | TracerError
     { ttError                :: !Text }
+  | TracerResource
+    { ttResource             :: !ResourceStats }
   deriving (Generic, Show)
 
 instance ToJSON TracerTrace where
@@ -120,6 +123,9 @@ instance ToJSON TracerTrace where
     TracerError{..} -> pairs
         ("kind" .= ("TracerError" :: Text)
       <> "Error" .= ttError)
+    TracerResource{..} -> pairs
+        ("kind" .= ("TracerResource" :: Text)
+      <> "resource" .= ttResource)
   toJSON = AE.genericToJSON jsonEncodingOptions
 
 -- {"ConfigPath":"config.json","MinLogSeverity":null,"StateDir":null,"kind":"TracerParamsAre}"

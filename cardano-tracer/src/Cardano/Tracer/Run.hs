@@ -10,6 +10,9 @@ import Control.Concurrent.Async.Extra (sequenceConcurrently)
 import Control.Concurrent.Extra (newLock)
 import Control.Concurrent.STM.TVar (newTVarIO)
 import Control.Monad (void)
+import Data.Foldable (for_)
+
+import Data.Functor.Contravariant
 
 import Cardano.Logging.Resources
 import Cardano.Tracer.Acceptors.Run
@@ -26,6 +29,11 @@ import Cardano.Tracer.MetaTrace
 import Cardano.Tracer.Types
 import Cardano.Tracer.Utils
 
+import Control.Applicative
+import Control.Monad
+import Control.Concurrent (threadDelay)
+import Control.Concurrent.Async (async)
+-- import Cardano.Node.Tracing.Tracers.Resources (startResourceTracer)
 
 -- | Top-level run function, called by 'cardano-tracer' app.
 runCardanoTracer :: TracerParams -> IO ()
@@ -33,17 +41,20 @@ runCardanoTracer TracerParams{tracerConfig, stateDir, logSeverity} = do
   tr <- mkTracerTracer $ SeverityF logSeverity
   traceWith tr $ TracerParamsAre tracerConfig stateDir logSeverity
 
-  mbrs <- readResourceStats
-  for_ mbrs do traceWith tr
-
   config <- readTracerConfig tracerConfig
   traceWith tr $ TracerConfigIs config
+
+  threadId <- async do
+    forever do
+      mbrs <- readResourceStats
+      for_ mbrs \resourceStat -> 
+        traceWith tr (TracerResource resourceStat)
+      threadDelay (10^6)
+  link threadId
 
   brake <- initProtocolsBrake
   dpRequestors <- initDataPointRequestors
   doRunCardanoTracer config stateDir tr brake dpRequestors
-
-
 
 -- | Runs all internal services of the tracer.
 doRunCardanoTracer
