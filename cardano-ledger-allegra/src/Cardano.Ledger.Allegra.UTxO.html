@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Allegra.UTxO</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier">AllegraEra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Tx.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Tx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxBody.html"><span class="hs-identifier">Cardano.Ledger.Allegra.TxBody</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Crypto</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.UTxO</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><span class="hs-identifier">ShelleyScriptsNeeded</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><span class="hs-identifier">getConsumedCoin</span></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><span class="hs-identifier">getShelleyScriptsNeeded</span></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><span class="hs-identifier">shelleyProducedValue</span></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.UTxO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraUTxO</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ScriptsProvided</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679288304"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679288304"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraUTxO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679288304"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ScriptsNeeded"><span class="annot"><span class="hs-identifier hs-var">ScriptsNeeded</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679288304"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyScriptsNeeded</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679288304"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621679288346"><span class="annot"><span class="annottext">getConsumedValue :: PParams (AllegraEra c)
+-&gt; (Credential 'Staking (EraCrypto (AllegraEra c)) -&gt; Maybe Coin)
+-&gt; (Credential 'DRepRole (EraCrypto (AllegraEra c)) -&gt; Maybe Coin)
+-&gt; UTxO (AllegraEra c)
+-&gt; TxBody (AllegraEra c)
+-&gt; Value (AllegraEra c)
+</span><a href="#local-6989586621679288346"><span class="hs-identifier hs-var hs-var hs-var hs-var">getConsumedValue</span></a></span></span><span> </span><span id="local-6989586621679288348"><span class="annot"><span class="annottext">PParams (AllegraEra c)
+</span><a href="#local-6989586621679288348"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679288349"><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto (AllegraEra c)) -&gt; Maybe Coin
+</span><a href="#local-6989586621679288349"><span class="hs-identifier hs-var">lookupKeyDeposit</span></a></span></span><span> </span><span class="annot"><span class="annottext">Credential 'DRepRole (EraCrypto (AllegraEra c)) -&gt; Maybe Coin
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams (AllegraEra c)
+-&gt; (Credential 'Staking (EraCrypto (AllegraEra c)) -&gt; Maybe Coin)
+-&gt; UTxO (AllegraEra c)
+-&gt; TxBody (AllegraEra c)
+-&gt; Coin
+forall era.
+ShelleyEraTxBody era =&gt;
+PParams era
+-&gt; (Credential 'Staking (EraCrypto era) -&gt; Maybe Coin)
+-&gt; UTxO era
+-&gt; TxBody era
+-&gt; Coin
+</span><span class="hs-identifier hs-var">getConsumedCoin</span></span><span> </span><span class="annot"><span class="annottext">PParams (AllegraEra c)
+</span><a href="#local-6989586621679288348"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto (AllegraEra c)) -&gt; Maybe Coin
+</span><a href="#local-6989586621679288349"><span class="hs-identifier hs-var">lookupKeyDeposit</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679288351"><span class="annot"><span class="annottext">getProducedValue :: PParams (AllegraEra c)
+-&gt; (KeyHash 'StakePool (EraCrypto (AllegraEra c)) -&gt; Bool)
+-&gt; TxBody (AllegraEra c)
+-&gt; Value (AllegraEra c)
+</span><a href="#local-6989586621679288351"><span class="hs-identifier hs-var hs-var hs-var hs-var">getProducedValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams (AllegraEra c)
+-&gt; (KeyHash 'StakePool (EraCrypto (AllegraEra c)) -&gt; Bool)
+-&gt; TxBody (AllegraEra c)
+-&gt; Value (AllegraEra c)
+forall era.
+ShelleyEraTxBody era =&gt;
+PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; TxBody era
+-&gt; Value era
+</span><span class="hs-identifier hs-var">shelleyProducedValue</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679288359"><span class="annot"><span class="annottext">getScriptsProvided :: UTxO (AllegraEra c)
+-&gt; Tx (AllegraEra c) -&gt; ScriptsProvided (AllegraEra c)
+</span><a href="#local-6989586621679288359"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScriptsProvided</span></a></span></span><span> </span><span class="annot"><span class="annottext">UTxO (AllegraEra c)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679288361"><span class="annot"><span class="annottext">Tx (AllegraEra c)
+</span><a href="#local-6989586621679288361"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))
+-&gt; ScriptsProvided (AllegraEra c)
+forall era.
+Map (ScriptHash (EraCrypto era)) (Script era)
+-&gt; ScriptsProvided era
+</span><span class="hs-identifier hs-var">ScriptsProvided</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShelleyTx (AllegraEra c)
+Tx (AllegraEra c)
+</span><a href="#local-6989586621679288361"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyTx (AllegraEra c)
+-&gt; Getting
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+     (ShelleyTx (AllegraEra c))
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+-&gt; Map (ScriptHash c) (Timelock (AllegraEra c))
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(TxWits (AllegraEra c)
+ -&gt; Const
+      (Map (ScriptHash c) (Timelock (AllegraEra c)))
+      (TxWits (AllegraEra c)))
+-&gt; ShelleyTx (AllegraEra c)
+-&gt; Const
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+     (ShelleyTx (AllegraEra c))
+(TxWits (AllegraEra c)
+ -&gt; Const
+      (Map (ScriptHash c) (Timelock (AllegraEra c)))
+      (TxWits (AllegraEra c)))
+-&gt; Tx (AllegraEra c)
+-&gt; Const
+     (Map (ScriptHash c) (Timelock (AllegraEra c))) (Tx (AllegraEra c))
+forall era. EraTx era =&gt; Lens' (Tx era) (TxWits era)
+Lens' (Tx (AllegraEra c)) (TxWits (AllegraEra c))
+</span><span class="hs-identifier hs-var">witsTxL</span></span><span> </span><span class="annot"><span class="annottext">((TxWits (AllegraEra c)
+  -&gt; Const
+       (Map (ScriptHash c) (Timelock (AllegraEra c)))
+       (TxWits (AllegraEra c)))
+ -&gt; ShelleyTx (AllegraEra c)
+ -&gt; Const
+      (Map (ScriptHash c) (Timelock (AllegraEra c)))
+      (ShelleyTx (AllegraEra c)))
+-&gt; ((Map (ScriptHash c) (Timelock (AllegraEra c))
+     -&gt; Const
+          (Map (ScriptHash c) (Timelock (AllegraEra c)))
+          (Map (ScriptHash c) (Timelock (AllegraEra c))))
+    -&gt; TxWits (AllegraEra c)
+    -&gt; Const
+         (Map (ScriptHash c) (Timelock (AllegraEra c)))
+         (TxWits (AllegraEra c)))
+-&gt; Getting
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+     (ShelleyTx (AllegraEra c))
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(Map (ScriptHash c) (Timelock (AllegraEra c))
+ -&gt; Const
+      (Map (ScriptHash c) (Timelock (AllegraEra c)))
+      (Map (ScriptHash c) (Timelock (AllegraEra c))))
+-&gt; TxWits (AllegraEra c)
+-&gt; Const
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+     (TxWits (AllegraEra c))
+(Map
+   (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))
+ -&gt; Const
+      (Map (ScriptHash c) (Timelock (AllegraEra c)))
+      (Map
+         (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))))
+-&gt; TxWits (AllegraEra c)
+-&gt; Const
+     (Map (ScriptHash c) (Timelock (AllegraEra c)))
+     (TxWits (AllegraEra c))
+forall era.
+EraTxWits era =&gt;
+Lens' (TxWits era) (Map (ScriptHash (EraCrypto era)) (Script era))
+Lens'
+  (TxWits (AllegraEra c))
+  (Map
+     (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c)))
+</span><span class="hs-identifier hs-var">scriptTxWitsL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679288368"><span class="annot"><span class="annottext">getScriptsNeeded :: UTxO (AllegraEra c)
+-&gt; TxBody (AllegraEra c) -&gt; ScriptsNeeded (AllegraEra c)
+</span><a href="#local-6989586621679288368"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScriptsNeeded</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTxO (AllegraEra c)
+-&gt; TxBody (AllegraEra c) -&gt; ScriptsNeeded (AllegraEra c)
+UTxO (AllegraEra c)
+-&gt; TxBody (AllegraEra c) -&gt; ShelleyScriptsNeeded (AllegraEra c)
+forall era.
+ShelleyEraTxBody era =&gt;
+UTxO era -&gt; TxBody era -&gt; ShelleyScriptsNeeded era
+</span><span class="hs-identifier hs-var">getShelleyScriptsNeeded</span></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621679288370"><span class="annot"><span class="annottext">getScriptsHashesNeeded :: ScriptsNeeded (AllegraEra c)
+-&gt; Set (ScriptHash (EraCrypto (AllegraEra c)))
+</span><a href="#local-6989586621679288370"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScriptsHashesNeeded</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ShelleyScriptsNeeded</span></span><span> </span><span id="local-6989586621679288373"><span class="annot"><span class="annottext">Set (ScriptHash (EraCrypto (AllegraEra c)))
+</span><a href="#local-6989586621679288373"><span class="hs-identifier hs-var">scriptHashes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (ScriptHash (EraCrypto (AllegraEra c)))
+</span><a href="#local-6989586621679288373"><span class="hs-identifier hs-var">scriptHashes</span></a></span><span>
+</span><span id="line-35"></span></pre></body></html>

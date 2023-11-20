@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Crypto.Raw</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-4"></span><span>  </span><span class="annot"><a href="Cardano.Crypto.Raw.html#Raw"><span class="hs-identifier">Raw</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">FromCBOR</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToCBOR</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html"><span class="hs-identifier">Data.ByteString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier">ByteString</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Prelude.html"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- | A wrapper over 'ByteString' for signalling that a bytestring should be</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--   processed as a sequence of bytes, not as a separate entity. It's used in</span><span>
+</span><span id="line-15"></span><span class="hs-comment">--   crypto and binary code.</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">newtype</span><span> </span><span id="Raw"><span class="annot"><a href="Cardano.Crypto.Raw.html#Raw"><span class="hs-identifier hs-var">Raw</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Raw"><span class="annot"><a href="Cardano.Crypto.Raw.html#Raw"><span class="hs-identifier hs-var">Raw</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679240967"><span id="local-6989586621679240972"><span class="annot"><span class="annottext">Raw -&gt; Raw -&gt; Bool
+(Raw -&gt; Raw -&gt; Bool) -&gt; (Raw -&gt; Raw -&gt; Bool) -&gt; Eq Raw
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Raw -&gt; Raw -&gt; Bool
+== :: Raw -&gt; Raw -&gt; Bool
+$c/= :: Raw -&gt; Raw -&gt; Bool
+/= :: Raw -&gt; Raw -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679240980"><span id="local-6989586621679240985"><span id="local-6989586621679240989"><span id="local-6989586621679240993"><span id="local-6989586621679240997"><span id="local-6989586621679241001"><span id="local-6989586621679241005"><span class="annot"><span class="annottext">Eq Raw
+Eq Raw =&gt;
+(Raw -&gt; Raw -&gt; Ordering)
+-&gt; (Raw -&gt; Raw -&gt; Bool)
+-&gt; (Raw -&gt; Raw -&gt; Bool)
+-&gt; (Raw -&gt; Raw -&gt; Bool)
+-&gt; (Raw -&gt; Raw -&gt; Bool)
+-&gt; (Raw -&gt; Raw -&gt; Raw)
+-&gt; (Raw -&gt; Raw -&gt; Raw)
+-&gt; Ord Raw
+Raw -&gt; Raw -&gt; Bool
+Raw -&gt; Raw -&gt; Ordering
+Raw -&gt; Raw -&gt; Raw
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: Raw -&gt; Raw -&gt; Ordering
+compare :: Raw -&gt; Raw -&gt; Ordering
+$c&lt; :: Raw -&gt; Raw -&gt; Bool
+&lt; :: Raw -&gt; Raw -&gt; Bool
+$c&lt;= :: Raw -&gt; Raw -&gt; Bool
+&lt;= :: Raw -&gt; Raw -&gt; Bool
+$c&gt; :: Raw -&gt; Raw -&gt; Bool
+&gt; :: Raw -&gt; Raw -&gt; Bool
+$c&gt;= :: Raw -&gt; Raw -&gt; Bool
+&gt;= :: Raw -&gt; Raw -&gt; Bool
+$cmax :: Raw -&gt; Raw -&gt; Raw
+max :: Raw -&gt; Raw -&gt; Raw
+$cmin :: Raw -&gt; Raw -&gt; Raw
+min :: Raw -&gt; Raw -&gt; Raw
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241011"><span id="local-6989586621679241017"><span id="local-6989586621679241021"><span class="annot"><span class="annottext">Int -&gt; Raw -&gt; ShowS
+[Raw] -&gt; ShowS
+Raw -&gt; String
+(Int -&gt; Raw -&gt; ShowS)
+-&gt; (Raw -&gt; String) -&gt; ([Raw] -&gt; ShowS) -&gt; Show Raw
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Raw -&gt; ShowS
+showsPrec :: Int -&gt; Raw -&gt; ShowS
+$cshow :: Raw -&gt; String
+show :: Raw -&gt; String
+$cshowList :: [Raw] -&gt; ShowS
+showList :: [Raw] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241025"><span class="annot"><span class="annottext">Raw -&gt; ()
+(Raw -&gt; ()) -&gt; NFData Raw
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: Raw -&gt; ()
+rnf :: Raw -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241034"><span id="local-6989586621679241039"><span id="local-6989586621679241043"><span class="annot"><span class="annottext">Typeable Raw
+Typeable Raw =&gt;
+(forall s. Decoder s Raw)
+-&gt; (forall s. Proxy Raw -&gt; Decoder s ())
+-&gt; (Proxy Raw -&gt; Text)
+-&gt; DecCBOR Raw
+Proxy Raw -&gt; Text
+forall s. Decoder s Raw
+forall a.
+Typeable a =&gt;
+(forall s. Decoder s a)
+-&gt; (forall s. Proxy a -&gt; Decoder s ())
+-&gt; (Proxy a -&gt; Text)
+-&gt; DecCBOR a
+forall s. Proxy Raw -&gt; Decoder s ()
+$cdecCBOR :: forall s. Decoder s Raw
+decCBOR :: forall s. Decoder s Raw
+$cdropCBOR :: forall s. Proxy Raw -&gt; Decoder s ()
+dropCBOR :: forall s. Proxy Raw -&gt; Decoder s ()
+$clabel :: Proxy Raw -&gt; Text
+label :: Proxy Raw -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">DecCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241051"><span id="local-6989586621679241058"><span id="local-6989586621679241064"><span class="annot"><span class="annottext">Typeable Raw
+Typeable Raw =&gt;
+(Raw -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy [Raw] -&gt; Size)
+-&gt; EncCBOR Raw
+Raw -&gt; Encoding
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+forall a.
+Typeable a =&gt;
+(a -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy a -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [a] -&gt; Size)
+-&gt; EncCBOR a
+$cencCBOR :: Raw -&gt; Encoding
+encCBOR :: Raw -&gt; Encoding
+$cencodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+encodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+$cencodedListSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+encodedListSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">EncCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241072"><span id="local-6989586621679241077"><span class="annot"><span class="annottext">Typeable Raw
+Typeable Raw =&gt;
+(forall s. Decoder s Raw) -&gt; (Proxy Raw -&gt; Text) -&gt; FromCBOR Raw
+Proxy Raw -&gt; Text
+forall s. Decoder s Raw
+forall a.
+Typeable a =&gt;
+(forall s. Decoder s a) -&gt; (Proxy a -&gt; Text) -&gt; FromCBOR a
+$cfromCBOR :: forall s. Decoder s Raw
+fromCBOR :: forall s. Decoder s Raw
+$clabel :: Proxy Raw -&gt; Text
+label :: Proxy Raw -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">FromCBOR</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679241085"><span id="local-6989586621679241092"><span id="local-6989586621679241098"><span class="annot"><span class="annottext">Typeable Raw
+Typeable Raw =&gt;
+(Raw -&gt; Encoding)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size)
+-&gt; ToCBOR Raw
+Raw -&gt; Encoding
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+forall a.
+Typeable a =&gt;
+(a -&gt; Encoding)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy a -&gt; Size)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [a] -&gt; Size)
+-&gt; ToCBOR a
+$ctoCBOR :: Raw -&gt; Encoding
+toCBOR :: Raw -&gt; Encoding
+$cencodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+encodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy Raw -&gt; Size
+$cencodedListSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+encodedListSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [Raw] -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToCBOR</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span></pre></body></html>

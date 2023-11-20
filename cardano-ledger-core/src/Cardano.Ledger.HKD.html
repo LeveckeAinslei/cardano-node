@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE AllowAmbiguousTypes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="annot"><span class="hs-comment">-- | This module contains just the type of protocol parameters.</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.HKD</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier">HKD</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier">HKDNoUpdate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDFunctor"><span class="hs-identifier">HKDFunctor</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier">NoUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.TreeDiff</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToExpr</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.Identity.html"><span class="hs-identifier">Data.Functor.Identity</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.Identity.html#Identity"><span class="hs-identifier">Identity</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">StrictMaybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- ====================================================================</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="annot"><span class="hs-comment">-- | Higher Kinded Data</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="HKD"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-var">HKD</span></a></span></span><span> </span><span id="local-6989586621679414279"><span class="annot"><a href="#local-6989586621679414279"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679414280"><span class="annot"><a href="#local-6989586621679414280"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="HKD"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-var">HKD</span></a></span></span><span> </span><span id="local-6989586621679414281"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.Identity.html#Identity"><span class="hs-identifier hs-type">Identity</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414281"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679414281"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span id="HKD"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-var">HKD</span></a></span></span><span> </span><span id="local-6989586621679414282"><span id="local-6989586621679414283"><span class="annot"><a href="#local-6989586621679414282"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414283"><span class="hs-identifier hs-type">a</span></a></span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679414282"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414283"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="NoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-var">NoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414269"><span class="annot"><a href="#local-6989586621679414269"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-var">NoUpdate</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679414286"><span id="local-6989586621679414288"><span class="annot"><span class="annottext">NoUpdate a -&gt; NoUpdate a -&gt; Bool
+(NoUpdate a -&gt; NoUpdate a -&gt; Bool)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; Bool) -&gt; Eq (NoUpdate a)
+forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+== :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+$c/= :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+/= :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679414295"><span id="local-6989586621679414297"><span id="local-6989586621679414299"><span id="local-6989586621679414303"><span id="local-6989586621679414306"><span id="local-6989586621679414309"><span id="local-6989586621679414312"><span class="annot"><span class="annottext">Eq (NoUpdate a)
+Eq (NoUpdate a) =&gt;
+(NoUpdate a -&gt; NoUpdate a -&gt; Ordering)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; Bool)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; Bool)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; Bool)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; Bool)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a)
+-&gt; (NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a)
+-&gt; Ord (NoUpdate a)
+NoUpdate a -&gt; NoUpdate a -&gt; Bool
+NoUpdate a -&gt; NoUpdate a -&gt; Ordering
+NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+forall a. Eq (NoUpdate a)
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+forall a. NoUpdate a -&gt; NoUpdate a -&gt; Ordering
+forall a. NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+$ccompare :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Ordering
+compare :: NoUpdate a -&gt; NoUpdate a -&gt; Ordering
+$c&lt; :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+&lt; :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+$c&lt;= :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+&lt;= :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+$c&gt; :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+&gt; :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+$c&gt;= :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; Bool
+&gt;= :: NoUpdate a -&gt; NoUpdate a -&gt; Bool
+$cmax :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+max :: NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+$cmin :: forall a. NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+min :: NoUpdate a -&gt; NoUpdate a -&gt; NoUpdate a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679414316"><span id="local-6989586621679414318"><span id="local-6989586621679414322"><span class="annot"><span class="annottext">Int -&gt; NoUpdate a -&gt; ShowS
+[NoUpdate a] -&gt; ShowS
+NoUpdate a -&gt; String
+(Int -&gt; NoUpdate a -&gt; ShowS)
+-&gt; (NoUpdate a -&gt; String)
+-&gt; ([NoUpdate a] -&gt; ShowS)
+-&gt; Show (NoUpdate a)
+forall a. Int -&gt; NoUpdate a -&gt; ShowS
+forall a. [NoUpdate a] -&gt; ShowS
+forall a. NoUpdate a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Int -&gt; NoUpdate a -&gt; ShowS
+showsPrec :: Int -&gt; NoUpdate a -&gt; ShowS
+$cshow :: forall a. NoUpdate a -&gt; String
+show :: NoUpdate a -&gt; String
+$cshowList :: forall a. [NoUpdate a] -&gt; ShowS
+showList :: [NoUpdate a] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679414326"><span id="local-6989586621679414328"><span class="annot"><span class="annottext">(forall x. NoUpdate a -&gt; Rep (NoUpdate a) x)
+-&gt; (forall x. Rep (NoUpdate a) x -&gt; NoUpdate a)
+-&gt; Generic (NoUpdate a)
+forall x. Rep (NoUpdate a) x -&gt; NoUpdate a
+forall x. NoUpdate a -&gt; Rep (NoUpdate a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (NoUpdate a) x -&gt; NoUpdate a
+forall a x. NoUpdate a -&gt; Rep (NoUpdate a) x
+$cfrom :: forall a x. NoUpdate a -&gt; Rep (NoUpdate a) x
+from :: forall x. NoUpdate a -&gt; Rep (NoUpdate a) x
+$cto :: forall a x. Rep (NoUpdate a) x -&gt; NoUpdate a
+to :: forall x. Rep (NoUpdate a) x -&gt; NoUpdate a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679414216"><span id="local-6989586621679414332"><span id="local-6989586621679414336"><span id="local-6989586621679414342"><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-type">NoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414216"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679414227"><span id="local-6989586621679414362"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-type">NoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414227"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679414245"><span id="local-6989586621679414374"><span id="local-6989586621679414381"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-type">NoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414245"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="HKDNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-var">HKDNoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414395"><span class="annot"><a href="#local-6989586621679414395"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679414396"><span class="annot"><a href="#local-6989586621679414396"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="HKDNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-var">HKDNoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414397"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.Identity.html#Identity"><span class="hs-identifier hs-type">Identity</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414397"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679414397"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span id="HKDNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-var">HKDNoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414398"><span class="annot"><span class="hs-identifier hs-type">StrictMaybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679414398"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-type">NoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414398"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-46"></span><span>  </span><span id="HKDNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-var">HKDNoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414399"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414399"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-type">NoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414399"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span id="HKDNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-var">HKDNoUpdate</span></a></span></span><span> </span><span id="local-6989586621679414400"><span id="local-6989586621679414401"><span class="annot"><a href="#local-6989586621679414400"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414401"><span class="hs-identifier hs-type">a</span></a></span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679414400"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414401"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">class</span><span> </span><span id="HKDFunctor"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDFunctor"><span class="hs-identifier hs-var">HKDFunctor</span></a></span></span><span> </span><span id="local-6989586621679414255"><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="hkdMap"><span class="annot"><a href="Cardano.Ledger.HKD.html#hkdMap"><span class="hs-identifier hs-type">hkdMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621679414246"><span id="local-6989586621679414248"><span id="local-6989586621679414249"><span class="annot"><a href="#local-6989586621679414246"><span class="hs-identifier hs-type">proxy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679414248"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679414249"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-type">HKD</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414248"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-type">HKD</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414249"><span class="hs-identifier hs-type">b</span></a></span></span></span></span><span>
+</span><span id="line-51"></span><span>  </span><span id="toNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#toNoUpdate"><span class="hs-identifier hs-type">toNoUpdate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621679414251"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-type">HKD</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414251"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-type">HKDNoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414251"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-52"></span><span>  </span><span id="fromNoUpdate"><span class="annot"><a href="Cardano.Ledger.HKD.html#fromNoUpdate"><span class="hs-identifier hs-type">fromNoUpdate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621679414253"><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDNoUpdate"><span class="hs-identifier hs-type">HKDNoUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414253"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKD"><span class="hs-identifier hs-type">HKD</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414255"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679414253"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDFunctor"><span class="hs-identifier hs-type">HKDFunctor</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.Identity.html#Identity"><span class="hs-identifier hs-type">Identity</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679414410"><span class="annot"><span class="annottext">hkdMap :: forall (proxy :: (* -&gt; *) -&gt; *) a b.
+proxy Identity -&gt; (a -&gt; b) -&gt; HKD Identity a -&gt; HKD Identity b
+</span><a href="Cardano.Ledger.HKD.html#hkdMap"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMap</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy Identity
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679414411"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679414411"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+HKD Identity a -&gt; HKD Identity b
+</span><a href="#local-6989586621679414411"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679414412"><span class="annot"><span class="annottext">toNoUpdate :: forall a. HKD Identity a -&gt; HKDNoUpdate Identity a
+</span><a href="Cardano.Ledger.HKD.html#toNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">toNoUpdate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+HKD Identity a -&gt; HKDNoUpdate Identity a
+forall a. a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679414414"><span class="annot"><span class="annottext">fromNoUpdate :: forall a. HKDNoUpdate Identity a -&gt; HKD Identity a
+</span><a href="Cardano.Ledger.HKD.html#fromNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromNoUpdate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+HKDNoUpdate Identity a -&gt; HKD Identity a
+forall a. a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDFunctor"><span class="hs-identifier hs-type">HKDFunctor</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621679414421"><span class="annot"><span class="annottext">hkdMap :: forall (proxy :: (* -&gt; *) -&gt; *) a b.
+proxy Maybe -&gt; (a -&gt; b) -&gt; HKD Maybe a -&gt; HKD Maybe b
+</span><a href="Cardano.Ledger.HKD.html#hkdMap"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMap</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy Maybe
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+(a -&gt; b) -&gt; HKD Maybe a -&gt; HKD Maybe b
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679414422"><span class="annot"><span class="annottext">toNoUpdate :: forall a. HKD Maybe a -&gt; HKDNoUpdate Maybe a
+</span><a href="Cardano.Ledger.HKD.html#toNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">toNoUpdate</span></a></span></span><span> </span><span class="annot"><span class="annottext">HKD Maybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HKDNoUpdate Maybe a
+NoUpdate a
+forall a. NoUpdate a
+</span><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-var">NoUpdate</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679414423"><span class="annot"><span class="annottext">fromNoUpdate :: forall a. HKDNoUpdate Maybe a -&gt; HKD Maybe a
+</span><a href="Cardano.Ledger.HKD.html#fromNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromNoUpdate</span></a></span></span><span> </span><span class="annot"><span class="annottext">HKDNoUpdate Maybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
+HKD Maybe a
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Cardano.Ledger.HKD.html#HKDFunctor"><span class="hs-identifier hs-type">HKDFunctor</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">StrictMaybe</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621679414430"><span class="annot"><span class="annottext">hkdMap :: forall (proxy :: (* -&gt; *) -&gt; *) a b.
+proxy StrictMaybe
+-&gt; (a -&gt; b) -&gt; HKD StrictMaybe a -&gt; HKD StrictMaybe b
+</span><a href="Cardano.Ledger.HKD.html#hkdMap"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMap</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy StrictMaybe
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+(a -&gt; b) -&gt; HKD StrictMaybe a -&gt; HKD StrictMaybe b
+forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621679414431"><span class="annot"><span class="annottext">toNoUpdate :: forall a. HKD StrictMaybe a -&gt; HKDNoUpdate StrictMaybe a
+</span><a href="Cardano.Ledger.HKD.html#toNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">toNoUpdate</span></a></span></span><span> </span><span class="annot"><span class="annottext">HKD StrictMaybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HKDNoUpdate StrictMaybe a
+NoUpdate a
+forall a. NoUpdate a
+</span><a href="Cardano.Ledger.HKD.html#NoUpdate"><span class="hs-identifier hs-var">NoUpdate</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679414432"><span class="annot"><span class="annottext">fromNoUpdate :: forall a. HKDNoUpdate StrictMaybe a -&gt; HKD StrictMaybe a
+</span><a href="Cardano.Ledger.HKD.html#fromNoUpdate"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromNoUpdate</span></a></span></span><span> </span><span class="annot"><span class="annottext">HKDNoUpdate StrictMaybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+HKD StrictMaybe a
+forall a. StrictMaybe a
+</span><span class="hs-identifier hs-var">SNothing</span></span><span>
+</span><span id="line-68"></span></pre></body></html>

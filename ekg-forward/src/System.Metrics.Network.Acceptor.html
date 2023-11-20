@@ -1,0 +1,959 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.Metrics.Network.Acceptor</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#listenToForwarder"><span class="hs-identifier">listenToForwarder</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Export this function for Mux purpose.</span></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsInit"><span class="hs-identifier">acceptEKGMetricsInit</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsResp"><span class="hs-identifier">acceptEKGMetricsResp</span></a></span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Codec.CBOR.Term</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Term</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Codec.Serialise</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CBOR</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.html"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.Base.html#finally"><span class="hs-identifier">finally</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Concurrent.html"><span class="hs-identifier">Control.Concurrent</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.IO.html#threadDelay"><span class="hs-identifier">threadDelay</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Concurrent.Async</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">async</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">wait</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html"><span class="hs-identifier">Control.Concurrent.STM.TVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier">TVar</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#readTVarIO"><span class="hs-identifier">readTVarIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.html"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LBS</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.html"><span class="hs-identifier">Data.Time.Clock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.Internal.NominalDiffTime.html#NominalDiffTime"><span class="hs-identifier">NominalDiffTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Void.html"><span class="hs-identifier">Data.Void</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier">Void</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Network.Socket</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Socket</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Context</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MinimalInitiatorContext</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ResponderContext</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Driver.Limits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ProtocolTimeLimits</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.ErrorPolicy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">nullErrorPolicies</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.IOManager</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">withIOManager</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Driver.Simple</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">runPeer</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Mux</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MiniProtocol</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MiniProtocolCb</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>                                        </span><span class="annot"><span class="hs-identifier">MiniProtocolLimits</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>                                        </span><span class="annot"><span class="hs-identifier">MiniProtocolNum</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MuxMode</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>                                        </span><span class="annot"><span class="hs-identifier">OuroborosApplication</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>                                        </span><span class="annot"><span class="hs-identifier">RunMiniProtocol</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>                                        </span><span class="annot"><span class="hs-identifier">miniProtocolLimits</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">miniProtocolNum</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">miniProtocolRun</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Snocket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">LocalAddress</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MakeBearer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Snocket</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>                                            </span><span class="annot"><span class="hs-identifier">localAddressFromPath</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">localSnocket</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">socketSnocket</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>                                            </span><span class="annot"><span class="hs-identifier">makeLocalBearer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">makeSocketBearer</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Socket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AcceptedConnectionsLimit</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>                                           </span><span class="annot"><span class="hs-identifier">HandshakeCallbacks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>                                           </span><span class="annot"><span class="hs-identifier">SomeResponderApplication</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>                                           </span><span class="annot"><span class="hs-identifier">cleanNetworkMutableState</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">newNetworkMutableState</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>                                           </span><span class="annot"><span class="hs-identifier">nullNetworkServerTracers</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">withServerNode</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.Handshake.Codec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">noTimeLimitsHandshake</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>                                                             </span><span class="annot"><span class="hs-identifier">timeLimitsHandshake</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.Handshake.Type</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Handshake</span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.Handshake.Unversioned</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">UnversionedProtocol</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>                                                                   </span><span class="annot"><span class="hs-identifier">UnversionedProtocolData</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>                                                                   </span><span class="annot"><span class="hs-identifier">unversionedHandshakeCodec</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>                                                                   </span><span class="annot"><span class="hs-identifier">unversionedProtocolDataCodec</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.Handshake.Version</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">acceptableVersion</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">queryVersion</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">simpleSingletonVersions</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="System.Metrics.Protocol.Acceptor.html"><span class="hs-identifier">System.Metrics.Protocol.Acceptor</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Acceptor</span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="System.Metrics.Protocol.Codec.html"><span class="hs-identifier">System.Metrics.Protocol.Codec</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Acceptor</span></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html"><span class="hs-identifier">System.Metrics.Store.Acceptor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier">MetricsLocalStore</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier">storeMetrics</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.ReqResp.html"><span class="hs-identifier">System.Metrics.ReqResp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier">Request</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier">Response</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.Configuration.html"><span class="hs-identifier">System.Metrics.Configuration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier">AcceptorConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#HowToConnect"><span class="hs-identifier">HowToConnect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#listenToForwarder"><span class="hs-identifier hs-type">listenToForwarder</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Either"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalAddress</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Socket.SockAddr</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Either"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalAddress</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Socket.SockAddr</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span>
+</span><span id="line-62"></span><span id="listenToForwarder"><span class="annot"><span class="annottext">listenToForwarder :: AcceptorConfiguration
+-&gt; (ResponderContext (Either LocalAddress SockAddr)
+    -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext (Either LocalAddress SockAddr) -&gt; IO ())
+-&gt; IO Void
+</span><a href="System.Metrics.Network.Acceptor.html#listenToForwarder"><span class="hs-identifier hs-var hs-var">listenToForwarder</span></a></span></span><span> </span><span id="local-6989586621679110278"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110278"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110279"><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr)
+-&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110279"><span class="hs-identifier hs-var">mkStores</span></a></span></span><span> </span><span id="local-6989586621679110280"><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr) -&gt; IO ()
+</span><a href="#local-6989586621679110280"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(IOManager -&gt; IO Void) -&gt; IO Void
+WithIOManager
+</span><span class="hs-identifier hs-var">withIOManager</span></span><span> </span><span class="annot"><span class="annottext">((IOManager -&gt; IO Void) -&gt; IO Void)
+-&gt; (IOManager -&gt; IO Void) -&gt; IO Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679110281"><span class="annot"><span class="annottext">IOManager
+</span><a href="#local-6989586621679110281"><span class="hs-identifier hs-var">iocp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration -&gt; HowToConnect
+</span><a href="System.Metrics.Configuration.html#forwarderEndpoint"><span class="hs-identifier hs-var">forwarderEndpoint</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110278"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="System.Metrics.Configuration.html#LocalPipe"><span class="hs-identifier hs-type">LocalPipe</span></a></span><span> </span><span id="local-6989586621679110284"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679110284"><span class="hs-identifier hs-var">localPipe</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110288"><span class="annot"><span class="annottext">app :: OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext LocalAddress)
+  (ResponderContext LocalAddress)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110288"><span class="hs-identifier hs-var hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (ResponderContext LocalAddress
+    -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext LocalAddress -&gt; IO ())
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext LocalAddress)
+     (ResponderContext LocalAddress)
+     ByteString
+     IO
+     Void
+     ()
+forall addr.
+AcceptorConfiguration
+-&gt; (ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext addr -&gt; IO ())
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorApp"><span class="hs-identifier hs-var">acceptorApp</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110278"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr)
+-&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110279"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">(ResponderContext (Either LocalAddress SockAddr)
+ -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext LocalAddress
+    -&gt; ResponderContext (Either LocalAddress SockAddr))
+-&gt; ResponderContext LocalAddress
+-&gt; IO (Store, TVar MetricsLocalStore)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(LocalAddress -&gt; Either LocalAddress SockAddr)
+-&gt; ResponderContext LocalAddress
+-&gt; ResponderContext (Either LocalAddress SockAddr)
+forall a b. (a -&gt; b) -&gt; ResponderContext a -&gt; ResponderContext b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">LocalAddress -&gt; Either LocalAddress SockAddr
+forall a b. a -&gt; Either a b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Left"><span class="hs-identifier hs-var">Left</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr) -&gt; IO ()
+</span><a href="#local-6989586621679110280"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">(ResponderContext (Either LocalAddress SockAddr) -&gt; IO ())
+-&gt; (ResponderContext LocalAddress
+    -&gt; ResponderContext (Either LocalAddress SockAddr))
+-&gt; ResponderContext LocalAddress
+-&gt; IO ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(LocalAddress -&gt; Either LocalAddress SockAddr)
+-&gt; ResponderContext LocalAddress
+-&gt; ResponderContext (Either LocalAddress SockAddr)
+forall a b. (a -&gt; b) -&gt; ResponderContext a -&gt; ResponderContext b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">LocalAddress -&gt; Either LocalAddress SockAddr
+forall a b. a -&gt; Either a b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Left"><span class="hs-identifier hs-var">Left</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>          </span><span id="local-6989586621679110291"><span class="annot"><span class="annottext">snocket :: LocalSnocket
+</span><a href="#local-6989586621679110291"><span class="hs-identifier hs-var hs-var">snocket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IOManager -&gt; LocalSnocket
+</span><span class="hs-identifier hs-var">localSnocket</span></span><span> </span><span class="annot"><span class="annottext">IOManager
+</span><a href="#local-6989586621679110281"><span class="hs-identifier hs-var">iocp</span></a></span><span>
+</span><span id="line-67"></span><span>          </span><span id="local-6989586621679110292"><span class="annot"><span class="annottext">address :: LocalAddress
+</span><a href="#local-6989586621679110292"><span class="hs-identifier hs-var hs-var">address</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; LocalAddress
+</span><span class="hs-identifier hs-var">localAddressFromPath</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679110284"><span class="hs-identifier hs-var">localPipe</span></a></span><span>
+</span><span id="line-68"></span><span>          </span><span id="local-6989586621679110307"><span class="annot"><span class="annottext">configureSocket :: LocalSocket -&gt; LocalAddress -&gt; IO ()
+</span><a href="#local-6989586621679110307"><span class="hs-identifier hs-var hs-var">configureSocket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LocalSocket -&gt; LocalAddress -&gt; IO ()
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">LocalSnocket
+-&gt; MakeBearer IO LocalSocket
+-&gt; (LocalSocket -&gt; LocalAddress -&gt; IO ())
+-&gt; LocalAddress
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext LocalAddress)
+     (ResponderContext LocalAddress)
+     ByteString
+     IO
+     Void
+     ()
+-&gt; IO Void
+forall addr fd.
+Ord addr =&gt;
+Snocket IO fd addr
+-&gt; MakeBearer IO fd
+-&gt; (fd -&gt; addr -&gt; IO ())
+-&gt; addr
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+-&gt; IO Void
+</span><a href="System.Metrics.Network.Acceptor.html#doListenToForwarder"><span class="hs-identifier hs-var">doListenToForwarder</span></a></span><span> </span><span class="annot"><span class="annottext">LocalSnocket
+</span><a href="#local-6989586621679110291"><span class="hs-identifier hs-var">snocket</span></a></span><span> </span><span class="annot"><span class="annottext">MakeBearer IO LocalSocket
+</span><span class="hs-identifier hs-var">makeLocalBearer</span></span><span> </span><span class="annot"><span class="annottext">LocalSocket -&gt; LocalAddress -&gt; IO ()
+</span><a href="#local-6989586621679110307"><span class="hs-identifier hs-var">configureSocket</span></a></span><span> </span><span class="annot"><span class="annottext">LocalAddress
+</span><a href="#local-6989586621679110292"><span class="hs-identifier hs-var">address</span></a></span><span> </span><span class="annot"><span class="annottext">ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+forall {k} (vNumber :: k).
+ProtocolTimeLimits (Handshake vNumber Term)
+</span><span class="hs-identifier hs-var">noTimeLimitsHandshake</span></span><span> </span><span class="annot"><span class="annottext">OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext LocalAddress)
+  (ResponderContext LocalAddress)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110288"><span class="hs-identifier hs-var">app</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="System.Metrics.Configuration.html#RemoteSocket"><span class="hs-identifier hs-type">RemoteSocket</span></a></span><span> </span><span id="local-6989586621679110310"><span class="annot"><span class="annottext">Host
+</span><a href="#local-6989586621679110310"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621679110311"><span class="annot"><span class="annottext">Port
+</span><a href="#local-6989586621679110311"><span class="hs-identifier hs-var">port</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621679110312"><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621679110312"><span class="hs-identifier hs-var">listenAddress</span></a></span></span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#%3A"><span class="hs-glyph hs-type">:</span></a></span><span class="annot"><span class="annottext">[AddrInfo]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe AddrInfo -&gt; Maybe FilePath -&gt; Maybe FilePath -&gt; IO [AddrInfo]
+</span><span class="hs-identifier hs-var">Socket.getAddrInfo</span></span><span> </span><span class="annot"><span class="annottext">Maybe AddrInfo
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath -&gt; Maybe FilePath
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; Maybe FilePath) -&gt; FilePath -&gt; Maybe FilePath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Host -&gt; FilePath
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Host
+</span><a href="#local-6989586621679110310"><span class="hs-identifier hs-var">host</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath -&gt; Maybe FilePath
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(FilePath -&gt; Maybe FilePath) -&gt; FilePath -&gt; Maybe FilePath
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Port -&gt; FilePath
+forall a. Show a =&gt; a -&gt; FilePath
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Port
+</span><a href="#local-6989586621679110311"><span class="hs-identifier hs-var">port</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110318"><span class="annot"><span class="annottext">app :: OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext SockAddr)
+  (ResponderContext SockAddr)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110318"><span class="hs-identifier hs-var hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (ResponderContext SockAddr
+    -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext SockAddr -&gt; IO ())
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext SockAddr)
+     (ResponderContext SockAddr)
+     ByteString
+     IO
+     Void
+     ()
+forall addr.
+AcceptorConfiguration
+-&gt; (ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext addr -&gt; IO ())
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorApp"><span class="hs-identifier hs-var">acceptorApp</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110278"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr)
+-&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110279"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">(ResponderContext (Either LocalAddress SockAddr)
+ -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext SockAddr
+    -&gt; ResponderContext (Either LocalAddress SockAddr))
+-&gt; ResponderContext SockAddr
+-&gt; IO (Store, TVar MetricsLocalStore)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(SockAddr -&gt; Either LocalAddress SockAddr)
+-&gt; ResponderContext SockAddr
+-&gt; ResponderContext (Either LocalAddress SockAddr)
+forall a b. (a -&gt; b) -&gt; ResponderContext a -&gt; ResponderContext b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">SockAddr -&gt; Either LocalAddress SockAddr
+forall a b. b -&gt; Either a b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Right"><span class="hs-identifier hs-var">Right</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr) -&gt; IO ()
+</span><a href="#local-6989586621679110280"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">(ResponderContext (Either LocalAddress SockAddr) -&gt; IO ())
+-&gt; (ResponderContext SockAddr
+    -&gt; ResponderContext (Either LocalAddress SockAddr))
+-&gt; ResponderContext SockAddr
+-&gt; IO ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(SockAddr -&gt; Either LocalAddress SockAddr)
+-&gt; ResponderContext SockAddr
+-&gt; ResponderContext (Either LocalAddress SockAddr)
+forall a b. (a -&gt; b) -&gt; ResponderContext a -&gt; ResponderContext b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">SockAddr -&gt; Either LocalAddress SockAddr
+forall a b. b -&gt; Either a b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Right"><span class="hs-identifier hs-var">Right</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>          </span><span id="local-6989586621679110319"><span class="annot"><span class="annottext">snocket :: SocketSnocket
+</span><a href="#local-6989586621679110319"><span class="hs-identifier hs-var hs-var">snocket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IOManager -&gt; SocketSnocket
+</span><span class="hs-identifier hs-var">socketSnocket</span></span><span> </span><span class="annot"><span class="annottext">IOManager
+</span><a href="#local-6989586621679110281"><span class="hs-identifier hs-var">iocp</span></a></span><span>
+</span><span id="line-74"></span><span>          </span><span id="local-6989586621679110320"><span class="annot"><span class="annottext">address :: SockAddr
+</span><a href="#local-6989586621679110320"><span class="hs-identifier hs-var hs-var">address</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AddrInfo -&gt; SockAddr
+</span><span class="hs-identifier hs-var">Socket.addrAddress</span></span><span> </span><span class="annot"><span class="annottext">AddrInfo
+</span><a href="#local-6989586621679110312"><span class="hs-identifier hs-var">listenAddress</span></a></span><span>
+</span><span id="line-75"></span><span>          </span><span id="local-6989586621679110322"><span class="annot"><span class="annottext">configureSocket :: Socket -&gt; p -&gt; IO ()
+</span><a href="#local-6989586621679110322"><span class="hs-identifier hs-var hs-var">configureSocket</span></a></span></span><span> </span><span id="local-6989586621679110323"><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621679110323"><span class="hs-identifier hs-var">fd</span></a></span></span><span> </span><span id="local-6989586621679110324"><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621679110324"><span class="hs-identifier hs-var">_addr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><span class="annottext">Socket -&gt; SocketOption -&gt; Int -&gt; IO ()
+</span><span class="hs-identifier hs-var">Socket.setSocketOption</span></span><span> </span><span class="annot"><span class="annottext">Socket
+</span><a href="#local-6989586621679110323"><span class="hs-identifier hs-var">fd</span></a></span><span> </span><span class="annot"><span class="annottext">SocketOption
+</span><span class="hs-identifier hs-var">Socket.ReuseAddr</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">SocketSnocket
+-&gt; MakeBearer IO Socket
+-&gt; (Socket -&gt; SockAddr -&gt; IO ())
+-&gt; SockAddr
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext SockAddr)
+     (ResponderContext SockAddr)
+     ByteString
+     IO
+     Void
+     ()
+-&gt; IO Void
+forall addr fd.
+Ord addr =&gt;
+Snocket IO fd addr
+-&gt; MakeBearer IO fd
+-&gt; (fd -&gt; addr -&gt; IO ())
+-&gt; addr
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+-&gt; IO Void
+</span><a href="System.Metrics.Network.Acceptor.html#doListenToForwarder"><span class="hs-identifier hs-var">doListenToForwarder</span></a></span><span> </span><span class="annot"><span class="annottext">SocketSnocket
+</span><a href="#local-6989586621679110319"><span class="hs-identifier hs-var">snocket</span></a></span><span> </span><span class="annot"><span class="annottext">MakeBearer IO Socket
+</span><span class="hs-identifier hs-var">makeSocketBearer</span></span><span> </span><span class="annot"><span class="annottext">Socket -&gt; SockAddr -&gt; IO ()
+forall {p}. Socket -&gt; p -&gt; IO ()
+</span><a href="#local-6989586621679110322"><span class="hs-identifier hs-var">configureSocket</span></a></span><span> </span><span class="annot"><span class="annottext">SockAddr
+</span><a href="#local-6989586621679110320"><span class="hs-identifier hs-var">address</span></a></span><span> </span><span class="annot"><span class="annottext">ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+forall {k} (vNumber :: k).
+ProtocolTimeLimits (Handshake vNumber Term)
+</span><span class="hs-identifier hs-var">timeLimitsHandshake</span></span><span> </span><span class="annot"><span class="annottext">OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext SockAddr)
+  (ResponderContext SockAddr)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110318"><span class="hs-identifier hs-var">app</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621679110073"><span id="local-6989586621679110074"><span class="annot"><a href="System.Metrics.Network.Acceptor.html#doListenToForwarder"><span class="hs-identifier hs-type">doListenToForwarder</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Snocket</span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110074"><span class="hs-identifier hs-type">fd</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MakeBearer</span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110074"><span class="hs-identifier hs-type">fd</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110074"><span class="hs-identifier hs-type">fd</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-comment">-- ^ configure socket</span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProtocolTimeLimits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Handshake</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UnversionedProtocol</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Term</span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OuroborosApplication</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ResponderMode</span></span><span>
+</span><span id="line-87"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MinimalInitiatorContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110073"><span class="hs-identifier hs-type">addr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>                          </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#ByteString"><span class="hs-identifier hs-type">LBS.ByteString</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span></span></span><span>
+</span><span id="line-91"></span><span id="doListenToForwarder"><span class="annot"><span class="annottext">doListenToForwarder :: forall addr fd.
+Ord addr =&gt;
+Snocket IO fd addr
+-&gt; MakeBearer IO fd
+-&gt; (fd -&gt; addr -&gt; IO ())
+-&gt; addr
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+-&gt; IO Void
+</span><a href="System.Metrics.Network.Acceptor.html#doListenToForwarder"><span class="hs-identifier hs-var hs-var">doListenToForwarder</span></a></span></span><span> </span><span id="local-6989586621679110349"><span class="annot"><span class="annottext">Snocket IO fd addr
+</span><a href="#local-6989586621679110349"><span class="hs-identifier hs-var">snocket</span></a></span></span><span> </span><span id="local-6989586621679110350"><span class="annot"><span class="annottext">MakeBearer IO fd
+</span><a href="#local-6989586621679110350"><span class="hs-identifier hs-var">makeBearer</span></a></span></span><span> </span><span id="local-6989586621679110351"><span class="annot"><span class="annottext">fd -&gt; addr -&gt; IO ()
+</span><a href="#local-6989586621679110351"><span class="hs-identifier hs-var">configureSocket</span></a></span></span><span> </span><span id="local-6989586621679110352"><span class="annot"><span class="annottext">addr
+</span><a href="#local-6989586621679110352"><span class="hs-identifier hs-var">address</span></a></span></span><span> </span><span id="local-6989586621679110353"><span class="annot"><span class="annottext">ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+</span><a href="#local-6989586621679110353"><span class="hs-identifier hs-var">timeLimits</span></a></span></span><span> </span><span id="local-6989586621679110354"><span class="annot"><span class="annottext">OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext addr)
+  (ResponderContext addr)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110354"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621679110355"><span class="annot"><span class="annottext">NetworkMutableState addr
+</span><a href="#local-6989586621679110355"><span class="hs-identifier hs-var">networkState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (NetworkMutableState addr)
+forall addr. IO (NetworkMutableState addr)
+</span><span class="hs-identifier hs-var">newNetworkMutableState</span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="annottext">Async ()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO (Async ())
+forall a. IO a -&gt; IO (Async a)
+</span><span class="hs-identifier hs-var">async</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO (Async ())) -&gt; IO () -&gt; IO (Async ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NetworkMutableState addr -&gt; IO ()
+forall addr. NetworkMutableState addr -&gt; IO ()
+</span><span class="hs-identifier hs-var">cleanNetworkMutableState</span></span><span> </span><span class="annot"><span class="annottext">NetworkMutableState addr
+</span><a href="#local-6989586621679110355"><span class="hs-identifier hs-var">networkState</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="annottext">Snocket IO fd addr
+-&gt; MakeBearer IO fd
+-&gt; (fd -&gt; addr -&gt; IO ())
+-&gt; NetworkServerTracers addr UnversionedProtocol
+-&gt; NetworkMutableState addr
+-&gt; AcceptedConnectionsLimit
+-&gt; addr
+-&gt; Codec
+     (Handshake UnversionedProtocol Term)
+     DeserialiseFailure
+     IO
+     ByteString
+-&gt; ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+-&gt; VersionDataCodec
+     Term UnversionedProtocol UnversionedProtocolData
+-&gt; HandshakeCallbacks UnversionedProtocolData
+-&gt; Versions
+     UnversionedProtocol
+     UnversionedProtocolData
+     (SomeResponderApplication addr ByteString IO ())
+-&gt; ErrorPolicies
+-&gt; (addr -&gt; Async Void -&gt; IO Void)
+-&gt; IO Void
+forall vNumber vData t fd addr b.
+(Ord vNumber, Typeable vNumber, Show vNumber, Ord addr) =&gt;
+Snocket IO fd addr
+-&gt; MakeBearer IO fd
+-&gt; (fd -&gt; addr -&gt; IO ())
+-&gt; NetworkServerTracers addr vNumber
+-&gt; NetworkMutableState addr
+-&gt; AcceptedConnectionsLimit
+-&gt; addr
+-&gt; Codec (Handshake vNumber Term) DeserialiseFailure IO ByteString
+-&gt; ProtocolTimeLimits (Handshake vNumber Term)
+-&gt; VersionDataCodec Term vNumber vData
+-&gt; HandshakeCallbacks vData
+-&gt; Versions
+     vNumber vData (SomeResponderApplication addr ByteString IO b)
+-&gt; ErrorPolicies
+-&gt; (addr -&gt; Async Void -&gt; IO t)
+-&gt; IO t
+</span><span class="hs-identifier hs-var">withServerNode</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">Snocket IO fd addr
+</span><a href="#local-6989586621679110349"><span class="hs-identifier hs-var">snocket</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">MakeBearer IO fd
+</span><a href="#local-6989586621679110350"><span class="hs-identifier hs-var">makeBearer</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">fd -&gt; addr -&gt; IO ()
+</span><a href="#local-6989586621679110351"><span class="hs-identifier hs-var">configureSocket</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">NetworkServerTracers addr UnversionedProtocol
+forall addr vNumber. NetworkServerTracers addr vNumber
+</span><span class="hs-identifier hs-var">nullNetworkServerTracers</span></span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">NetworkMutableState addr
+</span><a href="#local-6989586621679110355"><span class="hs-identifier hs-var">networkState</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; DiffTime -&gt; AcceptedConnectionsLimit
+</span><span class="hs-identifier hs-var">AcceptedConnectionsLimit</span></span><span> </span><span class="annot"><span class="annottext">Word32
+forall a. Bounded a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#maxBound"><span class="hs-identifier hs-var">maxBound</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+forall a. Bounded a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#maxBound"><span class="hs-identifier hs-var">maxBound</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">addr
+</span><a href="#local-6989586621679110352"><span class="hs-identifier hs-var">address</span></a></span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">Codec
+  (Handshake UnversionedProtocol Term)
+  DeserialiseFailure
+  IO
+  ByteString
+forall (m :: * -&gt; *).
+MonadST m =&gt;
+Codec
+  (Handshake UnversionedProtocol Term)
+  DeserialiseFailure
+  m
+  ByteString
+</span><span class="hs-identifier hs-var">unversionedHandshakeCodec</span></span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">ProtocolTimeLimits (Handshake UnversionedProtocol Term)
+</span><a href="#local-6989586621679110353"><span class="hs-identifier hs-var">timeLimits</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">VersionDataCodec Term UnversionedProtocol UnversionedProtocolData
+</span><span class="hs-identifier hs-var">unversionedProtocolDataCodec</span></span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(UnversionedProtocolData
+ -&gt; UnversionedProtocolData -&gt; Accept UnversionedProtocolData)
+-&gt; (UnversionedProtocolData -&gt; Bool)
+-&gt; HandshakeCallbacks UnversionedProtocolData
+forall vData.
+(vData -&gt; vData -&gt; Accept vData)
+-&gt; (vData -&gt; Bool) -&gt; HandshakeCallbacks vData
+</span><span class="hs-identifier hs-var">HandshakeCallbacks</span></span><span> </span><span class="annot"><span class="annottext">UnversionedProtocolData
+-&gt; UnversionedProtocolData -&gt; Accept UnversionedProtocolData
+forall v. Acceptable v =&gt; v -&gt; v -&gt; Accept v
+</span><span class="hs-identifier hs-var">acceptableVersion</span></span><span> </span><span class="annot"><span class="annottext">UnversionedProtocolData -&gt; Bool
+forall v. Queryable v =&gt; v -&gt; Bool
+</span><span class="hs-identifier hs-var">queryVersion</span></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnversionedProtocol
+-&gt; UnversionedProtocolData
+-&gt; SomeResponderApplication addr ByteString IO ()
+-&gt; Versions
+     UnversionedProtocol
+     UnversionedProtocolData
+     (SomeResponderApplication addr ByteString IO ())
+forall vNum vData r. vNum -&gt; vData -&gt; r -&gt; Versions vNum vData r
+</span><span class="hs-identifier hs-var">simpleSingletonVersions</span></span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">UnversionedProtocol
+</span><span class="hs-identifier hs-var">UnversionedProtocol</span></span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">UnversionedProtocolData
+</span><span class="hs-identifier hs-var">UnversionedProtocolData</span></span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext addr)
+  (ResponderContext addr)
+  ByteString
+  IO
+  Void
+  ()
+-&gt; SomeResponderApplication addr ByteString IO ()
+forall (appType :: MuxMode) addr bytes (m :: * -&gt; *) a b.
+(HasResponder appType ~ 'True) =&gt;
+OuroborosApplicationWithMinimalCtx appType addr bytes m a b
+-&gt; SomeResponderApplication addr bytes m b
+</span><span class="hs-identifier hs-var">SomeResponderApplication</span></span><span> </span><span class="annot"><span class="annottext">OuroborosApplication
+  'ResponderMode
+  (MinimalInitiatorContext addr)
+  (ResponderContext addr)
+  ByteString
+  IO
+  Void
+  ()
+</span><a href="#local-6989586621679110354"><span class="hs-identifier hs-var">app</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="annottext">ErrorPolicies
+</span><span class="hs-identifier hs-var">nullErrorPolicies</span></span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="annottext">((addr -&gt; Async Void -&gt; IO Void) -&gt; IO Void)
+-&gt; (addr -&gt; Async Void -&gt; IO Void) -&gt; IO Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">addr
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679110362"><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679110362"><span class="hs-identifier hs-var">serverAsync</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Async Void -&gt; IO Void
+forall a. Async a -&gt; IO a
+</span><span class="hs-identifier hs-var">wait</span></span><span> </span><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679110362"><span class="hs-identifier hs-var">serverAsync</span></a></span><span> </span><span class="hs-comment">-- Block until async exception.</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span id="local-6989586621679110050"><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptorApp"><span class="hs-identifier hs-type">acceptorApp</span></a></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110050"><span class="hs-identifier hs-type">addr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110050"><span class="hs-identifier hs-type">addr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OuroborosApplication</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ResponderMode</span></span><span>
+</span><span id="line-118"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MinimalInitiatorContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110050"><span class="hs-identifier hs-type">addr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ResponderContext</span></span><span> </span><span class="annot"><a href="#local-6989586621679110050"><span class="hs-identifier hs-type">addr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>                          </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#ByteString"><span class="hs-identifier hs-type">LBS.ByteString</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-121"></span><span id="acceptorApp"><span class="annot"><span class="annottext">acceptorApp :: forall addr.
+AcceptorConfiguration
+-&gt; (ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext addr -&gt; IO ())
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorApp"><span class="hs-identifier hs-var hs-var">acceptorApp</span></a></span></span><span> </span><span id="local-6989586621679110367"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110367"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110368"><span class="annot"><span class="annottext">ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110368"><span class="hs-identifier hs-var">mkStores</span></a></span></span><span> </span><span id="local-6989586621679110369"><span class="annot"><span class="annottext">ResponderContext addr -&gt; IO ()
+</span><a href="#local-6989586621679110369"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-122"></span><span>  </span><span class="annot"><span class="annottext">[MiniProtocol
+   'ResponderMode
+   (MinimalInitiatorContext addr)
+   (ResponderContext addr)
+   ByteString
+   IO
+   Void
+   ()]
+-&gt; OuroborosApplication
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+forall (mode :: MuxMode) initiatorCtx responderCtx bytes
+       (m :: * -&gt; *) a b.
+[MiniProtocol mode initiatorCtx responderCtx bytes m a b]
+-&gt; OuroborosApplication mode initiatorCtx responderCtx bytes m a b
+</span><span class="hs-identifier hs-var">OuroborosApplication</span></span><span> </span><span class="hs-special">[</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MiniProtocol</span></span><span>
+</span><span id="line-124"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">miniProtocolNum :: MiniProtocolNum
+</span><span class="hs-identifier hs-var">miniProtocolNum</span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Port -&gt; MiniProtocolNum
+</span><span class="hs-identifier hs-var">MiniProtocolNum</span></span><span> </span><span class="annot"><span class="annottext">Port
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-125"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">miniProtocolLimits :: MiniProtocolLimits
+</span><span class="hs-identifier hs-var">miniProtocolLimits</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MiniProtocolLimits</span></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">maximumIngressQueue :: Int
+</span><span class="hs-identifier hs-var">maximumIngressQueue</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+forall a. Bounded a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#maxBound"><span class="hs-identifier hs-var">maxBound</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-126"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">miniProtocolRun :: RunMiniProtocol
+  'ResponderMode
+  (MinimalInitiatorContext addr)
+  (ResponderContext addr)
+  ByteString
+  IO
+  Void
+  ()
+</span><span class="hs-identifier hs-var">miniProtocolRun</span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext addr -&gt; IO ())
+-&gt; RunMiniProtocol
+     'ResponderMode
+     (MinimalInitiatorContext addr)
+     (ResponderContext addr)
+     ByteString
+     IO
+     Void
+     ()
+forall responderCtx initiatorCtx.
+AcceptorConfiguration
+-&gt; (responderCtx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (responderCtx -&gt; IO ())
+-&gt; RunMiniProtocol
+     'ResponderMode initiatorCtx responderCtx ByteString IO Void ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsResp"><span class="hs-identifier hs-var">acceptEKGMetricsResp</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110367"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">ResponderContext addr -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110368"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">ResponderContext addr -&gt; IO ()
+</span><a href="#local-6989586621679110369"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span>
+</span><span id="line-127"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span id="local-6989586621679110148"><span id="local-6989586621679110149"><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsResp"><span class="hs-identifier hs-type">acceptEKGMetricsResp</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110148"><span class="hs-identifier hs-type">responderCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110148"><span class="hs-identifier hs-type">responderCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RunMiniProtocol</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ResponderMode</span></span><span> </span><span class="annot"><a href="#local-6989586621679110149"><span class="hs-identifier hs-type">initiatorCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110148"><span class="hs-identifier hs-type">responderCtx</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#ByteString"><span class="hs-identifier hs-type">LBS.ByteString</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-135"></span><span id="acceptEKGMetricsResp"><span class="annot"><span class="annottext">acceptEKGMetricsResp :: forall responderCtx initiatorCtx.
+AcceptorConfiguration
+-&gt; (responderCtx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (responderCtx -&gt; IO ())
+-&gt; RunMiniProtocol
+     'ResponderMode initiatorCtx responderCtx ByteString IO Void ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsResp"><span class="hs-identifier hs-var hs-var">acceptEKGMetricsResp</span></a></span></span><span> </span><span id="local-6989586621679110375"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110375"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110376"><span class="annot"><span class="annottext">responderCtx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110376"><span class="hs-identifier hs-var">mkStores</span></a></span></span><span> </span><span id="local-6989586621679110377"><span class="annot"><span class="annottext">responderCtx -&gt; IO ()
+</span><a href="#local-6989586621679110377"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><span class="annottext">MiniProtocolCb responderCtx ByteString IO ()
+-&gt; RunMiniProtocol
+     'ResponderMode initiatorCtx responderCtx ByteString IO Void ()
+forall responderCtx bytes (m :: * -&gt; *) b initiatorCtx.
+MiniProtocolCb responderCtx bytes m b
+-&gt; RunMiniProtocol
+     'ResponderMode initiatorCtx responderCtx bytes m Void b
+</span><span class="hs-identifier hs-var">ResponderProtocolOnly</span></span><span> </span><span class="annot"><span class="annottext">(MiniProtocolCb responderCtx ByteString IO ()
+ -&gt; RunMiniProtocol
+      'ResponderMode initiatorCtx responderCtx ByteString IO Void ())
+-&gt; MiniProtocolCb responderCtx ByteString IO ()
+-&gt; RunMiniProtocol
+     'ResponderMode initiatorCtx responderCtx ByteString IO Void ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (responderCtx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (responderCtx -&gt; IO ())
+-&gt; MiniProtocolCb responderCtx ByteString IO ()
+forall ctx.
+AcceptorConfiguration
+-&gt; (ctx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ctx -&gt; IO ())
+-&gt; MiniProtocolCb ctx ByteString IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#runPeerWithStores"><span class="hs-identifier hs-var">runPeerWithStores</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110375"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">responderCtx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110376"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">responderCtx -&gt; IO ()
+</span><a href="#local-6989586621679110377"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span id="local-6989586621679110159"><span id="local-6989586621679110161"><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsInit"><span class="hs-identifier hs-type">acceptEKGMetricsInit</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110159"><span class="hs-identifier hs-type">initiatorCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110159"><span class="hs-identifier hs-type">initiatorCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RunMiniProtocol</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">InitiatorMode</span></span><span> </span><span class="annot"><a href="#local-6989586621679110159"><span class="hs-identifier hs-type">initiatorCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679110161"><span class="hs-identifier hs-type">responderCtx</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#ByteString"><span class="hs-identifier hs-type">LBS.ByteString</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Void"><span class="hs-identifier hs-type">Void</span></a></span></span></span><span>
+</span><span id="line-143"></span><span id="acceptEKGMetricsInit"><span class="annot"><span class="annottext">acceptEKGMetricsInit :: forall initiatorCtx responderCtx.
+AcceptorConfiguration
+-&gt; (initiatorCtx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (initiatorCtx -&gt; IO ())
+-&gt; RunMiniProtocol
+     'InitiatorMode initiatorCtx responderCtx ByteString IO () Void
+</span><a href="System.Metrics.Network.Acceptor.html#acceptEKGMetricsInit"><span class="hs-identifier hs-var hs-var">acceptEKGMetricsInit</span></a></span></span><span> </span><span id="local-6989586621679110380"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110380"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110381"><span class="annot"><span class="annottext">initiatorCtx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110381"><span class="hs-identifier hs-var">mkStores</span></a></span></span><span> </span><span id="local-6989586621679110382"><span class="annot"><span class="annottext">initiatorCtx -&gt; IO ()
+</span><a href="#local-6989586621679110382"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><span class="annottext">MiniProtocolCb initiatorCtx ByteString IO ()
+-&gt; RunMiniProtocol
+     'InitiatorMode initiatorCtx responderCtx ByteString IO () Void
+forall initiatorCtx bytes (m :: * -&gt; *) a responderCtx.
+MiniProtocolCb initiatorCtx bytes m a
+-&gt; RunMiniProtocol
+     'InitiatorMode initiatorCtx responderCtx bytes m a Void
+</span><span class="hs-identifier hs-var">InitiatorProtocolOnly</span></span><span> </span><span class="annot"><span class="annottext">(MiniProtocolCb initiatorCtx ByteString IO ()
+ -&gt; RunMiniProtocol
+      'InitiatorMode initiatorCtx responderCtx ByteString IO () Void)
+-&gt; MiniProtocolCb initiatorCtx ByteString IO ()
+-&gt; RunMiniProtocol
+     'InitiatorMode initiatorCtx responderCtx ByteString IO () Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (initiatorCtx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (initiatorCtx -&gt; IO ())
+-&gt; MiniProtocolCb initiatorCtx ByteString IO ()
+forall ctx.
+AcceptorConfiguration
+-&gt; (ctx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ctx -&gt; IO ())
+-&gt; MiniProtocolCb ctx ByteString IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#runPeerWithStores"><span class="hs-identifier hs-var">runPeerWithStores</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110380"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">initiatorCtx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110381"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">initiatorCtx -&gt; IO ()
+</span><a href="#local-6989586621679110382"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span id="local-6989586621679110158"><span class="annot"><a href="System.Metrics.Network.Acceptor.html#runPeerWithStores"><span class="hs-identifier hs-type">runPeerWithStores</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110158"><span class="hs-identifier hs-type">ctx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679110158"><span class="hs-identifier hs-type">ctx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MiniProtocolCb</span></span><span> </span><span class="annot"><a href="#local-6989586621679110158"><span class="hs-identifier hs-type">ctx</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#ByteString"><span class="hs-identifier hs-type">LBS.ByteString</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-151"></span><span id="runPeerWithStores"><span class="annot"><span class="annottext">runPeerWithStores :: forall ctx.
+AcceptorConfiguration
+-&gt; (ctx -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ctx -&gt; IO ())
+-&gt; MiniProtocolCb ctx ByteString IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#runPeerWithStores"><span class="hs-identifier hs-var hs-var">runPeerWithStores</span></a></span></span><span> </span><span id="local-6989586621679110403"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110403"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110404"><span class="annot"><span class="annottext">ctx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110404"><span class="hs-identifier hs-var">mkStores</span></a></span></span><span> </span><span id="local-6989586621679110405"><span class="annot"><span class="annottext">ctx -&gt; IO ()
+</span><a href="#local-6989586621679110405"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">(ctx -&gt; Channel IO ByteString -&gt; IO ((), Maybe ByteString))
+-&gt; MiniProtocolCb ctx ByteString IO ()
+forall ctx (m :: * -&gt; *) bytes a.
+(ctx -&gt; Channel m bytes -&gt; m (a, Maybe bytes))
+-&gt; MiniProtocolCb ctx bytes m a
+</span><span class="hs-identifier hs-var">MiniProtocolCb</span></span><span> </span><span class="annot"><span class="annottext">((ctx -&gt; Channel IO ByteString -&gt; IO ((), Maybe ByteString))
+ -&gt; MiniProtocolCb ctx ByteString IO ())
+-&gt; (ctx -&gt; Channel IO ByteString -&gt; IO ((), Maybe ByteString))
+-&gt; MiniProtocolCb ctx ByteString IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679110407"><span class="annot"><span class="annottext">ctx
+</span><a href="#local-6989586621679110407"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span id="local-6989586621679110408"><span class="annot"><span class="annottext">Channel IO ByteString
+</span><a href="#local-6989586621679110408"><span class="hs-identifier hs-var">channel</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-153"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679110409"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110409"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679110410"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110410"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ctx -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110404"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">ctx
+</span><a href="#local-6989586621679110407"><span class="hs-identifier hs-var">ctx</span></a></span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="annottext">Tracer IO (TraceSendRecv (EKGForward Request Response))
+-&gt; Codec
+     (EKGForward Request Response) DeserialiseFailure IO ByteString
+-&gt; Channel IO ByteString
+-&gt; Peer (EKGForward Request Response) 'AsClient 'StIdle IO ()
+-&gt; IO ((), Maybe ByteString)
+forall ps (st :: ps) (pr :: PeerRole) failure bytes (m :: * -&gt; *)
+       a.
+(MonadThrow m, Show failure,
+ forall (st' :: ps). Show (ClientHasAgency st'),
+ forall (st' :: ps). Show (ServerHasAgency st'), ShowProxy ps) =&gt;
+Tracer m (TraceSendRecv ps)
+-&gt; Codec ps failure m bytes
+-&gt; Channel m bytes
+-&gt; Peer ps pr st m a
+-&gt; m (a, Maybe bytes)
+</span><span class="hs-identifier hs-var">runPeer</span></span><span>
+</span><span id="line-155"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; Tracer IO (TraceSendRecv (EKGForward Request Response))
+</span><a href="System.Metrics.Configuration.html#acceptorTracer"><span class="hs-identifier hs-var">acceptorTracer</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110403"><span class="hs-identifier hs-var">config</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Request -&gt; Encoding)
+-&gt; (forall s. Decoder s Request)
+-&gt; (Response -&gt; Encoding)
+-&gt; (forall s. Decoder s Response)
+-&gt; Codec
+     (EKGForward Request Response) DeserialiseFailure IO ByteString
+forall req resp (m :: * -&gt; *).
+MonadST m =&gt;
+(req -&gt; Encoding)
+-&gt; (forall s. Decoder s req)
+-&gt; (resp -&gt; Encoding)
+-&gt; (forall s. Decoder s resp)
+-&gt; Codec (EKGForward req resp) DeserialiseFailure m ByteString
+</span><a href="System.Metrics.Protocol.Codec.html#codecEKGForward"><span class="hs-identifier hs-var">Acceptor.codecEKGForward</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Encoding
+forall a. Serialise a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encode</span></span><span> </span><span class="annot"><span class="annottext">Decoder s Request
+forall s. Decoder s Request
+forall a s. Serialise a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">CBOR.decode</span></span><span>
+</span><span id="line-157"></span><span>                                </span><span class="annot"><span class="annottext">Response -&gt; Encoding
+forall a. Serialise a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encode</span></span><span> </span><span class="annot"><span class="annottext">Decoder s Response
+forall s. Decoder s Response
+forall a s. Serialise a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">CBOR.decode</span></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>      </span><span class="annot"><span class="annottext">Channel IO ByteString
+</span><a href="#local-6989586621679110408"><span class="hs-identifier hs-var">channel</span></a></span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EKGAcceptor Request Response IO ()
+-&gt; Peer (EKGForward Request Response) 'AsClient 'StIdle IO ()
+forall (m :: * -&gt; *) req resp a.
+Monad m =&gt;
+EKGAcceptor req resp m a
+-&gt; Peer (EKGForward req resp) 'AsClient 'StIdle m a
+</span><a href="System.Metrics.Protocol.Acceptor.html#ekgAcceptorPeer"><span class="hs-identifier hs-var">Acceptor.ekgAcceptorPeer</span></a></span><span> </span><span class="annot"><span class="annottext">(EKGAcceptor Request Response IO ()
+ -&gt; Peer (EKGForward Request Response) 'AsClient 'StIdle IO ())
+-&gt; EKGAcceptor Request Response IO ()
+-&gt; Peer (EKGForward Request Response) 'AsClient 'StIdle IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+-&gt; AcceptorConfiguration
+-&gt; Store
+-&gt; TVar MetricsLocalStore
+-&gt; EKGAcceptor Request Response IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-var">acceptorActions</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110403"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110409"><span class="hs-identifier hs-var">ekgStore</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110410"><span class="hs-identifier hs-var">metricsStore</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-160"></span><span>    </span><span class="annot"><span class="annottext">IO ((), Maybe ByteString) -&gt; IO () -&gt; IO ((), Maybe ByteString)
+forall a b. IO a -&gt; IO b -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.Base.html#finally"><span class="hs-operator hs-var">`finally`</span></a></span><span> </span><span class="annot"><span class="annottext">ctx -&gt; IO ()
+</span><a href="#local-6989586621679110405"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">ctx
+</span><a href="#local-6989586621679110407"><span class="hs-identifier hs-var">ctx</span></a></span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-type">acceptorActions</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span>
+</span><span id="line-166"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span>
+</span><span id="line-167"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.Protocol.Acceptor.html#EKGAcceptor"><span class="hs-identifier hs-type">Acceptor.EKGAcceptor</span></a></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier hs-type">Request</span></a></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span id="acceptorActions"><span class="annot"><span class="annottext">acceptorActions :: Bool
+-&gt; AcceptorConfiguration
+-&gt; Store
+-&gt; TVar MetricsLocalStore
+-&gt; EKGAcceptor Request Response IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-var hs-var">acceptorActions</span></a></span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span id="local-6989586621679110419"><span class="annot"><span class="annottext">config :: AcceptorConfiguration
+</span><a href="#local-6989586621679110419"><span class="hs-identifier hs-var">config</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span class="hs-special">{</span><span id="local-6989586621679110421"><span id="local-6989586621679110422"><span id="local-6989586621679110423"><span id="local-6989586621679110424"><span id="local-6989586621679110425"><span class="annot"><span class="annottext">TVar Bool
+NominalDiffTime
+Request
+Tracer IO (TraceSendRecv (EKGForward Request Response))
+HowToConnect
+forwarderEndpoint :: AcceptorConfiguration -&gt; HowToConnect
+acceptorTracer :: AcceptorConfiguration
+-&gt; Tracer IO (TraceSendRecv (EKGForward Request Response))
+acceptorTracer :: Tracer IO (TraceSendRecv (EKGForward Request Response))
+forwarderEndpoint :: HowToConnect
+requestFrequency :: NominalDiffTime
+whatToRequest :: Request
+shouldWeStop :: TVar Bool
+requestFrequency :: AcceptorConfiguration -&gt; NominalDiffTime
+whatToRequest :: AcceptorConfiguration -&gt; Request
+shouldWeStop :: AcceptorConfiguration -&gt; TVar Bool
+</span><a href="System.Metrics.Configuration.html#forwarderEndpoint"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621679110429"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110429"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span id="local-6989586621679110430"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110430"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>  </span><span class="annot"><span class="annottext">Request
+-&gt; (Response -&gt; IO (EKGAcceptor Request Response IO ()))
+-&gt; EKGAcceptor Request Response IO ()
+forall req resp (m :: * -&gt; *) a.
+req
+-&gt; (resp -&gt; m (EKGAcceptor req resp m a))
+-&gt; EKGAcceptor req resp m a
+</span><a href="System.Metrics.Protocol.Acceptor.html#SendMsgReq"><span class="hs-identifier hs-var">Acceptor.SendMsgReq</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621679110424"><span class="hs-identifier hs-var">whatToRequest</span></a></span><span> </span><span class="annot"><span class="annottext">((Response -&gt; IO (EKGAcceptor Request Response IO ()))
+ -&gt; EKGAcceptor Request Response IO ())
+-&gt; (Response -&gt; IO (EKGAcceptor Request Response IO ()))
+-&gt; EKGAcceptor Request Response IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679110432"><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621679110432"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-170"></span><span>    </span><span class="annot"><span class="annottext">Response -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier hs-var">storeMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621679110432"><span class="hs-identifier hs-var">response</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110429"><span class="hs-identifier hs-var">ekgStore</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110430"><span class="hs-identifier hs-var">metricsStore</span></a></span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; IO ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.IO.html#threadDelay"><span class="hs-identifier hs-var">threadDelay</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; IO ()) -&gt; Int -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime -&gt; Int
+</span><a href="#local-6989586621679110433"><span class="hs-identifier hs-var">toMicroSecs</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
+</span><a href="#local-6989586621679110423"><span class="hs-identifier hs-var">requestFrequency</span></a></span><span>
+</span><span id="line-172"></span><span>    </span><span id="local-6989586621679110434"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679110434"><span class="hs-identifier hs-var">weAreDone</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar Bool -&gt; IO Bool
+forall a. TVar a -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#readTVarIO"><span class="hs-identifier hs-var">readTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621679110425"><span class="hs-identifier hs-var">shouldWeStop</span></a></span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679110434"><span class="hs-identifier hs-var">weAreDone</span></a></span><span>
+</span><span id="line-174"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">EKGAcceptor Request Response IO ()
+-&gt; IO (EKGAcceptor Request Response IO ())
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(EKGAcceptor Request Response IO ()
+ -&gt; IO (EKGAcceptor Request Response IO ()))
+-&gt; EKGAcceptor Request Response IO ()
+-&gt; IO (EKGAcceptor Request Response IO ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+-&gt; AcceptorConfiguration
+-&gt; Store
+-&gt; TVar MetricsLocalStore
+-&gt; EKGAcceptor Request Response IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-var">acceptorActions</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110419"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110429"><span class="hs-identifier hs-var">ekgStore</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110430"><span class="hs-identifier hs-var">metricsStore</span></a></span><span>
+</span><span id="line-175"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">EKGAcceptor Request Response IO ()
+-&gt; IO (EKGAcceptor Request Response IO ())
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(EKGAcceptor Request Response IO ()
+ -&gt; IO (EKGAcceptor Request Response IO ()))
+-&gt; EKGAcceptor Request Response IO ()
+-&gt; IO (EKGAcceptor Request Response IO ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+-&gt; AcceptorConfiguration
+-&gt; Store
+-&gt; TVar MetricsLocalStore
+-&gt; EKGAcceptor Request Response IO ()
+</span><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-var">acceptorActions</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>  </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110419"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110429"><span class="hs-identifier hs-var">ekgStore</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110430"><span class="hs-identifier hs-var">metricsStore</span></a></span><span>
+</span><span id="line-176"></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><a href="#local-6989586621679110433"><span class="hs-identifier hs-type">toMicroSecs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.Internal.NominalDiffTime.html#NominalDiffTime"><span class="hs-identifier hs-type">NominalDiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621679110433"><span class="annot"><span class="annottext">toMicroSecs :: NominalDiffTime -&gt; Int
+</span><a href="#local-6989586621679110433"><span class="hs-identifier hs-var hs-var">toMicroSecs</span></a></span></span><span> </span><span id="local-6989586621679110435"><span class="annot"><span class="annottext">NominalDiffTime
+</span><a href="#local-6989586621679110435"><span class="hs-identifier hs-var">dt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NominalDiffTime -&gt; Int
+forall a. Enum a =&gt; a -&gt; Int
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#fromEnum"><span class="hs-identifier hs-var">fromEnum</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
+</span><a href="#local-6989586621679110435"><span class="hs-identifier hs-var">dt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#div"><span class="hs-operator hs-var">`div`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1000000</span></span><span>
+</span><span id="line-179"></span><span>
+</span><span id="line-180"></span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#acceptorActions"><span class="hs-identifier hs-var">acceptorActions</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Store
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-181"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; EKGAcceptor Request Response IO ()
+forall (m :: * -&gt; *) a req resp. m a -&gt; EKGAcceptor req resp m a
+</span><a href="System.Metrics.Protocol.Acceptor.html#SendMsgDone"><span class="hs-identifier hs-var">Acceptor.SendMsgDone</span></a></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; EKGAcceptor Request Response IO ())
+-&gt; IO () -&gt; EKGAcceptor Request Response IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span></pre></body></html>

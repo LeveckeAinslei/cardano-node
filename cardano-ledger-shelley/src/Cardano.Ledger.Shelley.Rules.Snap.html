@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE EmptyDataDeriving #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Shelley.Rules.Snap</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier">ShelleySNAP</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><span class="hs-identifier">PredicateFailure</span></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#ShelleySnapPredFailure"><span class="hs-identifier">ShelleySnapPredFailure</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEvent"><span class="hs-identifier">SnapEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEnv"><span class="hs-identifier">SnapEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BaseTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShelleyBase</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Coin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coin</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">CompactForm</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Compactible</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromCompact</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Credential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Credential</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.EpochBoundary</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">SnapShot</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ssDelegations</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ssStake</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier">SnapShots</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier">Stake</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unStake</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier">calculatePoolDistr</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier">emptySnapShots</span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyHash</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KeyRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">StakePool</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Staking</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html"><span class="hs-identifier">Cardano.Ledger.Shelley.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier">ShelleySNAP</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.html"><span class="hs-identifier">Cardano.Ledger.Shelley.LedgerState</span></a></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier">CertState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#LedgerState"><span class="hs-identifier">LedgerState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#UTxOState"><span class="hs-identifier">UTxOState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.IncrementalStake.html#incrementalStakeDistr"><span class="hs-identifier">incrementalStakeDistr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.State.Transition</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier">STS</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="hs-identifier">TRC</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier">TransitionRule</span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier">judgmentContext</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier">tellEvent</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.VMap</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">VMap</span></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- ======================================================</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="ShelleySnapPredFailure"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#ShelleySnapPredFailure"><span class="hs-identifier hs-var">ShelleySnapPredFailure</span></a></span></span><span> </span><span id="local-6989586621679621214"><span class="annot"><a href="#local-6989586621679621214"><span class="hs-identifier hs-type">era</span></a></span></span><span> </span><span class="hs-comment">-- No predicate failures</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679621216"><span id="local-6989586621679621218"><span id="local-6989586621679621222"><span class="annot"><span class="annottext">Int -&gt; ShelleySnapPredFailure era -&gt; ShowS
+[ShelleySnapPredFailure era] -&gt; ShowS
+ShelleySnapPredFailure era -&gt; String
+(Int -&gt; ShelleySnapPredFailure era -&gt; ShowS)
+-&gt; (ShelleySnapPredFailure era -&gt; String)
+-&gt; ([ShelleySnapPredFailure era] -&gt; ShowS)
+-&gt; Show (ShelleySnapPredFailure era)
+forall era. Int -&gt; ShelleySnapPredFailure era -&gt; ShowS
+forall era. [ShelleySnapPredFailure era] -&gt; ShowS
+forall era. ShelleySnapPredFailure era -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall era. Int -&gt; ShelleySnapPredFailure era -&gt; ShowS
+showsPrec :: Int -&gt; ShelleySnapPredFailure era -&gt; ShowS
+$cshow :: forall era. ShelleySnapPredFailure era -&gt; String
+show :: ShelleySnapPredFailure era -&gt; String
+$cshowList :: forall era. [ShelleySnapPredFailure era] -&gt; ShowS
+showList :: [ShelleySnapPredFailure era] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679621226"><span id="local-6989586621679621228"><span class="annot"><span class="annottext">(forall x.
+ ShelleySnapPredFailure era -&gt; Rep (ShelleySnapPredFailure era) x)
+-&gt; (forall x.
+    Rep (ShelleySnapPredFailure era) x -&gt; ShelleySnapPredFailure era)
+-&gt; Generic (ShelleySnapPredFailure era)
+forall x.
+Rep (ShelleySnapPredFailure era) x -&gt; ShelleySnapPredFailure era
+forall x.
+ShelleySnapPredFailure era -&gt; Rep (ShelleySnapPredFailure era) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall era x.
+Rep (ShelleySnapPredFailure era) x -&gt; ShelleySnapPredFailure era
+forall era x.
+ShelleySnapPredFailure era -&gt; Rep (ShelleySnapPredFailure era) x
+$cfrom :: forall era x.
+ShelleySnapPredFailure era -&gt; Rep (ShelleySnapPredFailure era) x
+from :: forall x.
+ShelleySnapPredFailure era -&gt; Rep (ShelleySnapPredFailure era) x
+$cto :: forall era x.
+Rep (ShelleySnapPredFailure era) x -&gt; ShelleySnapPredFailure era
+to :: forall x.
+Rep (ShelleySnapPredFailure era) x -&gt; ShelleySnapPredFailure era
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679621232"><span id="local-6989586621679621234"><span class="annot"><span class="annottext">ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+(ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool)
+-&gt; (ShelleySnapPredFailure era
+    -&gt; ShelleySnapPredFailure era -&gt; Bool)
+-&gt; Eq (ShelleySnapPredFailure era)
+forall era.
+ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall era.
+ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+== :: ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+$c/= :: forall era.
+ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+/= :: ShelleySnapPredFailure era -&gt; ShelleySnapPredFailure era -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679621076"><span id="local-6989586621679621239"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#ShelleySnapPredFailure"><span class="hs-identifier hs-type">ShelleySnapPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621076"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679621096"><span id="local-6989586621679621250"><span id="local-6989586621679621254"><span id="local-6989586621679621260"><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#ShelleySnapPredFailure"><span class="hs-identifier hs-type">ShelleySnapPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621096"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">newtype</span><span> </span><span id="SnapEvent"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEvent"><span class="hs-identifier hs-var">SnapEvent</span></a></span></span><span> </span><span id="local-6989586621679621201"><span class="annot"><a href="#local-6989586621679621201"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StakeDistEvent"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#StakeDistEvent"><span class="hs-identifier hs-var">StakeDistEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621201"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621201"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">data</span><span> </span><span id="SnapEnv"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEnv"><span class="hs-identifier hs-var">SnapEnv</span></a></span></span><span> </span><span id="local-6989586621679621278"><span class="annot"><a href="#local-6989586621679621278"><span class="hs-identifier hs-type">era</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SnapEnv"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEnv"><span class="hs-identifier hs-var">SnapEnv</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#LedgerState"><span class="hs-identifier hs-type">LedgerState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621278"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679621278"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679621118"><span id="local-6989586621679621297"><span id="local-6989586621679621301"><span class="annot"><span class="hs-identifier hs-type">EraTxOut</span></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STS</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="State"><span class="annot"><span class="hs-identifier hs-var">State</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SnapShots</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Signal"><span class="annot"><span class="hs-identifier hs-var">Signal</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Environment"><span class="annot"><span class="hs-identifier hs-var">Environment</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEnv"><span class="hs-identifier hs-type">SnapEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BaseM"><span class="annot"><span class="hs-identifier hs-var">BaseM</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyBase</span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="PredicateFailure"><span class="annot"><span class="hs-identifier hs-var">PredicateFailure</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#ShelleySnapPredFailure"><span class="hs-identifier hs-type">ShelleySnapPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Event"><span class="annot"><span class="hs-identifier hs-var">Event</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEvent"><span class="hs-identifier hs-type">SnapEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621118"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679621314"><span class="annot"><span class="annottext">initialRules :: [InitialRule (ShelleySNAP era)]
+</span><a href="#local-6989586621679621314"><span class="hs-identifier hs-var hs-var hs-var hs-var">initialRules</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SnapShots (EraCrypto era)
+-&gt; F (Clause (ShelleySNAP era) 'Initial)
+     (SnapShots (EraCrypto era))
+forall a. a -&gt; F (Clause (ShelleySNAP era) 'Initial) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era)
+forall c. SnapShots c
+</span><span class="hs-identifier hs-var">emptySnapShots</span></span><span class="hs-special">]</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621679621317"><span class="annot"><span class="annottext">transitionRules :: [TransitionRule (ShelleySNAP era)]
+</span><a href="#local-6989586621679621317"><span class="hs-identifier hs-var hs-var hs-var hs-var">transitionRules</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">TransitionRule (ShelleySNAP era)
+forall era. EraPParams era =&gt; TransitionRule (ShelleySNAP era)
+</span><a href="Cardano.Ledger.Shelley.Rules.Snap.html#snapTransition"><span class="hs-identifier hs-var">snapTransition</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- | The stake distribution was previously computed as in the spec:</span><span>
+</span><span id="line-79"></span><span class="hs-comment">--</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-81"></span><span class="hs-comment">--  stakeDistr @era utxo dstate pstate</span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-83"></span><span class="hs-comment">--</span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- but is now computed incrementally. We leave the comment as a historical note about</span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- where important changes were made to the source code.</span><span>
+</span><span id="line-86"></span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#snapTransition"><span class="hs-identifier hs-type">snapTransition</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679621128"><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TransitionRule</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleySNAP"><span class="hs-identifier hs-type">ShelleySNAP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span id="snapTransition"><span class="annot"><span class="annottext">snapTransition :: forall era. EraPParams era =&gt; TransitionRule (ShelleySNAP era)
+</span><a href="Cardano.Ledger.Shelley.Rules.Snap.html#snapTransition"><span class="hs-identifier hs-var hs-var">snapTransition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TRC</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679621341"><span class="annot"><span class="annottext">Environment (ShelleySNAP era)
+</span><a href="#local-6989586621679621341"><span class="hs-identifier hs-var">snapEnv</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679621342"><span class="annot"><span class="annottext">State (ShelleySNAP era)
+</span><a href="#local-6989586621679621342"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Signal (ShelleySNAP era)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Rule
+  (ShelleySNAP era)
+  'Transition
+  (RuleContext 'Transition (ShelleySNAP era))
+F (Clause (ShelleySNAP era) 'Transition) (TRC (ShelleySNAP era))
+forall sts (rtype :: RuleType).
+Rule sts rtype (RuleContext rtype sts)
+</span><span class="hs-identifier hs-var">judgmentContext</span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-comment">-- TODO Handle VState</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Snap.html#SnapEnv"><span class="hs-identifier hs-type">SnapEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#LedgerState"><span class="hs-identifier hs-type">LedgerState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#UTxOState"><span class="hs-identifier hs-type">UTxOState</span></a></span><span> </span><span id="local-6989586621679621345"><span class="annot"><span class="annottext">UTxO era
+</span><a href="#local-6989586621679621345"><span class="hs-identifier hs-var">_utxo</span></a></span></span><span> </span><span class="annot"><span class="annottext">Coin
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679621346"><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679621346"><span class="hs-identifier hs-var">fees</span></a></span></span><span> </span><span class="annot"><span class="annottext">GovState era
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679621347"><span class="annot"><span class="annottext">IncrementalStake (EraCrypto era)
+</span><a href="#local-6989586621679621347"><span class="hs-identifier hs-var">incStake</span></a></span></span><span> </span><span class="annot"><span class="annottext">Coin
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><span class="annottext">VState era
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679621349"><span class="annot"><span class="annottext">PState era
+</span><a href="#local-6989586621679621349"><span class="hs-identifier hs-var">pstate</span></a></span></span><span> </span><span id="local-6989586621679621350"><span class="annot"><span class="annottext">DState era
+</span><a href="#local-6989586621679621350"><span class="hs-identifier hs-var">dstate</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679621351"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679621351"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment (ShelleySNAP era)
+</span><a href="#local-6989586621679621341"><span class="hs-identifier hs-var">snapEnv</span></a></span><span>
+</span><span id="line-95"></span><span>      </span><span class="hs-comment">-- per the spec: stakeSnap = stakeDistr @era utxo dstate pstate</span><span>
+</span><span id="line-96"></span><span>      </span><span id="local-6989586621679621352"><span class="annot"><span class="annottext">istakeSnap :: SnapShot (EraCrypto era)
+</span><a href="#local-6989586621679621352"><span class="hs-identifier hs-var hs-var">istakeSnap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+-&gt; IncrementalStake (EraCrypto era)
+-&gt; DState era
+-&gt; PState era
+-&gt; SnapShot (EraCrypto era)
+forall era.
+EraPParams era =&gt;
+PParams era
+-&gt; IncrementalStake (EraCrypto era)
+-&gt; DState era
+-&gt; PState era
+-&gt; SnapShot (EraCrypto era)
+</span><a href="Cardano.Ledger.Shelley.LedgerState.IncrementalStake.html#incrementalStakeDistr"><span class="hs-identifier hs-var">incrementalStakeDistr</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679621351"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">IncrementalStake (EraCrypto era)
+</span><a href="#local-6989586621679621347"><span class="hs-identifier hs-var">incStake</span></a></span><span> </span><span class="annot"><span class="annottext">DState era
+</span><a href="#local-6989586621679621350"><span class="hs-identifier hs-var">dstate</span></a></span><span> </span><span class="annot"><span class="annottext">PState era
+</span><a href="#local-6989586621679621349"><span class="hs-identifier hs-var">pstate</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><span class="annottext">Event (ShelleySNAP era) -&gt; Rule (ShelleySNAP era) 'Transition ()
+forall sts (ctx :: RuleType). Event sts -&gt; Rule sts ctx ()
+</span><span class="hs-identifier hs-var">tellEvent</span></span><span> </span><span class="annot"><span class="annottext">(Event (ShelleySNAP era) -&gt; Rule (ShelleySNAP era) 'Transition ())
+-&gt; Event (ShelleySNAP era) -&gt; Rule (ShelleySNAP era) 'Transition ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621679621353"><span class="hs-identifier hs-type">stMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CompactForm</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>        </span><span id="local-6989586621679621353"><span class="annot"><span class="annottext">stMap :: Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+</span><a href="#local-6989586621679621353"><span class="hs-identifier hs-var hs-var">stMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VMap VB VP (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+-&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+forall (kv :: * -&gt; *) k (vv :: * -&gt; *) v.
+(Vector kv k, Vector vv v) =&gt;
+VMap kv vv k v -&gt; Map k v
+</span><span class="hs-identifier hs-var">VMap.toMap</span></span><span> </span><span class="annot"><span class="annottext">(VMap
+   VB VP (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+ -&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin))
+-&gt; (Stake (EraCrypto era)
+    -&gt; VMap
+         VB VP (Credential 'Staking (EraCrypto era)) (CompactForm Coin))
+-&gt; Stake (EraCrypto era)
+-&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Stake (EraCrypto era)
+-&gt; VMap
+     VB VP (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+forall c.
+Stake c -&gt; VMap VB VP (Credential 'Staking c) (CompactForm Coin)
+</span><span class="hs-identifier hs-var">unStake</span></span><span> </span><span class="annot"><span class="annottext">(Stake (EraCrypto era)
+ -&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin))
+-&gt; Stake (EraCrypto era)
+-&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era) -&gt; Stake (EraCrypto era)
+forall c. SnapShot c -&gt; Stake c
+</span><span class="hs-identifier hs-var">ssStake</span></span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era)
+</span><a href="#local-6989586621679621352"><span class="hs-identifier hs-var">istakeSnap</span></a></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span>        </span><span class="annot"><a href="#local-6989586621679621356"><span class="hs-identifier hs-type">stakeCoinMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span>
+</span><span id="line-103"></span><span>        </span><span id="local-6989586621679621356"><span class="annot"><span class="annottext">stakeCoinMap :: Map (Credential 'Staking (EraCrypto era)) Coin
+</span><a href="#local-6989586621679621356"><span class="hs-identifier hs-var hs-var">stakeCoinMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CompactForm Coin -&gt; Coin)
+-&gt; Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+-&gt; Map (Credential 'Staking (EraCrypto era)) Coin
+forall a b.
+(a -&gt; b)
+-&gt; Map (Credential 'Staking (EraCrypto era)) a
+-&gt; Map (Credential 'Staking (EraCrypto era)) b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">CompactForm Coin -&gt; Coin
+forall a. Compactible a =&gt; CompactForm a -&gt; a
+</span><span class="hs-identifier hs-var">fromCompact</span></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'Staking (EraCrypto era)) (CompactForm Coin)
+</span><a href="#local-6989586621679621353"><span class="hs-identifier hs-var">stMap</span></a></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span>        </span><span class="annot"><a href="#local-6989586621679621357"><span class="hs-identifier hs-type">stakePoolMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>        </span><span id="local-6989586621679621357"><span class="annot"><span class="annottext">stakePoolMap :: Map
+  (Credential 'Staking (EraCrypto era))
+  (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679621357"><span class="hs-identifier hs-var hs-var">stakePoolMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VMap
+  VB
+  VB
+  (Credential 'Staking (EraCrypto era))
+  (KeyHash 'StakePool (EraCrypto era))
+-&gt; Map
+     (Credential 'Staking (EraCrypto era))
+     (KeyHash 'StakePool (EraCrypto era))
+forall (kv :: * -&gt; *) k (vv :: * -&gt; *) v.
+(Vector kv k, Vector vv v) =&gt;
+VMap kv vv k v -&gt; Map k v
+</span><span class="hs-identifier hs-var">VMap.toMap</span></span><span> </span><span class="annot"><span class="annottext">(VMap
+   VB
+   VB
+   (Credential 'Staking (EraCrypto era))
+   (KeyHash 'StakePool (EraCrypto era))
+ -&gt; Map
+      (Credential 'Staking (EraCrypto era))
+      (KeyHash 'StakePool (EraCrypto era)))
+-&gt; VMap
+     VB
+     VB
+     (Credential 'Staking (EraCrypto era))
+     (KeyHash 'StakePool (EraCrypto era))
+-&gt; Map
+     (Credential 'Staking (EraCrypto era))
+     (KeyHash 'StakePool (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era)
+-&gt; VMap
+     VB
+     VB
+     (Credential 'Staking (EraCrypto era))
+     (KeyHash 'StakePool (EraCrypto era))
+forall c.
+SnapShot c
+-&gt; VMap VB VB (Credential 'Staking c) (KeyHash 'StakePool c)
+</span><span class="hs-identifier hs-var">ssDelegations</span></span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era)
+</span><a href="#local-6989586621679621352"><span class="hs-identifier hs-var">istakeSnap</span></a></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><a href="#local-6989586621679621358"><span class="hs-identifier hs-type">stakeMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679621128"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>        </span><span id="local-6989586621679621358"><span class="annot"><span class="annottext">stakeMap :: Map
+  (Credential 'Staking (EraCrypto era))
+  (Coin, KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679621358"><span class="hs-identifier hs-var hs-var">stakeMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Coin
+ -&gt; KeyHash 'StakePool (EraCrypto era)
+ -&gt; (Coin, KeyHash 'StakePool (EraCrypto era)))
+-&gt; Map (Credential 'Staking (EraCrypto era)) Coin
+-&gt; Map
+     (Credential 'Staking (EraCrypto era))
+     (KeyHash 'StakePool (EraCrypto era))
+-&gt; Map
+     (Credential 'Staking (EraCrypto era))
+     (Coin, KeyHash 'StakePool (EraCrypto era))
+forall k a b c.
+Ord k =&gt;
+(a -&gt; b -&gt; c) -&gt; Map k a -&gt; Map k b -&gt; Map k c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#intersectionWith"><span class="hs-identifier hs-var">Map.intersectionWith</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Map (Credential 'Staking (EraCrypto era)) Coin
+</span><a href="#local-6989586621679621356"><span class="hs-identifier hs-var">stakeCoinMap</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'Staking (EraCrypto era))
+  (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679621357"><span class="hs-identifier hs-var">stakePoolMap</span></a></span><span>
+</span><span id="line-110"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'Staking (EraCrypto era))
+  (Coin, KeyHash 'StakePool (EraCrypto era))
+-&gt; SnapEvent era
+forall era.
+Map
+  (Credential 'Staking (EraCrypto era))
+  (Coin, KeyHash 'StakePool (EraCrypto era))
+-&gt; SnapEvent era
+</span><a href="Cardano.Ledger.Shelley.Rules.Snap.html#StakeDistEvent"><span class="hs-identifier hs-var">StakeDistEvent</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'Staking (EraCrypto era))
+  (Coin, KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679621358"><span class="hs-identifier hs-var">stakeMap</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era)
+-&gt; F (Clause (ShelleySNAP era) 'Transition)
+     (SnapShots (EraCrypto era))
+forall a. a -&gt; F (Clause (ShelleySNAP era) 'Transition) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(SnapShots (EraCrypto era)
+ -&gt; F (Clause (ShelleySNAP era) 'Transition)
+      (SnapShots (EraCrypto era)))
+-&gt; SnapShots (EraCrypto era)
+-&gt; F (Clause (ShelleySNAP era) 'Transition)
+     (SnapShots (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">SnapShots</span></span><span>
+</span><span id="line-114"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:ssStakeMark:SnapShots :: SnapShot (EraCrypto era)
+</span><span class="hs-identifier hs-var">ssStakeMark</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era)
+</span><a href="#local-6989586621679621352"><span class="hs-identifier hs-var">istakeSnap</span></a></span><span>
+</span><span id="line-115"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:ssStakeMarkPoolDistr:SnapShots :: PoolDistr (EraCrypto era)
+</span><span class="hs-identifier hs-var">ssStakeMarkPoolDistr</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era) -&gt; PoolDistr (EraCrypto era)
+forall c. SnapShot c -&gt; PoolDistr c
+</span><span class="hs-identifier hs-var">calculatePoolDistr</span></span><span> </span><span class="annot"><span class="annottext">SnapShot (EraCrypto era)
+</span><a href="#local-6989586621679621352"><span class="hs-identifier hs-var">istakeSnap</span></a></span><span>
+</span><span id="line-116"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- ssStakeMarkPoolDistr exists for performance reasons, see ADR-7</span><span>
+</span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">$sel:ssStakeSet:SnapShots :: SnapShot (EraCrypto era)
+</span><span class="hs-identifier hs-var">ssStakeSet</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era) -&gt; SnapShot (EraCrypto era)
+forall c. SnapShots c -&gt; SnapShot c
+</span><span class="hs-identifier hs-var">ssStakeMark</span></span><span> </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era)
+State (ShelleySNAP era)
+</span><a href="#local-6989586621679621342"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-118"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:ssStakeGo:SnapShots :: SnapShot (EraCrypto era)
+</span><span class="hs-identifier hs-var">ssStakeGo</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era) -&gt; SnapShot (EraCrypto era)
+forall c. SnapShots c -&gt; SnapShot c
+</span><span class="hs-identifier hs-var">ssStakeSet</span></span><span> </span><span class="annot"><span class="annottext">SnapShots (EraCrypto era)
+State (ShelleySNAP era)
+</span><a href="#local-6989586621679621342"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:ssFee:SnapShots :: Coin
+</span><span class="hs-identifier hs-var">ssFee</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679621346"><span class="hs-identifier hs-var">fees</span></a></span><span>
+</span><span id="line-120"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-121"></span></pre></body></html>

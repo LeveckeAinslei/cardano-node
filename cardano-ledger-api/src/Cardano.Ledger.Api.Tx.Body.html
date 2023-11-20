@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Api.Tx.Body</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Building and inspecting transaction outputs</span></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Out.html"><span class="hs-identifier">Cardano.Ledger.Api.Tx.Out</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Working with Timelock scripts and Plutus scripts</span></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.Scripts.html"><span class="hs-identifier">Cardano.Ledger.Api.Scripts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><span class="hs-identifier">EraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">TxBody</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><span class="hs-identifier">mkBasicTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><span class="hs-identifier">inputsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><span class="hs-identifier">outputsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><span class="hs-identifier">feeTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><span class="hs-identifier">withdrawalsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><span class="hs-identifier">Withdrawals</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><span class="hs-identifier">auxDataHashTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><span class="hs-identifier">AuxiliaryDataHash</span></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier">spendableInputsTxBodyF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><span class="hs-identifier">allInputsTxBodyF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#evalBalanceTxBody"><span class="hs-identifier">evalBalanceTxBody</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Shelley Era</span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier">ShelleyEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">ttlTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier">updateTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier">updateTxBodyG</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- deprecated</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier">certsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Allegra Era</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="hs-identifier">AllegraEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier">vldtTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier">ValidityInterval</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#invalidBeforeL"><span class="hs-identifier">invalidBeforeL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#invalidHereAfterL"><span class="hs-identifier">invalidHereAfterL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Mary Era</span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier">MaryEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier">mintTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="hs-identifier">mintValueTxBodyF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier">mintedTxBodyF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Alonzo Era</span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier">AlonzoEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier">collateralInputsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="hs-identifier">reqSignerHashesTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier">scriptIntegrityHashTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="hs-identifier">networkIdTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Babbage Era</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier">BabbageEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier">sizedOutputsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier">referenceInputsTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier">totalCollateralTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier">collateralReturnTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-identifier">sizedCollateralReturnTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier">allSizedOutputsTxBodyF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Conway Era</span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier">ConwayEraTxBody</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier">votingProceduresTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-identifier">proposalProceduresTxBodyL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Address</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Withdrawals</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Allegra.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AllegraEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Alonzo.TxBody</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AlonzoEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.Era.html"><span class="hs-identifier">Cardano.Ledger.Api.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.Scripts.html"><span class="hs-identifier">Cardano.Ledger.Api.Scripts</span></a></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Out.html"><span class="hs-identifier">Cardano.Ledger.Api.Tx.Out</span></a></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.AuxiliaryData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AuxiliaryDataHash</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Babbage.TxBody</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BabbageEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BaseTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">SlotNo</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">StrictMaybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Coin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coin</span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Conway.TxBody</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ConwayEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Era</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraCrypto</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">PParams</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Value</span></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Credential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Credential</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyHash</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KeyRole</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Mary.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MaryEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShelleyEraTxBody</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.UTxO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getProducedValue</span></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.UTxO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraUTxO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getConsumedValue</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">UTxO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Val</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;-&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Lens'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lens</span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | Evaluate the difference between the value currently being consumed by a transaction</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- and the total value being produced. This value will be zero for a valid transaction.</span><span>
+</span><span id="line-90"></span><span class="hs-comment">--</span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- In case when full `Cardano.Ledger.CertState` is available then this can be simplified to:</span><span>
+</span><span id="line-92"></span><span class="hs-comment">--</span><span>
+</span><span id="line-93"></span><span class="hs-comment">-- &gt; let lookupRefund = lookupDepositDState (certDState dpState)</span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- &gt; let isRegPoolId = (`Map.member` psStakePoolParams (certPState dpState))</span><span>
+</span><span id="line-95"></span><span class="hs-comment">-- &gt; evalBalanceTxBody pp lookupRefund isRegPoolId utxo txBody</span><span>
+</span><span id="line-96"></span><span id="local-6989586621679269182"><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#evalBalanceTxBody"><span class="hs-identifier hs-type">evalBalanceTxBody</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraUTxO</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Current protocol parameters</span></span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-comment">-- | Lookup current deposit amount for a registered stake credential delegation. This</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-comment">-- function must produce valid answer for all of the stake credentials present in any of</span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-comment">-- the `DeRegKey` delegation certificates in the supplied `TxBody`. In other words,</span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-comment">-- there is no requirement to know about all of the delegation certificates in the</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-comment">-- ledger state, just the ones this transaction cares about.</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-comment">-- | Lookup current deposit amount for a registered DRep credential. This</span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-comment">-- function must produce valid answer for all of the DRep credentials present in any of</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-comment">-- the `UnRegDRep` certificates in the supplied `TxBody`. In other words,</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-comment">-- there is no requirement to know about all of the DRep registrations in the</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-comment">-- ledger state, just the ones this transaction cares about.</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">DRepRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-comment">-- | Check whether a pool with a supplied PoolStakeId is already registered. There is no</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-comment">-- requirement to answer this question for all stake pool credentials, just for the ones</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-comment">-- that have the registration certificates included in the supplied `TxBody`</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="hs-comment">-- | The UTxO relevant to the transaction.</span></span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">UTxO</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><span class="hs-comment">-- | The transaction being evaluated for balance.</span></span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TxBody</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><span class="hs-comment">-- | The difference between what the transaction consumes and what it produces.</span></span><span>
+</span><span id="line-121"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679269182"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-122"></span><span id="evalBalanceTxBody"><span class="annot"><span class="annottext">evalBalanceTxBody :: forall era.
+EraUTxO era =&gt;
+PParams era
+-&gt; (Credential 'Staking (EraCrypto era) -&gt; Maybe Coin)
+-&gt; (Credential 'DRepRole (EraCrypto era) -&gt; Maybe Coin)
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; UTxO era
+-&gt; TxBody era
+-&gt; Value era
+</span><a href="Cardano.Ledger.Api.Tx.Body.html#evalBalanceTxBody"><span class="hs-identifier hs-var hs-var">evalBalanceTxBody</span></a></span></span><span> </span><span id="local-6989586621679269280"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679269280"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679269281"><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679269281"><span class="hs-identifier hs-var">lookupKeyRefund</span></a></span></span><span> </span><span id="local-6989586621679269282"><span class="annot"><span class="annottext">Credential 'DRepRole (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679269282"><span class="hs-identifier hs-var">lookupDRepRefund</span></a></span></span><span> </span><span id="local-6989586621679269283"><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era) -&gt; Bool
+</span><a href="#local-6989586621679269283"><span class="hs-identifier hs-var">isRegPoolId</span></a></span></span><span> </span><span id="local-6989586621679269284"><span class="annot"><span class="annottext">UTxO era
+</span><a href="#local-6989586621679269284"><span class="hs-identifier hs-var">utxo</span></a></span></span><span> </span><span id="local-6989586621679269285"><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679269285"><span class="hs-identifier hs-var">txBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">PParams era
+-&gt; (Credential 'Staking (EraCrypto era) -&gt; Maybe Coin)
+-&gt; (Credential 'DRepRole (EraCrypto era) -&gt; Maybe Coin)
+-&gt; UTxO era
+-&gt; TxBody era
+-&gt; Value era
+forall era.
+EraUTxO era =&gt;
+PParams era
+-&gt; (Credential 'Staking (EraCrypto era) -&gt; Maybe Coin)
+-&gt; (Credential 'DRepRole (EraCrypto era) -&gt; Maybe Coin)
+-&gt; UTxO era
+-&gt; TxBody era
+-&gt; Value era
+</span><span class="hs-identifier hs-var">getConsumedValue</span></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679269280"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679269281"><span class="hs-identifier hs-var">lookupKeyRefund</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'DRepRole (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679269282"><span class="hs-identifier hs-var">lookupDRepRefund</span></a></span><span> </span><span class="annot"><span class="annottext">UTxO era
+</span><a href="#local-6989586621679269284"><span class="hs-identifier hs-var">utxo</span></a></span><span> </span><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679269285"><span class="hs-identifier hs-var">txBody</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">Value era -&gt; Value era -&gt; Value era
+forall t. Val t =&gt; t -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;-&gt;</span></span><span> </span><span class="annot"><span class="annottext">PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; TxBody era
+-&gt; Value era
+forall era.
+EraUTxO era =&gt;
+PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; TxBody era
+-&gt; Value era
+</span><span class="hs-identifier hs-var">getProducedValue</span></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679269280"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era) -&gt; Bool
+</span><a href="#local-6989586621679269283"><span class="hs-identifier hs-var">isRegPoolId</span></a></span><span> </span><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679269285"><span class="hs-identifier hs-var">txBody</span></a></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="annot"><span class="hs-comment">-- | Lens to access the 'invalidBefore' field of a 'ValidityInterval' as a 'Maybe SlotNo'.</span></span><span>
+</span><span id="line-127"></span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#invalidBeforeL"><span class="hs-identifier hs-type">invalidBeforeL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span id="invalidBeforeL"><span class="annot"><span class="annottext">invalidBeforeL :: Lens' ValidityInterval (Maybe SlotNo)
+</span><a href="Cardano.Ledger.Api.Tx.Body.html#invalidBeforeL"><span class="hs-identifier hs-var hs-var">invalidBeforeL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValidityInterval -&gt; Maybe SlotNo)
+-&gt; (ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval)
+-&gt; Lens' ValidityInterval (Maybe SlotNo)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">ValidityInterval -&gt; Maybe SlotNo
+</span><a href="#local-6989586621679269290"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval
+</span><a href="#local-6989586621679269291"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>    </span><span class="annot"><a href="#local-6989586621679269290"><span class="hs-identifier hs-type">g</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621679269290"><span class="annot"><span class="annottext">g :: ValidityInterval -&gt; Maybe SlotNo
+</span><a href="#local-6989586621679269290"><span class="hs-identifier hs-var hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span id="local-6989586621679269292"><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269292"><span class="hs-identifier hs-var">ma</span></a></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269292"><span class="hs-identifier hs-var">ma</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier hs-var">SNothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe SlotNo
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-134"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">SJust</span></span><span> </span><span id="local-6989586621679269295"><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621679269295"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; Maybe SlotNo
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621679269295"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><a href="#local-6989586621679269291"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621679269291"><span class="annot"><span class="annottext">s :: ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval
+</span><a href="#local-6989586621679269291"><span class="hs-identifier hs-var hs-var">s</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679269296"><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269296"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679269297"><span class="annot"><span class="annottext">Maybe SlotNo
+</span><a href="#local-6989586621679269297"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo -&gt; StrictMaybe SlotNo -&gt; ValidityInterval
+</span><span class="hs-identifier hs-var">ValidityInterval</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+-&gt; (SlotNo -&gt; StrictMaybe SlotNo)
+-&gt; Maybe SlotNo
+-&gt; StrictMaybe SlotNo
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#maybe"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+forall a. StrictMaybe a
+</span><span class="hs-identifier hs-var">SNothing</span></span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; StrictMaybe SlotNo
+forall a. a -&gt; StrictMaybe a
+</span><span class="hs-identifier hs-var">SJust</span></span><span> </span><span class="annot"><span class="annottext">Maybe SlotNo
+</span><a href="#local-6989586621679269297"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269296"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="annot"><span class="hs-comment">-- | Lens to access the 'invalidHereAfter' field of a 'ValidityInterval' as a 'Maybe SlotNo'.</span></span><span>
+</span><span id="line-140"></span><span class="annot"><a href="Cardano.Ledger.Api.Tx.Body.html#invalidHereAfterL"><span class="hs-identifier hs-type">invalidHereAfterL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span id="invalidHereAfterL"><span class="annot"><span class="annottext">invalidHereAfterL :: Lens' ValidityInterval (Maybe SlotNo)
+</span><a href="Cardano.Ledger.Api.Tx.Body.html#invalidHereAfterL"><span class="hs-identifier hs-var hs-var">invalidHereAfterL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ValidityInterval -&gt; Maybe SlotNo)
+-&gt; (ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval)
+-&gt; Lens' ValidityInterval (Maybe SlotNo)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">ValidityInterval -&gt; Maybe SlotNo
+</span><a href="#local-6989586621679269301"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval
+</span><a href="#local-6989586621679269302"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><a href="#local-6989586621679269301"><span class="hs-identifier hs-type">g</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621679269301"><span class="annot"><span class="annottext">g :: ValidityInterval -&gt; Maybe SlotNo
+</span><a href="#local-6989586621679269301"><span class="hs-identifier hs-var hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679269303"><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269303"><span class="hs-identifier hs-var">mb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269303"><span class="hs-identifier hs-var">mb</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier hs-var">SNothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe SlotNo
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-147"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">SJust</span></span><span> </span><span id="local-6989586621679269304"><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621679269304"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; Maybe SlotNo
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621679269304"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span>    </span><span class="annot"><a href="#local-6989586621679269302"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621679269302"><span class="annot"><span class="annottext">s :: ValidityInterval -&gt; Maybe SlotNo -&gt; ValidityInterval
+</span><a href="#local-6989586621679269302"><span class="hs-identifier hs-var hs-var">s</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ValidityInterval</span></span><span> </span><span id="local-6989586621679269305"><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269305"><span class="hs-identifier hs-var">ma</span></a></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo -&gt; StrictMaybe SlotNo -&gt; ValidityInterval
+</span><span class="hs-identifier hs-var">ValidityInterval</span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+</span><a href="#local-6989586621679269305"><span class="hs-identifier hs-var">ma</span></a></span><span> </span><span class="annot"><span class="annottext">(StrictMaybe SlotNo -&gt; ValidityInterval)
+-&gt; (Maybe SlotNo -&gt; StrictMaybe SlotNo)
+-&gt; Maybe SlotNo
+-&gt; ValidityInterval
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+-&gt; (SlotNo -&gt; StrictMaybe SlotNo)
+-&gt; Maybe SlotNo
+-&gt; StrictMaybe SlotNo
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#maybe"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe SlotNo
+forall a. StrictMaybe a
+</span><span class="hs-identifier hs-var">SNothing</span></span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; StrictMaybe SlotNo
+forall a. a -&gt; StrictMaybe a
+</span><span class="hs-identifier hs-var">SJust</span></span><span>
+</span><span id="line-151"></span></pre></body></html>

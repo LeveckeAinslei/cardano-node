@@ -1,0 +1,401 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Network.DNS.Memo</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Control.Reaper</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">R</span></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html"><span class="hs-identifier">Data.ByteString</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OrdPSQ</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">OrdPSQ</span></span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.OrdPSQ</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PSQ</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.html"><span class="hs-identifier">Data.Time</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.Internal.UTCTime.html#UTCTime"><span class="hs-identifier">UTCTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.POSIX.html#getCurrentTime"><span class="hs-identifier">getCurrentTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.DNS.Imports.html"><span class="hs-identifier">Network.DNS.Imports</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.DNS.Types.html"><span class="hs-identifier">Network.DNS.Types</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">data</span><span> </span><span id="Section"><span class="annot"><a href="Network.DNS.Memo.html#Section"><span class="hs-identifier hs-var">Section</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Answer"><span class="annot"><a href="Network.DNS.Memo.html#Answer"><span class="hs-identifier hs-var">Answer</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Authority"><span class="annot"><a href="Network.DNS.Memo.html#Authority"><span class="hs-identifier hs-var">Authority</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679084131"><span id="local-6989586621679084133"><span class="annot"><span class="annottext">Section -&gt; Section -&gt; Bool
+(Section -&gt; Section -&gt; Bool)
+-&gt; (Section -&gt; Section -&gt; Bool) -&gt; Eq Section
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Section -&gt; Section -&gt; Bool
+== :: Section -&gt; Section -&gt; Bool
+$c/= :: Section -&gt; Section -&gt; Bool
+/= :: Section -&gt; Section -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679084140"><span id="local-6989586621679084142"><span id="local-6989586621679084144"><span id="local-6989586621679084148"><span id="local-6989586621679084151"><span id="local-6989586621679084154"><span id="local-6989586621679084157"><span class="annot"><span class="annottext">Eq Section
+Eq Section =&gt;
+(Section -&gt; Section -&gt; Ordering)
+-&gt; (Section -&gt; Section -&gt; Bool)
+-&gt; (Section -&gt; Section -&gt; Bool)
+-&gt; (Section -&gt; Section -&gt; Bool)
+-&gt; (Section -&gt; Section -&gt; Bool)
+-&gt; (Section -&gt; Section -&gt; Section)
+-&gt; (Section -&gt; Section -&gt; Section)
+-&gt; Ord Section
+Section -&gt; Section -&gt; Bool
+Section -&gt; Section -&gt; Ordering
+Section -&gt; Section -&gt; Section
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: Section -&gt; Section -&gt; Ordering
+compare :: Section -&gt; Section -&gt; Ordering
+$c&lt; :: Section -&gt; Section -&gt; Bool
+&lt; :: Section -&gt; Section -&gt; Bool
+$c&lt;= :: Section -&gt; Section -&gt; Bool
+&lt;= :: Section -&gt; Section -&gt; Bool
+$c&gt; :: Section -&gt; Section -&gt; Bool
+&gt; :: Section -&gt; Section -&gt; Bool
+$c&gt;= :: Section -&gt; Section -&gt; Bool
+&gt;= :: Section -&gt; Section -&gt; Bool
+$cmax :: Section -&gt; Section -&gt; Section
+max :: Section -&gt; Section -&gt; Section
+$cmin :: Section -&gt; Section -&gt; Section
+min :: Section -&gt; Section -&gt; Section
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679084161"><span id="local-6989586621679084163"><span id="local-6989586621679084167"><span class="annot"><span class="annottext">Int -&gt; Section -&gt; ShowS
+[Section] -&gt; ShowS
+Section -&gt; String
+(Int -&gt; Section -&gt; ShowS)
+-&gt; (Section -&gt; String) -&gt; ([Section] -&gt; ShowS) -&gt; Show Section
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Section -&gt; ShowS
+showsPrec :: Int -&gt; Section -&gt; ShowS
+$cshow :: Section -&gt; String
+show :: Section -&gt; String
+$cshowList :: [Section] -&gt; ShowS
+showList :: [Section] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">type</span><span> </span><span id="Key"><span class="annot"><a href="Network.DNS.Memo.html#Key"><span class="hs-identifier hs-var">Key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span>
+</span><span id="line-15"></span><span>           </span><span class="hs-special">,</span><span class="annot"><a href="Network.DNS.Types.html#TYPE"><span class="hs-identifier hs-type">TYPE</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">type</span><span> </span><span id="Prio"><span class="annot"><a href="Network.DNS.Memo.html#Prio"><span class="hs-identifier hs-var">Prio</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.Internal.UTCTime.html#UTCTime"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">type</span><span> </span><span id="Entry"><span class="annot"><a href="Network.DNS.Memo.html#Entry"><span class="hs-identifier hs-var">Entry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Either"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Network.DNS.Types.html#DNSError"><span class="hs-identifier hs-type">DNSError</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Network.DNS.Types.html#RData"><span class="hs-identifier hs-type">RData</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">type</span><span> </span><span id="DB"><span class="annot"><a href="Network.DNS.Memo.html#DB"><span class="hs-identifier hs-var">DB</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OrdPSQ</span></span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Prio"><span class="hs-identifier hs-type">Prio</span></a></span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Entry"><span class="hs-identifier hs-type">Entry</span></a></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">type</span><span> </span><span id="Cache"><span class="annot"><a href="Network.DNS.Memo.html#Cache"><span class="hs-identifier hs-var">Cache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">R.Reaper</span></span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#DB"><span class="hs-identifier hs-type">DB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Memo.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span class="hs-special">,</span><span class="annot"><a href="Network.DNS.Memo.html#Prio"><span class="hs-identifier hs-type">Prio</span></a></span><span class="hs-special">,</span><span class="annot"><a href="Network.DNS.Memo.html#Entry"><span class="hs-identifier hs-type">Entry</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="annot"><a href="Network.DNS.Memo.html#newCache"><span class="hs-identifier hs-type">newCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Cache"><span class="hs-identifier hs-type">Cache</span></a></span><span>
+</span><span id="line-25"></span><span id="newCache"><span class="annot"><span class="annottext">newCache :: Int -&gt; IO Cache
+</span><a href="Network.DNS.Memo.html#newCache"><span class="hs-identifier hs-var hs-var">newCache</span></a></span></span><span> </span><span id="local-6989586621679084171"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679084171"><span class="hs-identifier hs-var">delay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaperSettings DB (Key, Prio, Entry) -&gt; IO Cache
+forall workload item.
+ReaperSettings workload item -&gt; IO (Reaper workload item)
+</span><span class="hs-identifier hs-var">R.mkReaper</span></span><span> </span><span class="annot"><span class="annottext">ReaperSettings [Any] Any
+forall item. ReaperSettings [item] item
+</span><span class="hs-identifier hs-var">R.defaultReaperSettings</span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-identifier hs-var">R.reaperEmpty</span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PSQ.empty</span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-var">R.reaperCons</span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679084177"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621679084177"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679084178"><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084178"><span class="hs-identifier hs-var">tim</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679084179"><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084179"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679084180"><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084180"><span class="hs-identifier hs-var">psq</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Prio -&gt; Entry -&gt; DB -&gt; DB
+forall k p v.
+(Ord k, Ord p) =&gt;
+k -&gt; p -&gt; v -&gt; OrdPSQ k p v -&gt; OrdPSQ k p v
+</span><span class="hs-identifier hs-var">PSQ.insert</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621679084177"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084178"><span class="hs-identifier hs-var">tim</span></a></span><span> </span><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084179"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084180"><span class="hs-identifier hs-var">psq</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-var">R.reaperAction</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#prune"><span class="hs-identifier hs-type">prune</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-var">R.reaperDelay</span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679084171"><span class="hs-identifier hs-type">delay</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2A"><span class="hs-operator hs-type">*</span></a></span><span> </span><span class="annot"><span class="hs-number">1000000</span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-var">R.reaperNull</span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PSQ.null</span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Network.DNS.Memo.html#lookupCache"><span class="hs-identifier hs-type">lookupCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Cache"><span class="hs-identifier hs-type">Cache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Memo.html#Prio"><span class="hs-identifier hs-type">Prio</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Entry"><span class="hs-identifier hs-type">Entry</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span id="lookupCache"><span class="annot"><span class="annottext">lookupCache :: Key -&gt; Cache -&gt; IO (Maybe (Prio, Entry))
+</span><a href="Network.DNS.Memo.html#lookupCache"><span class="hs-identifier hs-var hs-var">lookupCache</span></a></span></span><span> </span><span id="local-6989586621679084189"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621679084189"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621679084190"><span class="annot"><span class="annottext">Cache
+</span><a href="#local-6989586621679084190"><span class="hs-identifier hs-var">reaper</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Key -&gt; DB -&gt; Maybe (Prio, Entry)
+forall k p v. Ord k =&gt; k -&gt; OrdPSQ k p v -&gt; Maybe (p, v)
+</span><span class="hs-identifier hs-var">PSQ.lookup</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621679084189"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">(DB -&gt; Maybe (Prio, Entry)) -&gt; IO DB -&gt; IO (Maybe (Prio, Entry))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Cache -&gt; IO DB
+forall workload item. Reaper workload item -&gt; IO workload
+</span><span class="hs-identifier hs-var">R.reaperRead</span></span><span> </span><span class="annot"><span class="annottext">Cache
+</span><a href="#local-6989586621679084190"><span class="hs-identifier hs-var">reaper</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="annot"><a href="Network.DNS.Memo.html#insertCache"><span class="hs-identifier hs-type">insertCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Prio"><span class="hs-identifier hs-type">Prio</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Entry"><span class="hs-identifier hs-type">Entry</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#Cache"><span class="hs-identifier hs-type">Cache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span id="insertCache"><span class="annot"><span class="annottext">insertCache :: Key -&gt; Prio -&gt; Entry -&gt; Cache -&gt; IO ()
+</span><a href="Network.DNS.Memo.html#insertCache"><span class="hs-identifier hs-var hs-var">insertCache</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679084195"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084195"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679084196"><span class="annot"><span class="annottext">TYPE
+</span><a href="#local-6989586621679084196"><span class="hs-identifier hs-var">typ</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679084197"><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084197"><span class="hs-identifier hs-var">tim</span></a></span></span><span> </span><span id="local-6989586621679084198"><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084198"><span class="hs-identifier hs-var">ent0</span></a></span></span><span> </span><span id="local-6989586621679084199"><span class="annot"><span class="annottext">Cache
+</span><a href="#local-6989586621679084199"><span class="hs-identifier hs-var">reaper</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Cache -&gt; (Key, Prio, Entry) -&gt; IO ()
+forall workload item. Reaper workload item -&gt; item -&gt; IO ()
+</span><span class="hs-identifier hs-var">R.reaperAdd</span></span><span> </span><span class="annot"><span class="annottext">Cache
+</span><a href="#local-6989586621679084199"><span class="hs-identifier hs-var">reaper</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621679084201"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084197"><span class="hs-identifier hs-var">tim</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084202"><span class="hs-identifier hs-var">ent</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621679084201"><span class="annot"><span class="annottext">key :: Key
+</span><a href="#local-6989586621679084201"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084195"><span class="hs-identifier hs-var">dom</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">TYPE
+</span><a href="#local-6989586621679084196"><span class="hs-identifier hs-var">typ</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621679084202"><span class="annot"><span class="annottext">ent :: Entry
+</span><a href="#local-6989586621679084202"><span class="hs-identifier hs-var hs-var">ent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084198"><span class="hs-identifier hs-var">ent0</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621679084204"><span class="annot"><span class="annottext">l :: Entry
+</span><a href="#local-6989586621679084204"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Left"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="annot"><span class="annottext">DNSError
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Entry
+</span><a href="#local-6989586621679084204"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Right"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621679084205"><span class="annot"><span class="annottext">[RData]
+</span><a href="#local-6989586621679084205"><span class="hs-identifier hs-var">rds</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[RData] -&gt; Entry
+forall a b. b -&gt; Either a b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Right"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">([RData] -&gt; Entry) -&gt; [RData] -&gt; Entry
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(RData -&gt; RData) -&gt; [RData] -&gt; [RData]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#map"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">RData -&gt; RData
+</span><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="annot"><span class="annottext">[RData]
+</span><a href="#local-6989586621679084205"><span class="hs-identifier hs-var">rds</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- Theoretically speaking, atMostView itself is good enough for pruning.</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- But auto-update assumes a list based db which does not provide atMost</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- functions. So, we need to do this redundant way.</span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Network.DNS.Memo.html#prune"><span class="hs-identifier hs-type">prune</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#DB"><span class="hs-identifier hs-type">DB</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Memo.html#DB"><span class="hs-identifier hs-type">DB</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Memo.html#DB"><span class="hs-identifier hs-type">DB</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span id="prune"><span class="annot"><span class="annottext">prune :: DB -&gt; IO (DB -&gt; DB)
+</span><a href="Network.DNS.Memo.html#prune"><span class="hs-identifier hs-var hs-var">prune</span></a></span></span><span> </span><span id="local-6989586621679084207"><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084207"><span class="hs-identifier hs-var">oldpsq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621679084208"><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084208"><span class="hs-identifier hs-var">tim</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Prio
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/time-1.12.2/src/Data.Time.Clock.POSIX.html#getCurrentTime"><span class="hs-identifier hs-var">getCurrentTime</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Key, Prio, Entry)]
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679084213"><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084213"><span class="hs-identifier hs-var">pruned</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Prio -&gt; DB -&gt; ([(Key, Prio, Entry)], DB)
+forall k p v.
+(Ord k, Ord p) =&gt;
+p -&gt; OrdPSQ k p v -&gt; ([(k, p, v)], OrdPSQ k p v)
+</span><span class="hs-identifier hs-var">PSQ.atMostView</span></span><span> </span><span class="annot"><span class="annottext">Prio
+</span><a href="#local-6989586621679084208"><span class="hs-identifier hs-var">tim</span></a></span><span> </span><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084207"><span class="hs-identifier hs-var">oldpsq</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">(DB -&gt; DB) -&gt; IO (DB -&gt; DB)
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">((DB -&gt; DB) -&gt; IO (DB -&gt; DB)) -&gt; (DB -&gt; DB) -&gt; IO (DB -&gt; DB)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679084215"><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084215"><span class="hs-identifier hs-var">newpsq</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(DB -&gt; (Key, Prio, Entry) -&gt; DB)
+-&gt; DB -&gt; [(Key, Prio, Entry)] -&gt; DB
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier hs-var">foldl'</span></a></span><span> </span><span class="annot"><span class="annottext">DB -&gt; (Key, Prio, Entry) -&gt; DB
+forall {k} {p} {v}.
+(Ord k, Ord p) =&gt;
+OrdPSQ k p v -&gt; (k, p, v) -&gt; OrdPSQ k p v
+</span><a href="#local-6989586621679084217"><span class="hs-identifier hs-var">ins</span></a></span><span> </span><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084213"><span class="hs-identifier hs-var">pruned</span></a></span><span> </span><span class="annot"><span class="annottext">([(Key, Prio, Entry)] -&gt; DB) -&gt; [(Key, Prio, Entry)] -&gt; DB
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">DB -&gt; [(Key, Prio, Entry)]
+forall k p v. OrdPSQ k p v -&gt; [(k, p, v)]
+</span><span class="hs-identifier hs-var">PSQ.toList</span></span><span> </span><span class="annot"><span class="annottext">DB
+</span><a href="#local-6989586621679084215"><span class="hs-identifier hs-var">newpsq</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>    </span><span id="local-6989586621679084217"><span class="annot"><span class="annottext">ins :: OrdPSQ k p v -&gt; (k, p, v) -&gt; OrdPSQ k p v
+</span><a href="#local-6989586621679084217"><span class="hs-identifier hs-var hs-var">ins</span></a></span></span><span> </span><span id="local-6989586621679084228"><span class="annot"><span class="annottext">OrdPSQ k p v
+</span><a href="#local-6989586621679084228"><span class="hs-identifier hs-var">psq</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679084229"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621679084229"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679084230"><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621679084230"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679084231"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621679084231"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">k -&gt; p -&gt; v -&gt; OrdPSQ k p v -&gt; OrdPSQ k p v
+forall k p v.
+(Ord k, Ord p) =&gt;
+k -&gt; p -&gt; v -&gt; OrdPSQ k p v -&gt; OrdPSQ k p v
+</span><span class="hs-identifier hs-var">PSQ.insert</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621679084229"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621679084230"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621679084231"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">OrdPSQ k p v
+</span><a href="#local-6989586621679084228"><span class="hs-identifier hs-var">psq</span></a></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-type">copy</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.DNS.Types.html#RData"><span class="hs-identifier hs-type">RData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Types.html#RData"><span class="hs-identifier hs-type">RData</span></a></span><span>
+</span><span id="line-56"></span><span id="copy"><span class="annot"><span class="annottext">copy :: RData -&gt; RData
+</span><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var hs-var">copy</span></a></span></span><span> </span><span id="local-6989586621679084232"><span class="annot"><span class="annottext">r :: RData
+</span><a href="#local-6989586621679084232"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_A"><span class="hs-identifier hs-type">RD_A</span></a></span><span> </span><span class="annot"><span class="annottext">IPv4
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>           </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RData
+</span><a href="#local-6989586621679084232"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_NS"><span class="hs-identifier hs-type">RD_NS</span></a></span><span> </span><span id="local-6989586621679084235"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084235"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_NS"><span class="hs-identifier hs-var">RD_NS</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084235"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-58"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_CNAME"><span class="hs-identifier hs-type">RD_CNAME</span></a></span><span> </span><span id="local-6989586621679084237"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084237"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>       </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_CNAME"><span class="hs-identifier hs-var">RD_CNAME</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084237"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_SOA"><span class="hs-identifier hs-type">RD_SOA</span></a></span><span> </span><span id="local-6989586621679084239"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084239"><span class="hs-identifier hs-var">mn</span></a></span></span><span> </span><span id="local-6989586621679084240"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084240"><span class="hs-identifier hs-var">mr</span></a></span></span><span> </span><span id="local-6989586621679084241"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084241"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084242"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084242"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679084243"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084243"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679084244"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084244"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span id="local-6989586621679084245"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084245"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+-&gt; ByteString
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; Word32
+-&gt; RData
+</span><a href="Network.DNS.Types.html#RD_SOA"><span class="hs-identifier hs-var">RD_SOA</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084239"><span class="hs-identifier hs-var">mn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084240"><span class="hs-identifier hs-var">mr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084241"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084242"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084243"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084244"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679084245"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_PTR"><span class="hs-identifier hs-type">RD_PTR</span></a></span><span> </span><span id="local-6989586621679084247"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084247"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>         </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_PTR"><span class="hs-identifier hs-var">RD_PTR</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084247"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="annot"><span class="annottext">RData
+</span><a href="Network.DNS.Types.html#RD_NULL"><span class="hs-identifier hs-var">RD_NULL</span></a></span><span>              </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RData
+</span><a href="Network.DNS.Types.html#RD_NULL"><span class="hs-identifier hs-var">RD_NULL</span></a></span><span>
+</span><span id="line-62"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_MX"><span class="hs-identifier hs-type">RD_MX</span></a></span><span> </span><span id="local-6989586621679084250"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084250"><span class="hs-identifier hs-var">prf</span></a></span></span><span> </span><span id="local-6989586621679084251"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084251"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_MX"><span class="hs-identifier hs-var">RD_MX</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084250"><span class="hs-identifier hs-var">prf</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084251"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-63"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_TXT"><span class="hs-identifier hs-type">RD_TXT</span></a></span><span> </span><span id="local-6989586621679084253"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084253"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span>         </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_TXT"><span class="hs-identifier hs-var">RD_TXT</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084253"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span id="local-6989586621679084254"><span class="annot"><span class="annottext">r :: RData
+</span><a href="#local-6989586621679084254"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_AAAA"><span class="hs-identifier hs-type">RD_AAAA</span></a></span><span> </span><span class="annot"><span class="annottext">IPv6
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>        </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RData
+</span><a href="#local-6989586621679084254"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-65"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_SRV"><span class="hs-identifier hs-type">RD_SRV</span></a></span><span> </span><span id="local-6989586621679084257"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084257"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084258"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084258"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679084259"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084259"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679084260"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084260"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Word16 -&gt; Word16 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_SRV"><span class="hs-identifier hs-var">RD_SRV</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084257"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084258"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084259"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084260"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_DNAME"><span class="hs-identifier hs-type">RD_DNAME</span></a></span><span> </span><span id="local-6989586621679084262"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084262"><span class="hs-identifier hs-var">dom</span></a></span></span><span class="hs-special">)</span><span>       </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_DNAME"><span class="hs-identifier hs-var">RD_DNAME</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084262"><span class="hs-identifier hs-var">dom</span></a></span><span>
+</span><span id="line-67"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_OPT"><span class="hs-identifier hs-type">RD_OPT</span></a></span><span> </span><span id="local-6989586621679084264"><span class="annot"><span class="annottext">[OData]
+</span><a href="#local-6989586621679084264"><span class="hs-identifier hs-var">od</span></a></span></span><span class="hs-special">)</span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[OData] -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_OPT"><span class="hs-identifier hs-var">RD_OPT</span></a></span><span> </span><span class="annot"><span class="annottext">([OData] -&gt; RData) -&gt; [OData] -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(OData -&gt; OData) -&gt; [OData] -&gt; [OData]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#map"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">OData -&gt; OData
+</span><a href="Network.DNS.Memo.html#copyOData"><span class="hs-identifier hs-var">copyOData</span></a></span><span> </span><span class="annot"><span class="annottext">[OData]
+</span><a href="#local-6989586621679084264"><span class="hs-identifier hs-var">od</span></a></span><span>
+</span><span id="line-68"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_DS"><span class="hs-identifier hs-type">RD_DS</span></a></span><span> </span><span id="local-6989586621679084267"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084267"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679084268"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084268"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084269"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084269"><span class="hs-identifier hs-var">dt</span></a></span></span><span> </span><span id="local-6989586621679084270"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084270"><span class="hs-identifier hs-var">dv</span></a></span></span><span class="hs-special">)</span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Word8 -&gt; Word8 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_DS"><span class="hs-identifier hs-var">RD_DS</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084267"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084268"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084269"><span class="hs-identifier hs-var">dt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084270"><span class="hs-identifier hs-var">dv</span></a></span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_DNSKEY"><span class="hs-identifier hs-type">RD_DNSKEY</span></a></span><span> </span><span id="local-6989586621679084272"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084272"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679084273"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084273"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679084274"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084274"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084275"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084275"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Word8 -&gt; Word8 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_DNSKEY"><span class="hs-identifier hs-var">RD_DNSKEY</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084272"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084273"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084274"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084275"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-70"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_TLSA"><span class="hs-identifier hs-type">RD_TLSA</span></a></span><span> </span><span id="local-6989586621679084277"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084277"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084278"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084278"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679084279"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084279"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679084280"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084280"><span class="hs-identifier hs-var">dgst</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_TLSA"><span class="hs-identifier hs-var">RD_TLSA</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084277"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084278"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084279"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084280"><span class="hs-identifier hs-var">dgst</span></a></span><span>
+</span><span id="line-71"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#RD_NSEC3PARAM"><span class="hs-identifier hs-type">RD_NSEC3PARAM</span></a></span><span> </span><span id="local-6989586621679084282"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084282"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679084283"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084283"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679084284"><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084284"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679084285"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084285"><span class="hs-identifier hs-var">salt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word16 -&gt; ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#RD_NSEC3PARAM"><span class="hs-identifier hs-var">RD_NSEC3PARAM</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084282"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679084283"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><a href="#local-6989586621679084284"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084285"><span class="hs-identifier hs-var">salt</span></a></span><span>
+</span><span id="line-72"></span><span class="annot"><a href="Network.DNS.Memo.html#copy"><span class="hs-identifier hs-var">copy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#UnknownRData"><span class="hs-identifier hs-type">UnknownRData</span></a></span><span> </span><span id="local-6989586621679084287"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084287"><span class="hs-identifier hs-var">is</span></a></span></span><span class="hs-special">)</span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RData
+</span><a href="Network.DNS.Types.html#UnknownRData"><span class="hs-identifier hs-var">UnknownRData</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; RData) -&gt; ByteString -&gt; RData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084287"><span class="hs-identifier hs-var">is</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Network.DNS.Memo.html#copyOData"><span class="hs-identifier hs-type">copyOData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.DNS.Types.html#OData"><span class="hs-identifier hs-type">OData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.DNS.Types.html#OData"><span class="hs-identifier hs-type">OData</span></a></span><span>
+</span><span id="line-75"></span><span id="copyOData"><span class="annot"><span class="annottext">copyOData :: OData -&gt; OData
+</span><a href="Network.DNS.Memo.html#copyOData"><span class="hs-identifier hs-var hs-var">copyOData</span></a></span></span><span> </span><span id="local-6989586621679084288"><span class="annot"><span class="annottext">o :: OData
+</span><a href="#local-6989586621679084288"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#OD_ClientSubnet"><span class="hs-identifier hs-type">OD_ClientSubnet</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">IP
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OData
+</span><a href="#local-6989586621679084288"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-76"></span><span class="annot"><a href="Network.DNS.Memo.html#copyOData"><span class="hs-identifier hs-var">copyOData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Network.DNS.Types.html#UnknownOData"><span class="hs-identifier hs-type">UnknownOData</span></a></span><span> </span><span id="local-6989586621679084291"><span class="annot"><span class="annottext">OptCode
+</span><a href="#local-6989586621679084291"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679084292"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084292"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span>        </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OptCode -&gt; ByteString -&gt; OData
+</span><a href="Network.DNS.Types.html#UnknownOData"><span class="hs-identifier hs-var">UnknownOData</span></a></span><span> </span><span class="annot"><span class="annottext">OptCode
+</span><a href="#local-6989586621679084291"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; OData) -&gt; ByteString -&gt; OData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.html#copy"><span class="hs-identifier hs-var">B.copy</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679084292"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-77"></span></pre></body></html>

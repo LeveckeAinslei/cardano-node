@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving #-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Chain.Genesis.Hash</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><a href="Cardano.Chain.Genesis.Hash.html#GenesisHash"><span class="hs-identifier">GenesisHash</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Crypto.Hashing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hash</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Crypto.Raw</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Raw</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Prelude</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">newtype</span><span> </span><span id="GenesisHash"><span class="annot"><a href="Cardano.Chain.Genesis.Hash.html#GenesisHash"><span class="hs-identifier hs-var">GenesisHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GenesisHash"><span class="annot"><a href="Cardano.Chain.Genesis.Hash.html#GenesisHash"><span class="hs-identifier hs-var">GenesisHash</span></a></span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unGenesisHash"><span class="annot"><span class="annottext">GenesisHash -&gt; Hash Raw
+</span><a href="Cardano.Chain.Genesis.Hash.html#unGenesisHash"><span class="hs-identifier hs-var hs-var">unGenesisHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hash</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Raw</span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679541750"><span id="local-6989586621679541755"><span class="annot"><span class="annottext">GenesisHash -&gt; GenesisHash -&gt; Bool
+(GenesisHash -&gt; GenesisHash -&gt; Bool)
+-&gt; (GenesisHash -&gt; GenesisHash -&gt; Bool) -&gt; Eq GenesisHash
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: GenesisHash -&gt; GenesisHash -&gt; Bool
+== :: GenesisHash -&gt; GenesisHash -&gt; Bool
+$c/= :: GenesisHash -&gt; GenesisHash -&gt; Bool
+/= :: GenesisHash -&gt; GenesisHash -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679541761"><span id="local-6989586621679541763"><span class="annot"><span class="annottext">(forall x. GenesisHash -&gt; Rep GenesisHash x)
+-&gt; (forall x. Rep GenesisHash x -&gt; GenesisHash)
+-&gt; Generic GenesisHash
+forall x. Rep GenesisHash x -&gt; GenesisHash
+forall x. GenesisHash -&gt; Rep GenesisHash x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. GenesisHash -&gt; Rep GenesisHash x
+from :: forall x. GenesisHash -&gt; Rep GenesisHash x
+$cto :: forall x. Rep GenesisHash x -&gt; GenesisHash
+to :: forall x. Rep GenesisHash x -&gt; GenesisHash
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679541767"><span class="annot"><span class="annottext">GenesisHash -&gt; ()
+(GenesisHash -&gt; ()) -&gt; NFData GenesisHash
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: GenesisHash -&gt; ()
+rnf :: GenesisHash -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679541776"><span id="local-6989586621679541784"><span id="local-6989586621679541791"><span class="annot"><span class="annottext">Typeable GenesisHash
+Typeable GenesisHash =&gt;
+(forall s. Decoder s GenesisHash)
+-&gt; (forall s. Proxy GenesisHash -&gt; Decoder s ())
+-&gt; (Proxy GenesisHash -&gt; Text)
+-&gt; DecCBOR GenesisHash
+Proxy GenesisHash -&gt; Text
+forall s. Decoder s GenesisHash
+forall a.
+Typeable a =&gt;
+(forall s. Decoder s a)
+-&gt; (forall s. Proxy a -&gt; Decoder s ())
+-&gt; (Proxy a -&gt; Text)
+-&gt; DecCBOR a
+forall s. Proxy GenesisHash -&gt; Decoder s ()
+$cdecCBOR :: forall s. Decoder s GenesisHash
+decCBOR :: forall s. Decoder s GenesisHash
+$cdropCBOR :: forall s. Proxy GenesisHash -&gt; Decoder s ()
+dropCBOR :: forall s. Proxy GenesisHash -&gt; Decoder s ()
+$clabel :: Proxy GenesisHash -&gt; Text
+label :: Proxy GenesisHash -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">DecCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679541803"><span id="local-6989586621679541813"><span id="local-6989586621679541822"><span class="annot"><span class="annottext">Typeable GenesisHash
+Typeable GenesisHash =&gt;
+(GenesisHash -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy GenesisHash -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy [GenesisHash] -&gt; Size)
+-&gt; EncCBOR GenesisHash
+GenesisHash -&gt; Encoding
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [GenesisHash] -&gt; Size
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy GenesisHash -&gt; Size
+forall a.
+Typeable a =&gt;
+(a -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy a -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [a] -&gt; Size)
+-&gt; EncCBOR a
+$cencCBOR :: GenesisHash -&gt; Encoding
+encCBOR :: GenesisHash -&gt; Encoding
+$cencodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy GenesisHash -&gt; Size
+encodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy GenesisHash -&gt; Size
+$cencodedListSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [GenesisHash] -&gt; Size
+encodedListSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [GenesisHash] -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">EncCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679541831"><span id="local-6989586621679541836"><span id="local-6989586621679541840"><span class="annot"><span class="annottext">Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo)
+Proxy GenesisHash -&gt; String
+(Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy GenesisHash -&gt; String)
+-&gt; NoThunks GenesisHash
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; GenesisHash -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy GenesisHash -&gt; String
+showTypeOf :: Proxy GenesisHash -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span id="local-6989586621679541846"><span id="local-6989586621679541852"><span id="local-6989586621679541856"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="Cardano.Chain.Genesis.Hash.html#GenesisHash"><span class="hs-identifier hs-type">GenesisHash</span></a></span></span></span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- Used for debugging purposes only</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679541860"><span id="local-6989586621679541867"><span id="local-6989586621679541870"><span id="local-6989586621679541873"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Cardano.Chain.Genesis.Hash.html#GenesisHash"><span class="hs-identifier hs-type">GenesisHash</span></a></span></span></span></span></span><span>
+</span><span id="line-27"></span></pre></body></html>

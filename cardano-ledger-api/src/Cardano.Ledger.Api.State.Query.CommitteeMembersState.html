@@ -1,0 +1,1201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621679265959"><span id="local-6989586621679265960"><span id="local-6989586621679265961"><span id="local-6989586621679265962"></span></span></span></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Api.State.Query.CommitteeMembersState</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier">CommitteeMemberState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier">HotCredAuthStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier">MemberStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier">NextEpochChange</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BaseTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">UnitInterval</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">decCBOR</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">encCBOR</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-identifier">decodeEnumBounded</span></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="hs-identifier">encodeEnum</span></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary.Coders</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Decode</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Encode</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">decode</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">encode</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(!&gt;)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;!)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Credential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Credential</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Crypto</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier">KeyRole</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Slot</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier">EpochNo</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.TreeDiff</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToExpr</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyValue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">pairs</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="MemberStatus"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-var">MemberStatus</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- Votes of this member will count during ratification</span><span>
+</span><span id="line-42"></span><span>    </span><span id="Active"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Active"><span class="hs-identifier hs-var">Active</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Expired"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Expired"><span class="hs-identifier hs-var">Expired</span></a></span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | This can happen when a hot credential for an unknown cold credential exists.</span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-comment">-- Such Committee member will be either removed from the state at the next</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-comment">-- epoch boundary or enacted as a new member.</span><span>
+</span><span id="line-47"></span><span>    </span><span id="Unrecognized"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Unrecognized"><span class="hs-identifier hs-var">Unrecognized</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679265978"><span id="local-6989586621679265980"><span id="local-6989586621679265984"><span class="annot"><span class="annottext">Int -&gt; MemberStatus -&gt; ShowS
+[MemberStatus] -&gt; ShowS
+MemberStatus -&gt; String
+(Int -&gt; MemberStatus -&gt; ShowS)
+-&gt; (MemberStatus -&gt; String)
+-&gt; ([MemberStatus] -&gt; ShowS)
+-&gt; Show MemberStatus
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; MemberStatus -&gt; ShowS
+showsPrec :: Int -&gt; MemberStatus -&gt; ShowS
+$cshow :: MemberStatus -&gt; String
+show :: MemberStatus -&gt; String
+$cshowList :: [MemberStatus] -&gt; ShowS
+showList :: [MemberStatus] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679265988"><span id="local-6989586621679265990"><span class="annot"><span class="annottext">MemberStatus -&gt; MemberStatus -&gt; Bool
+(MemberStatus -&gt; MemberStatus -&gt; Bool)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; Bool) -&gt; Eq MemberStatus
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: MemberStatus -&gt; MemberStatus -&gt; Bool
+== :: MemberStatus -&gt; MemberStatus -&gt; Bool
+$c/= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+/= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679265995"><span id="local-6989586621679266003"><span id="local-6989586621679266009"><span id="local-6989586621679266023"><span id="local-6989586621679266025"><span id="local-6989586621679266029"><span id="local-6989586621679266033"><span id="local-6989586621679266037"><span class="annot"><span class="annottext">Int -&gt; MemberStatus
+MemberStatus -&gt; Int
+MemberStatus -&gt; [MemberStatus]
+MemberStatus -&gt; MemberStatus
+MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+MemberStatus -&gt; MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+(MemberStatus -&gt; MemberStatus)
+-&gt; (MemberStatus -&gt; MemberStatus)
+-&gt; (Int -&gt; MemberStatus)
+-&gt; (MemberStatus -&gt; Int)
+-&gt; (MemberStatus -&gt; [MemberStatus])
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; [MemberStatus])
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; [MemberStatus])
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; MemberStatus -&gt; [MemberStatus])
+-&gt; Enum MemberStatus
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: MemberStatus -&gt; MemberStatus
+succ :: MemberStatus -&gt; MemberStatus
+$cpred :: MemberStatus -&gt; MemberStatus
+pred :: MemberStatus -&gt; MemberStatus
+$ctoEnum :: Int -&gt; MemberStatus
+toEnum :: Int -&gt; MemberStatus
+$cfromEnum :: MemberStatus -&gt; Int
+fromEnum :: MemberStatus -&gt; Int
+$cenumFrom :: MemberStatus -&gt; [MemberStatus]
+enumFrom :: MemberStatus -&gt; [MemberStatus]
+$cenumFromThen :: MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+enumFromThen :: MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+$cenumFromTo :: MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+enumFromTo :: MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+$cenumFromThenTo :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+enumFromThenTo :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus -&gt; [MemberStatus]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Enum"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266041"><span id="local-6989586621679266043"><span class="annot"><span class="annottext">MemberStatus
+MemberStatus -&gt; MemberStatus -&gt; Bounded MemberStatus
+forall a. a -&gt; a -&gt; Bounded a
+$cminBound :: MemberStatus
+minBound :: MemberStatus
+$cmaxBound :: MemberStatus
+maxBound :: MemberStatus
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Bounded"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266047"><span id="local-6989586621679266049"><span class="annot"><span class="annottext">(forall x. MemberStatus -&gt; Rep MemberStatus x)
+-&gt; (forall x. Rep MemberStatus x -&gt; MemberStatus)
+-&gt; Generic MemberStatus
+forall x. Rep MemberStatus x -&gt; MemberStatus
+forall x. MemberStatus -&gt; Rep MemberStatus x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. MemberStatus -&gt; Rep MemberStatus x
+from :: forall x. MemberStatus -&gt; Rep MemberStatus x
+$cto :: forall x. Rep MemberStatus x -&gt; MemberStatus
+to :: forall x. Rep MemberStatus x -&gt; MemberStatus
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266055"><span id="local-6989586621679266057"><span id="local-6989586621679266059"><span id="local-6989586621679266063"><span id="local-6989586621679266066"><span id="local-6989586621679266069"><span id="local-6989586621679266072"><span class="annot"><span class="annottext">Eq MemberStatus
+Eq MemberStatus =&gt;
+(MemberStatus -&gt; MemberStatus -&gt; Ordering)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; Bool)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; Bool)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; Bool)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; Bool)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; MemberStatus)
+-&gt; (MemberStatus -&gt; MemberStatus -&gt; MemberStatus)
+-&gt; Ord MemberStatus
+MemberStatus -&gt; MemberStatus -&gt; Bool
+MemberStatus -&gt; MemberStatus -&gt; Ordering
+MemberStatus -&gt; MemberStatus -&gt; MemberStatus
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: MemberStatus -&gt; MemberStatus -&gt; Ordering
+compare :: MemberStatus -&gt; MemberStatus -&gt; Ordering
+$c&lt; :: MemberStatus -&gt; MemberStatus -&gt; Bool
+&lt; :: MemberStatus -&gt; MemberStatus -&gt; Bool
+$c&lt;= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+&lt;= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+$c&gt; :: MemberStatus -&gt; MemberStatus -&gt; Bool
+&gt; :: MemberStatus -&gt; MemberStatus -&gt; Bool
+$c&gt;= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+&gt;= :: MemberStatus -&gt; MemberStatus -&gt; Bool
+$cmax :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus
+max :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus
+$cmin :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus
+min :: MemberStatus -&gt; MemberStatus -&gt; MemberStatus
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266076"><span id="local-6989586621679266083"><span id="local-6989586621679266086"><span id="local-6989586621679266089"><span class="annot"><span class="annottext">[MemberStatus] -&gt; Value
+[MemberStatus] -&gt; Encoding
+MemberStatus -&gt; Value
+MemberStatus -&gt; Encoding
+(MemberStatus -&gt; Value)
+-&gt; (MemberStatus -&gt; Encoding)
+-&gt; ([MemberStatus] -&gt; Value)
+-&gt; ([MemberStatus] -&gt; Encoding)
+-&gt; ToJSON MemberStatus
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: MemberStatus -&gt; Value
+toJSON :: MemberStatus -&gt; Value
+$ctoEncoding :: MemberStatus -&gt; Encoding
+toEncoding :: MemberStatus -&gt; Encoding
+$ctoJSONList :: [MemberStatus] -&gt; Value
+toJSONList :: [MemberStatus] -&gt; Value
+$ctoEncodingList :: [MemberStatus] -&gt; Encoding
+toEncodingList :: [MemberStatus] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266192"><span id="local-6989586621679266199"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-type">MemberStatus</span></a></span></span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266224"><span id="local-6989586621679266228"><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-type">MemberStatus</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679266232"><span class="annot"><span class="annottext">encCBOR :: MemberStatus -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MemberStatus -&gt; Encoding
+forall a. Enum a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeEnum</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266237"><span id="local-6989586621679266241"><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-type">MemberStatus</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679266247"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s MemberStatus
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s MemberStatus
+forall a s. (Enum a, Bounded a, Typeable a) =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decodeEnumBounded</span></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">data</span><span> </span><span id="HotCredAuthStatus"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier hs-var">HotCredAuthStatus</span></a></span></span><span> </span><span id="local-6989586621679265818"><span class="annot"><a href="#local-6989586621679265818"><span class="hs-identifier hs-type">c</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MemberAuthorized"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberAuthorized"><span class="hs-identifier hs-var">MemberAuthorized</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">HotCommitteeRole</span></span><span> </span><span class="annot"><a href="#local-6989586621679265818"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Member enacted, but no hot credential for voting has been registered</span></span><span>
+</span><span id="line-61"></span><span>    </span><span id="MemberNotAuthorized"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberNotAuthorized"><span class="hs-identifier hs-var">MemberNotAuthorized</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MemberResigned"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberResigned"><span class="hs-identifier hs-var">MemberResigned</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679266252"><span id="local-6989586621679266257"><span id="local-6989586621679266261"><span class="annot"><span class="annottext">Int -&gt; HotCredAuthStatus c -&gt; ShowS
+[HotCredAuthStatus c] -&gt; ShowS
+HotCredAuthStatus c -&gt; String
+(Int -&gt; HotCredAuthStatus c -&gt; ShowS)
+-&gt; (HotCredAuthStatus c -&gt; String)
+-&gt; ([HotCredAuthStatus c] -&gt; ShowS)
+-&gt; Show (HotCredAuthStatus c)
+forall c. Int -&gt; HotCredAuthStatus c -&gt; ShowS
+forall c. [HotCredAuthStatus c] -&gt; ShowS
+forall c. HotCredAuthStatus c -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall c. Int -&gt; HotCredAuthStatus c -&gt; ShowS
+showsPrec :: Int -&gt; HotCredAuthStatus c -&gt; ShowS
+$cshow :: forall c. HotCredAuthStatus c -&gt; String
+show :: HotCredAuthStatus c -&gt; String
+$cshowList :: forall c. [HotCredAuthStatus c] -&gt; ShowS
+showList :: [HotCredAuthStatus c] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266264"><span id="local-6989586621679266268"><span class="annot"><span class="annottext">HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+(HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; (HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; Eq (HotCredAuthStatus c)
+forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+== :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+$c/= :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+/= :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266272"><span id="local-6989586621679266274"><span class="annot"><span class="annottext">(forall x. HotCredAuthStatus c -&gt; Rep (HotCredAuthStatus c) x)
+-&gt; (forall x. Rep (HotCredAuthStatus c) x -&gt; HotCredAuthStatus c)
+-&gt; Generic (HotCredAuthStatus c)
+forall x. Rep (HotCredAuthStatus c) x -&gt; HotCredAuthStatus c
+forall x. HotCredAuthStatus c -&gt; Rep (HotCredAuthStatus c) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall c x. Rep (HotCredAuthStatus c) x -&gt; HotCredAuthStatus c
+forall c x. HotCredAuthStatus c -&gt; Rep (HotCredAuthStatus c) x
+$cfrom :: forall c x. HotCredAuthStatus c -&gt; Rep (HotCredAuthStatus c) x
+from :: forall x. HotCredAuthStatus c -&gt; Rep (HotCredAuthStatus c) x
+$cto :: forall c x. Rep (HotCredAuthStatus c) x -&gt; HotCredAuthStatus c
+to :: forall x. Rep (HotCredAuthStatus c) x -&gt; HotCredAuthStatus c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266279"><span id="local-6989586621679266283"><span id="local-6989586621679266286"><span id="local-6989586621679266290"><span id="local-6989586621679266293"><span id="local-6989586621679266296"><span id="local-6989586621679266299"><span class="annot"><span class="annottext">Eq (HotCredAuthStatus c)
+Eq (HotCredAuthStatus c) =&gt;
+(HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Ordering)
+-&gt; (HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; (HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; (HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; (HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool)
+-&gt; (HotCredAuthStatus c
+    -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c)
+-&gt; (HotCredAuthStatus c
+    -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c)
+-&gt; Ord (HotCredAuthStatus c)
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Ordering
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+forall c. Eq (HotCredAuthStatus c)
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Ordering
+forall c.
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+$ccompare :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Ordering
+compare :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Ordering
+$c&lt; :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+&lt; :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+$c&lt;= :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+&lt;= :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+$c&gt; :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+&gt; :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+$c&gt;= :: forall c. HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+&gt;= :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; Bool
+$cmax :: forall c.
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+max :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+$cmin :: forall c.
+HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+min :: HotCredAuthStatus c -&gt; HotCredAuthStatus c -&gt; HotCredAuthStatus c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266303"><span id="local-6989586621679266310"><span id="local-6989586621679266313"><span id="local-6989586621679266316"><span class="annot"><span class="annottext">[HotCredAuthStatus c] -&gt; Value
+[HotCredAuthStatus c] -&gt; Encoding
+HotCredAuthStatus c -&gt; Value
+HotCredAuthStatus c -&gt; Encoding
+(HotCredAuthStatus c -&gt; Value)
+-&gt; (HotCredAuthStatus c -&gt; Encoding)
+-&gt; ([HotCredAuthStatus c] -&gt; Value)
+-&gt; ([HotCredAuthStatus c] -&gt; Encoding)
+-&gt; ToJSON (HotCredAuthStatus c)
+forall c. Crypto c =&gt; [HotCredAuthStatus c] -&gt; Value
+forall c. Crypto c =&gt; [HotCredAuthStatus c] -&gt; Encoding
+forall c. Crypto c =&gt; HotCredAuthStatus c -&gt; Value
+forall c. Crypto c =&gt; HotCredAuthStatus c -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: forall c. Crypto c =&gt; HotCredAuthStatus c -&gt; Value
+toJSON :: HotCredAuthStatus c -&gt; Value
+$ctoEncoding :: forall c. Crypto c =&gt; HotCredAuthStatus c -&gt; Encoding
+toEncoding :: HotCredAuthStatus c -&gt; Encoding
+$ctoJSONList :: forall c. Crypto c =&gt; [HotCredAuthStatus c] -&gt; Value
+toJSONList :: [HotCredAuthStatus c] -&gt; Value
+$ctoEncodingList :: forall c. Crypto c =&gt; [HotCredAuthStatus c] -&gt; Encoding
+toEncodingList :: [HotCredAuthStatus c] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265803"><span id="local-6989586621679266401"><span id="local-6989586621679266408"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier hs-type">HotCredAuthStatus</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265803"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265806"><span id="local-6989586621679266447"><span id="local-6989586621679266451"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265806"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier hs-type">HotCredAuthStatus</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265806"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679266457"><span class="annot"><span class="annottext">encCBOR :: HotCredAuthStatus c -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Encode 'Open (HotCredAuthStatus c) -&gt; Encoding
+forall (w :: Wrapped) t. Encode w t -&gt; Encoding
+</span><span class="hs-identifier hs-var">encode</span></span><span> </span><span class="annot"><span class="annottext">(Encode 'Open (HotCredAuthStatus c) -&gt; Encoding)
+-&gt; (HotCredAuthStatus c -&gt; Encode 'Open (HotCredAuthStatus c))
+-&gt; HotCredAuthStatus c
+-&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberAuthorized"><span class="hs-identifier hs-type">MemberAuthorized</span></a></span><span> </span><span id="local-6989586621679266459"><span class="annot"><span class="annottext">Credential 'HotCommitteeRole c
+</span><a href="#local-6989586621679266459"><span class="hs-identifier hs-var">cred</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+-&gt; Word
+-&gt; Encode
+     'Open (Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+forall t. t -&gt; Word -&gt; Encode 'Open t
+</span><span class="hs-identifier hs-var">Sum</span></span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c
+forall c. Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberAuthorized"><span class="hs-identifier hs-var">MemberAuthorized</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Encode
+  'Open (Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+-&gt; Encode ('Closed 'Dense) (Credential 'HotCommitteeRole c)
+-&gt; Encode 'Open (HotCredAuthStatus c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole c
+-&gt; Encode ('Closed 'Dense) (Credential 'HotCommitteeRole c)
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole c
+</span><a href="#local-6989586621679266459"><span class="hs-identifier hs-var">cred</span></a></span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberNotAuthorized"><span class="hs-identifier hs-var">MemberNotAuthorized</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c -&gt; Word -&gt; Encode 'Open (HotCredAuthStatus c)
+forall t. t -&gt; Word -&gt; Encode 'Open t
+</span><span class="hs-identifier hs-var">Sum</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberNotAuthorized"><span class="hs-identifier hs-var">MemberNotAuthorized</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberResigned"><span class="hs-identifier hs-var">MemberResigned</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c -&gt; Word -&gt; Encode 'Open (HotCredAuthStatus c)
+forall t. t -&gt; Word -&gt; Encode 'Open t
+</span><span class="hs-identifier hs-var">Sum</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberResigned"><span class="hs-identifier hs-var">MemberResigned</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265827"><span id="local-6989586621679266469"><span id="local-6989586621679266473"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265827"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier hs-type">HotCredAuthStatus</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265827"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679266486"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (HotCredAuthStatus c)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (HotCredAuthStatus c)
+-&gt; Decoder s (HotCredAuthStatus c)
+forall (w :: Wrapped) t s. Decode w t -&gt; Decoder s t
+</span><span class="hs-identifier hs-var">decode</span></span><span> </span><span class="annot"><span class="annottext">(Decode ('Closed 'Dense) (HotCredAuthStatus c)
+ -&gt; Decoder s (HotCredAuthStatus c))
+-&gt; Decode ('Closed 'Dense) (HotCredAuthStatus c)
+-&gt; Decoder s (HotCredAuthStatus c)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Word -&gt; Decode 'Open (HotCredAuthStatus c))
+-&gt; Decode ('Closed 'Dense) (HotCredAuthStatus c)
+forall t.
+String -&gt; (Word -&gt; Decode 'Open t) -&gt; Decode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">Summands</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;HotCredAuthStatus&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Word -&gt; Decode 'Open (HotCredAuthStatus c))
+ -&gt; Decode ('Closed 'Dense) (HotCredAuthStatus c))
+-&gt; (Word -&gt; Decode 'Open (HotCredAuthStatus c))
+-&gt; Decode ('Closed 'Dense) (HotCredAuthStatus c)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+-&gt; Decode
+     'Open (Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+forall t. t -&gt; Decode 'Open t
+</span><span class="hs-identifier hs-var">SumD</span></span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c
+forall c. Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberAuthorized"><span class="hs-identifier hs-var">MemberAuthorized</span></a></span><span> </span><span class="annot"><span class="annottext">Decode
+  'Open (Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c)
+-&gt; Decode ('Closed Any) (Credential 'HotCommitteeRole c)
+-&gt; Decode 'Open (HotCredAuthStatus c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Credential 'HotCommitteeRole c)
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c -&gt; Decode 'Open (HotCredAuthStatus c)
+forall t. t -&gt; Decode 'Open t
+</span><span class="hs-identifier hs-var">SumD</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberNotAuthorized"><span class="hs-identifier hs-var">MemberNotAuthorized</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c -&gt; Decode 'Open (HotCredAuthStatus c)
+forall t. t -&gt; Decode 'Open t
+</span><span class="hs-identifier hs-var">SumD</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberResigned"><span class="hs-identifier hs-var">MemberResigned</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span id="local-6989586621679266490"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679266490"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Decode 'Open (HotCredAuthStatus c)
+forall (w :: Wrapped) t. Word -&gt; Decode w t
+</span><span class="hs-identifier hs-var">Invalid</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679266490"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">data</span><span> </span><span id="NextEpochChange"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier hs-var">NextEpochChange</span></a></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">--- | Member not enacted yet, but will be at the next epoch</span><span>
+</span><span id="line-84"></span><span>    </span><span id="ToBeEnacted"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#ToBeEnacted"><span class="hs-identifier hs-var">ToBeEnacted</span></a></span></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Member will be removed</span></span><span>
+</span><span id="line-86"></span><span>    </span><span id="ToBeRemoved"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#ToBeRemoved"><span class="hs-identifier hs-var">ToBeRemoved</span></a></span></span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NoChangeExpected"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NoChangeExpected"><span class="hs-identifier hs-var">NoChangeExpected</span></a></span></span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679266496"><span id="local-6989586621679266498"><span id="local-6989586621679266502"><span class="annot"><span class="annottext">Int -&gt; NextEpochChange -&gt; ShowS
+[NextEpochChange] -&gt; ShowS
+NextEpochChange -&gt; String
+(Int -&gt; NextEpochChange -&gt; ShowS)
+-&gt; (NextEpochChange -&gt; String)
+-&gt; ([NextEpochChange] -&gt; ShowS)
+-&gt; Show NextEpochChange
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; NextEpochChange -&gt; ShowS
+showsPrec :: Int -&gt; NextEpochChange -&gt; ShowS
+$cshow :: NextEpochChange -&gt; String
+show :: NextEpochChange -&gt; String
+$cshowList :: [NextEpochChange] -&gt; ShowS
+showList :: [NextEpochChange] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266505"><span id="local-6989586621679266507"><span class="annot"><span class="annottext">NextEpochChange -&gt; NextEpochChange -&gt; Bool
+(NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; Eq NextEpochChange
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+== :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+$c/= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+/= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266511"><span id="local-6989586621679266517"><span id="local-6989586621679266523"><span id="local-6989586621679266534"><span id="local-6989586621679266536"><span id="local-6989586621679266539"><span id="local-6989586621679266543"><span id="local-6989586621679266547"><span class="annot"><span class="annottext">Int -&gt; NextEpochChange
+NextEpochChange -&gt; Int
+NextEpochChange -&gt; [NextEpochChange]
+NextEpochChange -&gt; NextEpochChange
+NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+NextEpochChange
+-&gt; NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+(NextEpochChange -&gt; NextEpochChange)
+-&gt; (NextEpochChange -&gt; NextEpochChange)
+-&gt; (Int -&gt; NextEpochChange)
+-&gt; (NextEpochChange -&gt; Int)
+-&gt; (NextEpochChange -&gt; [NextEpochChange])
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange])
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange])
+-&gt; (NextEpochChange
+    -&gt; NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange])
+-&gt; Enum NextEpochChange
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: NextEpochChange -&gt; NextEpochChange
+succ :: NextEpochChange -&gt; NextEpochChange
+$cpred :: NextEpochChange -&gt; NextEpochChange
+pred :: NextEpochChange -&gt; NextEpochChange
+$ctoEnum :: Int -&gt; NextEpochChange
+toEnum :: Int -&gt; NextEpochChange
+$cfromEnum :: NextEpochChange -&gt; Int
+fromEnum :: NextEpochChange -&gt; Int
+$cenumFrom :: NextEpochChange -&gt; [NextEpochChange]
+enumFrom :: NextEpochChange -&gt; [NextEpochChange]
+$cenumFromThen :: NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+enumFromThen :: NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+$cenumFromTo :: NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+enumFromTo :: NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+$cenumFromThenTo :: NextEpochChange
+-&gt; NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+enumFromThenTo :: NextEpochChange
+-&gt; NextEpochChange -&gt; NextEpochChange -&gt; [NextEpochChange]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Enum"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266550"><span id="local-6989586621679266552"><span class="annot"><span class="annottext">NextEpochChange
+NextEpochChange -&gt; NextEpochChange -&gt; Bounded NextEpochChange
+forall a. a -&gt; a -&gt; Bounded a
+$cminBound :: NextEpochChange
+minBound :: NextEpochChange
+$cmaxBound :: NextEpochChange
+maxBound :: NextEpochChange
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Bounded"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266555"><span id="local-6989586621679266557"><span class="annot"><span class="annottext">(forall x. NextEpochChange -&gt; Rep NextEpochChange x)
+-&gt; (forall x. Rep NextEpochChange x -&gt; NextEpochChange)
+-&gt; Generic NextEpochChange
+forall x. Rep NextEpochChange x -&gt; NextEpochChange
+forall x. NextEpochChange -&gt; Rep NextEpochChange x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. NextEpochChange -&gt; Rep NextEpochChange x
+from :: forall x. NextEpochChange -&gt; Rep NextEpochChange x
+$cto :: forall x. Rep NextEpochChange x -&gt; NextEpochChange
+to :: forall x. Rep NextEpochChange x -&gt; NextEpochChange
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266562"><span id="local-6989586621679266564"><span id="local-6989586621679266566"><span id="local-6989586621679266570"><span id="local-6989586621679266573"><span id="local-6989586621679266576"><span id="local-6989586621679266579"><span class="annot"><span class="annottext">Eq NextEpochChange
+Eq NextEpochChange =&gt;
+(NextEpochChange -&gt; NextEpochChange -&gt; Ordering)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; Bool)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange)
+-&gt; (NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange)
+-&gt; Ord NextEpochChange
+NextEpochChange -&gt; NextEpochChange -&gt; Bool
+NextEpochChange -&gt; NextEpochChange -&gt; Ordering
+NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: NextEpochChange -&gt; NextEpochChange -&gt; Ordering
+compare :: NextEpochChange -&gt; NextEpochChange -&gt; Ordering
+$c&lt; :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+&lt; :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+$c&lt;= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+&lt;= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+$c&gt; :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+&gt; :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+$c&gt;= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+&gt;= :: NextEpochChange -&gt; NextEpochChange -&gt; Bool
+$cmax :: NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange
+max :: NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange
+$cmin :: NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange
+min :: NextEpochChange -&gt; NextEpochChange -&gt; NextEpochChange
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266582"><span id="local-6989586621679266589"><span id="local-6989586621679266592"><span id="local-6989586621679266595"><span class="annot"><span class="annottext">[NextEpochChange] -&gt; Value
+[NextEpochChange] -&gt; Encoding
+NextEpochChange -&gt; Value
+NextEpochChange -&gt; Encoding
+(NextEpochChange -&gt; Value)
+-&gt; (NextEpochChange -&gt; Encoding)
+-&gt; ([NextEpochChange] -&gt; Value)
+-&gt; ([NextEpochChange] -&gt; Encoding)
+-&gt; ToJSON NextEpochChange
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: NextEpochChange -&gt; Value
+toJSON :: NextEpochChange -&gt; Value
+$ctoEncoding :: NextEpochChange -&gt; Encoding
+toEncoding :: NextEpochChange -&gt; Encoding
+$ctoJSONList :: [NextEpochChange] -&gt; Value
+toJSONList :: [NextEpochChange] -&gt; Value
+$ctoEncodingList :: [NextEpochChange] -&gt; Encoding
+toEncodingList :: [NextEpochChange] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266670"><span id="local-6989586621679266677"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier hs-type">NextEpochChange</span></a></span></span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266697"><span id="local-6989586621679266701"><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier hs-type">NextEpochChange</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621679266704"><span class="annot"><span class="annottext">encCBOR :: NextEpochChange -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NextEpochChange -&gt; Encoding
+forall a. Enum a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeEnum</span></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679266709"><span id="local-6989586621679266713"><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier hs-type">NextEpochChange</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621679266718"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s NextEpochChange
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s NextEpochChange
+forall a s. (Enum a, Bounded a, Typeable a) =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decodeEnumBounded</span></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">data</span><span> </span><span id="CommitteeMemberState"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-var">CommitteeMemberState</span></a></span></span><span> </span><span id="local-6989586621679265845"><span class="annot"><a href="#local-6989586621679265845"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CommitteeMemberState"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-var">CommitteeMemberState</span></a></span></span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cmsHotCredAuthStatus"><span class="annot"><span class="annottext">forall c. CommitteeMemberState c -&gt; HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#cmsHotCredAuthStatus"><span class="hs-identifier hs-var hs-var">cmsHotCredAuthStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier hs-type">HotCredAuthStatus</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265845"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="cmsStatus"><span class="annot"><span class="annottext">forall c. CommitteeMemberState c -&gt; MemberStatus
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#cmsStatus"><span class="hs-identifier hs-var hs-var">cmsStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-type">MemberStatus</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="cmsExpiration"><span class="annot"><span class="annottext">forall c. CommitteeMemberState c -&gt; Maybe EpochNo
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#cmsExpiration"><span class="hs-identifier hs-var hs-var">cmsExpiration</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">EpochNo</span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Absolute epoch number when the member expires</span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="cmsNextEpochChange"><span class="annot"><span class="annottext">forall c. CommitteeMemberState c -&gt; NextEpochChange
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#cmsNextEpochChange"><span class="hs-identifier hs-var hs-var">cmsNextEpochChange</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier hs-type">NextEpochChange</span></a></span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Changes to the member at the next epoch</span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679266725"><span id="local-6989586621679266734"><span id="local-6989586621679266738"><span class="annot"><span class="annottext">Int -&gt; CommitteeMemberState c -&gt; ShowS
+[CommitteeMemberState c] -&gt; ShowS
+CommitteeMemberState c -&gt; String
+(Int -&gt; CommitteeMemberState c -&gt; ShowS)
+-&gt; (CommitteeMemberState c -&gt; String)
+-&gt; ([CommitteeMemberState c] -&gt; ShowS)
+-&gt; Show (CommitteeMemberState c)
+forall c. Int -&gt; CommitteeMemberState c -&gt; ShowS
+forall c. [CommitteeMemberState c] -&gt; ShowS
+forall c. CommitteeMemberState c -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall c. Int -&gt; CommitteeMemberState c -&gt; ShowS
+showsPrec :: Int -&gt; CommitteeMemberState c -&gt; ShowS
+$cshow :: forall c. CommitteeMemberState c -&gt; String
+show :: CommitteeMemberState c -&gt; String
+$cshowList :: forall c. [CommitteeMemberState c] -&gt; ShowS
+showList :: [CommitteeMemberState c] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266742"><span id="local-6989586621679266750"><span class="annot"><span class="annottext">CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+(CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool)
+-&gt; (CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool)
+-&gt; Eq (CommitteeMemberState c)
+forall c. CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall c. CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+== :: CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+$c/= :: forall c. CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+/= :: CommitteeMemberState c -&gt; CommitteeMemberState c -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266755"><span id="local-6989586621679266757"><span class="annot"><span class="annottext">(forall x.
+ CommitteeMemberState c -&gt; Rep (CommitteeMemberState c) x)
+-&gt; (forall x.
+    Rep (CommitteeMemberState c) x -&gt; CommitteeMemberState c)
+-&gt; Generic (CommitteeMemberState c)
+forall x. Rep (CommitteeMemberState c) x -&gt; CommitteeMemberState c
+forall x. CommitteeMemberState c -&gt; Rep (CommitteeMemberState c) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall c x.
+Rep (CommitteeMemberState c) x -&gt; CommitteeMemberState c
+forall c x.
+CommitteeMemberState c -&gt; Rep (CommitteeMemberState c) x
+$cfrom :: forall c x.
+CommitteeMemberState c -&gt; Rep (CommitteeMemberState c) x
+from :: forall x. CommitteeMemberState c -&gt; Rep (CommitteeMemberState c) x
+$cto :: forall c x.
+Rep (CommitteeMemberState c) x -&gt; CommitteeMemberState c
+to :: forall x. Rep (CommitteeMemberState c) x -&gt; CommitteeMemberState c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span id="local-6989586621679265862"><span id="local-6989586621679266762"><span id="local-6989586621679266770"><span id="local-6989586621679266777"><span id="local-6989586621679266781"><span id="local-6989586621679266784"><span id="local-6989586621679266787"><span id="local-6989586621679266790"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265862"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-109"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265870"><span id="local-6989586621679266794"><span id="local-6989586621679266801"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265870"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265872"><span id="local-6989586621679266858"><span id="local-6989586621679266862"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265872"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265872"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621679266871"><span class="annot"><span class="annottext">encCBOR :: CommitteeMemberState c -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span id="local-6989586621679266872"><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><a href="#local-6989586621679266872"><span class="hs-identifier hs-var">cStatus</span></a></span></span><span> </span><span id="local-6989586621679266873"><span class="annot"><span class="annottext">MemberStatus
+</span><a href="#local-6989586621679266873"><span class="hs-identifier hs-var">mStatus</span></a></span></span><span> </span><span id="local-6989586621679266874"><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="#local-6989586621679266874"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span id="local-6989586621679266875"><span class="annot"><span class="annottext">NextEpochChange
+</span><a href="#local-6989586621679266875"><span class="hs-identifier hs-var">nec</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">Encode ('Closed 'Dense) (CommitteeMemberState c) -&gt; Encoding
+forall (w :: Wrapped) t. Encode w t -&gt; Encoding
+</span><span class="hs-identifier hs-var">encode</span></span><span> </span><span class="annot"><span class="annottext">(Encode ('Closed 'Dense) (CommitteeMemberState c) -&gt; Encoding)
+-&gt; Encode ('Closed 'Dense) (CommitteeMemberState c) -&gt; Encoding
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">(HotCredAuthStatus c
+ -&gt; MemberStatus
+ -&gt; Maybe EpochNo
+ -&gt; NextEpochChange
+ -&gt; CommitteeMemberState c)
+-&gt; Encode
+     ('Closed 'Dense)
+     (HotCredAuthStatus c
+      -&gt; MemberStatus
+      -&gt; Maybe EpochNo
+      -&gt; NextEpochChange
+      -&gt; CommitteeMemberState c)
+forall t. t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">Rec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall c.
+HotCredAuthStatus c
+-&gt; MemberStatus
+-&gt; Maybe EpochNo
+-&gt; NextEpochChange
+-&gt; CommitteeMemberState c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-var">CommitteeMemberState</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679265872"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>        </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (HotCredAuthStatus c
+   -&gt; MemberStatus
+   -&gt; Maybe EpochNo
+   -&gt; NextEpochChange
+   -&gt; CommitteeMemberState c)
+-&gt; Encode ('Closed 'Dense) (HotCredAuthStatus c)
+-&gt; Encode
+     ('Closed 'Dense)
+     (MemberStatus
+      -&gt; Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+-&gt; Encode ('Closed 'Dense) (HotCredAuthStatus c)
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><a href="#local-6989586621679266872"><span class="hs-identifier hs-var">cStatus</span></a></span><span>
+</span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (MemberStatus
+   -&gt; Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Encode ('Closed 'Dense) MemberStatus
+-&gt; Encode
+     ('Closed 'Dense)
+     (Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">MemberStatus -&gt; Encode ('Closed 'Dense) MemberStatus
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="#local-6989586621679266873"><span class="hs-identifier hs-var">mStatus</span></a></span><span>
+</span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Encode ('Closed 'Dense) (Maybe EpochNo)
+-&gt; Encode
+     ('Closed 'Dense) (NextEpochChange -&gt; CommitteeMemberState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo -&gt; Encode ('Closed 'Dense) (Maybe EpochNo)
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="#local-6989586621679266874"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">Encode ('Closed 'Dense) (NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Encode ('Closed 'Dense) NextEpochChange
+-&gt; Encode ('Closed 'Dense) (CommitteeMemberState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">NextEpochChange -&gt; Encode ('Closed 'Dense) NextEpochChange
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">NextEpochChange
+</span><a href="#local-6989586621679266875"><span class="hs-identifier hs-var">nec</span></a></span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265875"><span id="local-6989586621679266884"><span id="local-6989586621679266888"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265875"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265875"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621679266897"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (CommitteeMemberState c)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (CommitteeMemberState c)
+-&gt; Decoder s (CommitteeMemberState c)
+forall (w :: Wrapped) t s. Decode w t -&gt; Decoder s t
+</span><span class="hs-identifier hs-var">decode</span></span><span> </span><span class="annot"><span class="annottext">(Decode ('Closed 'Dense) (CommitteeMemberState c)
+ -&gt; Decoder s (CommitteeMemberState c))
+-&gt; Decode ('Closed 'Dense) (CommitteeMemberState c)
+-&gt; Decoder s (CommitteeMemberState c)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">(HotCredAuthStatus c
+ -&gt; MemberStatus
+ -&gt; Maybe EpochNo
+ -&gt; NextEpochChange
+ -&gt; CommitteeMemberState c)
+-&gt; Decode
+     ('Closed 'Dense)
+     (HotCredAuthStatus c
+      -&gt; MemberStatus
+      -&gt; Maybe EpochNo
+      -&gt; NextEpochChange
+      -&gt; CommitteeMemberState c)
+forall t. t -&gt; Decode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">RecD</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+-&gt; MemberStatus
+-&gt; Maybe EpochNo
+-&gt; NextEpochChange
+-&gt; CommitteeMemberState c
+forall c.
+HotCredAuthStatus c
+-&gt; MemberStatus
+-&gt; Maybe EpochNo
+-&gt; NextEpochChange
+-&gt; CommitteeMemberState c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-var">CommitteeMemberState</span></a></span><span>
+</span><span id="line-124"></span><span>        </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (HotCredAuthStatus c
+   -&gt; MemberStatus
+   -&gt; Maybe EpochNo
+   -&gt; NextEpochChange
+   -&gt; CommitteeMemberState c)
+-&gt; Decode ('Closed Any) (HotCredAuthStatus c)
+-&gt; Decode
+     ('Closed 'Dense)
+     (MemberStatus
+      -&gt; Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (HotCredAuthStatus c)
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (MemberStatus
+   -&gt; Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Decode ('Closed Any) MemberStatus
+-&gt; Decode
+     ('Closed 'Dense)
+     (Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) MemberStatus
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-126"></span><span>        </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (Maybe EpochNo -&gt; NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Decode ('Closed Any) (Maybe EpochNo)
+-&gt; Decode
+     ('Closed 'Dense) (NextEpochChange -&gt; CommitteeMemberState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Maybe EpochNo)
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-127"></span><span>        </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (NextEpochChange -&gt; CommitteeMemberState c)
+-&gt; Decode ('Closed Any) NextEpochChange
+-&gt; Decode ('Closed 'Dense) (CommitteeMemberState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) NextEpochChange
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265879"><span id="local-6989586621679266903"><span id="local-6989586621679266907"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265879"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265879"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621679266914"><span class="annot"><span class="annottext">toJSON :: CommitteeMemberState c -&gt; Value
+</span><a href="#local-6989586621679266914"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value)
+-&gt; (CommitteeMemberState c -&gt; [Pair])
+-&gt; CommitteeMemberState c
+-&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">CommitteeMemberState c -&gt; [Pair]
+forall c a. (Crypto c, KeyValue a) =&gt; CommitteeMemberState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMemberStatePairs"><span class="hs-identifier hs-var">toCommitteeMemberStatePairs</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621679266922"><span class="annot"><span class="annottext">toEncoding :: CommitteeMemberState c -&gt; Encoding
+</span><a href="#local-6989586621679266922"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Series -&gt; Encoding
+</span><span class="hs-identifier hs-var">pairs</span></span><span> </span><span class="annot"><span class="annottext">(Series -&gt; Encoding)
+-&gt; (CommitteeMemberState c -&gt; Series)
+-&gt; CommitteeMemberState c
+-&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[Series] -&gt; Series
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">([Series] -&gt; Series)
+-&gt; (CommitteeMemberState c -&gt; [Series])
+-&gt; CommitteeMemberState c
+-&gt; Series
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">CommitteeMemberState c -&gt; [Series]
+forall c a. (Crypto c, KeyValue a) =&gt; CommitteeMemberState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMemberStatePairs"><span class="hs-identifier hs-var">toCommitteeMemberStatePairs</span></a></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span id="local-6989586621679265884"><span id="local-6989586621679265885"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMemberStatePairs"><span class="hs-identifier hs-type">toCommitteeMemberStatePairs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265884"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KeyValue</span></span><span> </span><span class="annot"><a href="#local-6989586621679265885"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265884"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679265885"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-134"></span><span id="toCommitteeMemberStatePairs"><span class="annot"><span class="annottext">toCommitteeMemberStatePairs :: forall c a. (Crypto c, KeyValue a) =&gt; CommitteeMemberState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMemberStatePairs"><span class="hs-identifier hs-var hs-var">toCommitteeMemberStatePairs</span></a></span></span><span> </span><span id="local-6989586621679266942"><span class="annot"><span class="annottext">c :: CommitteeMemberState c
+</span><a href="#local-6989586621679266942"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NextEpochChange
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679266943"><span id="local-6989586621679266944"><span id="local-6989586621679266945"><span id="local-6989586621679266946"><span class="annot"><span class="annottext">Maybe EpochNo
+NextEpochChange
+HotCredAuthStatus c
+MemberStatus
+cmsHotCredAuthStatus :: forall c. CommitteeMemberState c -&gt; HotCredAuthStatus c
+cmsStatus :: forall c. CommitteeMemberState c -&gt; MemberStatus
+cmsExpiration :: forall c. CommitteeMemberState c -&gt; Maybe EpochNo
+cmsNextEpochChange :: forall c. CommitteeMemberState c -&gt; NextEpochChange
+cmsHotCredAuthStatus :: HotCredAuthStatus c
+cmsStatus :: MemberStatus
+cmsExpiration :: Maybe EpochNo
+cmsNextEpochChange :: NextEpochChange
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#cmsHotCredAuthStatus"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommitteeMemberState c
+</span><a href="#local-6989586621679266942"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-136"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;hotCredsAuthStatus&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HotCredAuthStatus c -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus c
+</span><a href="#local-6989586621679266943"><span class="hs-identifier hs-var">cmsHotCredAuthStatus</span></a></span><span>
+</span><span id="line-137"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;status&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; MemberStatus -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="#local-6989586621679266944"><span class="hs-identifier hs-var">cmsStatus</span></a></span><span>
+</span><span id="line-138"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;expiration&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe EpochNo -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="#local-6989586621679266945"><span class="hs-identifier hs-var">cmsExpiration</span></a></span><span>
+</span><span id="line-139"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;nextEpochChange&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; NextEpochChange -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">NextEpochChange
+</span><a href="#local-6989586621679266946"><span class="hs-identifier hs-var">cmsNextEpochChange</span></a></span><span>
+</span><span id="line-140"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-keyword">data</span><span> </span><span id="CommitteeMembersState"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-var">CommitteeMembersState</span></a></span></span><span> </span><span id="local-6989586621679265893"><span class="annot"><a href="#local-6989586621679265893"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CommitteeMembersState"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-var">CommitteeMembersState</span></a></span></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="csCommittee"><span class="annot"><span class="annottext">forall c.
+CommitteeMembersState c
+-&gt; Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csCommittee"><span class="hs-identifier hs-var hs-var">csCommittee</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ColdCommitteeRole</span></span><span> </span><span class="annot"><a href="#local-6989586621679265893"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265893"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="csQuorum"><span class="annot"><span class="annottext">forall c. CommitteeMembersState c -&gt; UnitInterval
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csQuorum"><span class="hs-identifier hs-var hs-var">csQuorum</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UnitInterval</span></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="csEpochNo"><span class="annot"><span class="annottext">forall c. CommitteeMembersState c -&gt; EpochNo
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csEpochNo"><span class="hs-identifier hs-var hs-var">csEpochNo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">EpochNo</span></span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Current epoch number. This is necessary to interpret committee member states</span></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679266952"><span id="local-6989586621679266961"><span class="annot"><span class="annottext">CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+(CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool)
+-&gt; (CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool)
+-&gt; Eq (CommitteeMembersState c)
+forall c.
+CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall c.
+CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+== :: CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+$c/= :: forall c.
+CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+/= :: CommitteeMembersState c -&gt; CommitteeMembersState c -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266965"><span id="local-6989586621679266975"><span id="local-6989586621679266979"><span class="annot"><span class="annottext">Int -&gt; CommitteeMembersState c -&gt; ShowS
+[CommitteeMembersState c] -&gt; ShowS
+CommitteeMembersState c -&gt; String
+(Int -&gt; CommitteeMembersState c -&gt; ShowS)
+-&gt; (CommitteeMembersState c -&gt; String)
+-&gt; ([CommitteeMembersState c] -&gt; ShowS)
+-&gt; Show (CommitteeMembersState c)
+forall c. Int -&gt; CommitteeMembersState c -&gt; ShowS
+forall c. [CommitteeMembersState c] -&gt; ShowS
+forall c. CommitteeMembersState c -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall c. Int -&gt; CommitteeMembersState c -&gt; ShowS
+showsPrec :: Int -&gt; CommitteeMembersState c -&gt; ShowS
+$cshow :: forall c. CommitteeMembersState c -&gt; String
+show :: CommitteeMembersState c -&gt; String
+$cshowList :: forall c. [CommitteeMembersState c] -&gt; ShowS
+showList :: [CommitteeMembersState c] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679266982"><span id="local-6989586621679266984"><span class="annot"><span class="annottext">(forall x.
+ CommitteeMembersState c -&gt; Rep (CommitteeMembersState c) x)
+-&gt; (forall x.
+    Rep (CommitteeMembersState c) x -&gt; CommitteeMembersState c)
+-&gt; Generic (CommitteeMembersState c)
+forall x.
+Rep (CommitteeMembersState c) x -&gt; CommitteeMembersState c
+forall x.
+CommitteeMembersState c -&gt; Rep (CommitteeMembersState c) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall c x.
+Rep (CommitteeMembersState c) x -&gt; CommitteeMembersState c
+forall c x.
+CommitteeMembersState c -&gt; Rep (CommitteeMembersState c) x
+$cfrom :: forall c x.
+CommitteeMembersState c -&gt; Rep (CommitteeMembersState c) x
+from :: forall x.
+CommitteeMembersState c -&gt; Rep (CommitteeMembersState c) x
+$cto :: forall c x.
+Rep (CommitteeMembersState c) x -&gt; CommitteeMembersState c
+to :: forall x.
+Rep (CommitteeMembersState c) x -&gt; CommitteeMembersState c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span id="local-6989586621679265914"><span id="local-6989586621679266989"><span id="local-6989586621679266998"><span id="local-6989586621679267005"><span id="local-6989586621679267009"><span id="local-6989586621679267012"><span id="local-6989586621679267015"><span id="local-6989586621679267018"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265914"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-151"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265918"><span id="local-6989586621679267021"><span id="local-6989586621679267028"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265918"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265920"><span id="local-6989586621679267072"><span id="local-6989586621679267076"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265920"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265920"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621679267087"><span class="annot"><span class="annottext">encCBOR :: CommitteeMembersState c -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></span></span><span> </span><span id="local-6989586621679267088"><span class="annot"><span class="annottext">c :: CommitteeMembersState c
+</span><a href="#local-6989586621679267088"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UnitInterval
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-155"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679267089"><span id="local-6989586621679267090"><span id="local-6989586621679267091"><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+EpochNo
+UnitInterval
+csCommittee :: forall c.
+CommitteeMembersState c
+-&gt; Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+csQuorum :: forall c. CommitteeMembersState c -&gt; UnitInterval
+csEpochNo :: forall c. CommitteeMembersState c -&gt; EpochNo
+csCommittee :: Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+csQuorum :: UnitInterval
+csEpochNo :: EpochNo
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csCommittee"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommitteeMembersState c
+</span><a href="#local-6989586621679267088"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-156"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Encode ('Closed 'Dense) (CommitteeMembersState c) -&gt; Encoding
+forall (w :: Wrapped) t. Encode w t -&gt; Encoding
+</span><span class="hs-identifier hs-var">encode</span></span><span> </span><span class="annot"><span class="annottext">(Encode ('Closed 'Dense) (CommitteeMembersState c) -&gt; Encoding)
+-&gt; Encode ('Closed 'Dense) (CommitteeMembersState c) -&gt; Encoding
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">(Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+ -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Encode
+     ('Closed 'Dense)
+     (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+      -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+forall t. t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">Rec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall c.
+Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+-&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-var">CommitteeMembersState</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679265920"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>            </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+   -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Encode
+     ('Closed 'Dense)
+     (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c))
+-&gt; Encode
+     ('Closed 'Dense)
+     (UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+-&gt; Encode
+     ('Closed 'Dense)
+     (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c))
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+</span><a href="#local-6989586621679267089"><span class="hs-identifier hs-var">csCommittee</span></a></span><span>
+</span><span id="line-159"></span><span>            </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Encode ('Closed 'Dense) UnitInterval
+-&gt; Encode ('Closed 'Dense) (EpochNo -&gt; CommitteeMembersState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">UnitInterval -&gt; Encode ('Closed 'Dense) UnitInterval
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">UnitInterval
+</span><a href="#local-6989586621679267090"><span class="hs-identifier hs-var">csQuorum</span></a></span><span>
+</span><span id="line-160"></span><span>            </span><span class="annot"><span class="annottext">Encode ('Closed 'Dense) (EpochNo -&gt; CommitteeMembersState c)
+-&gt; Encode ('Closed 'Dense) EpochNo
+-&gt; Encode ('Closed 'Dense) (CommitteeMembersState c)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">EpochNo -&gt; Encode ('Closed 'Dense) EpochNo
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267091"><span class="hs-identifier hs-var">csEpochNo</span></a></span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265924"><span id="local-6989586621679267099"><span id="local-6989586621679267103"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265924"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265924"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621679267114"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (CommitteeMembersState c)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-164"></span><span>    </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (CommitteeMembersState c)
+-&gt; Decoder s (CommitteeMembersState c)
+forall (w :: Wrapped) t s. Decode w t -&gt; Decoder s t
+</span><span class="hs-identifier hs-var">decode</span></span><span> </span><span class="annot"><span class="annottext">(Decode ('Closed 'Dense) (CommitteeMembersState c)
+ -&gt; Decoder s (CommitteeMembersState c))
+-&gt; Decode ('Closed 'Dense) (CommitteeMembersState c)
+-&gt; Decoder s (CommitteeMembersState c)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">(Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+ -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Decode
+     ('Closed 'Dense)
+     (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+      -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+forall t. t -&gt; Decode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">RecD</span></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+-&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c
+forall c.
+Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+-&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-var">CommitteeMembersState</span></a></span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+   -&gt; UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Decode
+     ('Closed Any)
+     (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c))
+-&gt; Decode
+     ('Closed 'Dense)
+     (UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode
+  ('Closed Any)
+  (Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c))
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-167"></span><span>        </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (UnitInterval -&gt; EpochNo -&gt; CommitteeMembersState c)
+-&gt; Decode ('Closed Any) UnitInterval
+-&gt; Decode ('Closed 'Dense) (EpochNo -&gt; CommitteeMembersState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) UnitInterval
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-168"></span><span>        </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (EpochNo -&gt; CommitteeMembersState c)
+-&gt; Decode ('Closed Any) EpochNo
+-&gt; Decode ('Closed 'Dense) (CommitteeMembersState c)
+forall (w1 :: Wrapped) a t (w :: Density).
+Decode w1 (a -&gt; t) -&gt; Decode ('Closed w) a -&gt; Decode w1 t
+</span><span class="hs-operator hs-var">&lt;!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) EpochNo
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679265929"><span id="local-6989586621679267119"><span id="local-6989586621679267123"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265929"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265929"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621679267129"><span class="annot"><span class="annottext">toJSON :: CommitteeMembersState c -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value)
+-&gt; (CommitteeMembersState c -&gt; [Pair])
+-&gt; CommitteeMembersState c
+-&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">CommitteeMembersState c -&gt; [Pair]
+forall a c.
+(KeyValue a, Crypto c) =&gt;
+CommitteeMembersState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMembersStatePairs"><span class="hs-identifier hs-var">toCommitteeMembersStatePairs</span></a></span><span>
+</span><span id="line-172"></span><span>  </span><span id="local-6989586621679267134"><span class="annot"><span class="annottext">toEncoding :: CommitteeMembersState c -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Series -&gt; Encoding
+</span><span class="hs-identifier hs-var">pairs</span></span><span> </span><span class="annot"><span class="annottext">(Series -&gt; Encoding)
+-&gt; (CommitteeMembersState c -&gt; Series)
+-&gt; CommitteeMembersState c
+-&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[Series] -&gt; Series
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">([Series] -&gt; Series)
+-&gt; (CommitteeMembersState c -&gt; [Series])
+-&gt; CommitteeMembersState c
+-&gt; Series
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">CommitteeMembersState c -&gt; [Series]
+forall a c.
+(KeyValue a, Crypto c) =&gt;
+CommitteeMembersState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMembersStatePairs"><span class="hs-identifier hs-var">toCommitteeMembersStatePairs</span></a></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span id="local-6989586621679265930"><span id="local-6989586621679265931"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMembersStatePairs"><span class="hs-identifier hs-type">toCommitteeMembersStatePairs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyValue</span></span><span> </span><span class="annot"><a href="#local-6989586621679265930"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679265931"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679265931"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679265930"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-175"></span><span id="toCommitteeMembersStatePairs"><span class="annot"><span class="annottext">toCommitteeMembersStatePairs :: forall a c.
+(KeyValue a, Crypto c) =&gt;
+CommitteeMembersState c -&gt; [a]
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#toCommitteeMembersStatePairs"><span class="hs-identifier hs-var hs-var">toCommitteeMembersStatePairs</span></a></span></span><span> </span><span id="local-6989586621679267151"><span class="annot"><span class="annottext">c :: CommitteeMembersState c
+</span><a href="#local-6989586621679267151"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">UnitInterval
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679267152"><span id="local-6989586621679267153"><span id="local-6989586621679267154"><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+EpochNo
+UnitInterval
+csCommittee :: forall c.
+CommitteeMembersState c
+-&gt; Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+csQuorum :: forall c. CommitteeMembersState c -&gt; UnitInterval
+csEpochNo :: forall c. CommitteeMembersState c -&gt; EpochNo
+csCommittee :: Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+csQuorum :: UnitInterval
+csEpochNo :: EpochNo
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csCommittee"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommitteeMembersState c
+</span><a href="#local-6989586621679267151"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-177"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;committee&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key
+-&gt; Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+-&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole c) (CommitteeMemberState c)
+</span><a href="#local-6989586621679267152"><span class="hs-identifier hs-var">csCommittee</span></a></span><span>
+</span><span id="line-178"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;quorum&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; UnitInterval -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">UnitInterval
+</span><a href="#local-6989586621679267153"><span class="hs-identifier hs-var">csQuorum</span></a></span><span>
+</span><span id="line-179"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;epoch&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; EpochNo -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267154"><span class="hs-identifier hs-var">csEpochNo</span></a></span><span>
+</span><span id="line-180"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-181"></span></pre></body></html>

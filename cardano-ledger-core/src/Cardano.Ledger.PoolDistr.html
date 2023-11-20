@@ -1,0 +1,465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- | The stake distribution, aggregated by stake pool (as opposed to stake credential),</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- plays a primary role in Cardano's proof of stake network.</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- Together with the VRF checks, the stake distribution determines leader election.</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- The leader election is the precisely the part of the ledger that is</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- determined by Ouroboros (Praos and Genesis), our consensus mechanism.</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- See Section 16, &quot;Leader Value Calculation&quot;, of the</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- &lt;https://github.com/input-output-hk/cardano-ledger/releases/latest/download/shelley-ledger.pdf formal specification&gt;.</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.PoolDistr</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier">IndividualPoolStake</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier">PoolDistr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">decodeRecordNamed</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">encodeListLen</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Crypto.html"><span class="hs-identifier">Cardano.Ledger.Crypto</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Keys.html"><span class="hs-identifier">Cardano.Ledger.Keys</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#Hash"><span class="hs-identifier">Hash</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Keys.html#KeyHash"><span class="hs-identifier">KeyHash</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Keys.html#KeyRole"><span class="hs-identifier">KeyRole</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Keys.html#VerKeyVRF"><span class="hs-identifier">VerKeyVRF</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.TreeDiff</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToExpr</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.SetAlgebra</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BaseRep</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MapR</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Embed</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Exp</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Base</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">HasExp</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyValue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">pairs</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- | The 'IndividualPoolStake' contains all the stake controlled</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- by a single stake pool (the combination of owners and delegates)</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- for a given epoch, and also the hash of the stake pool's</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- registered VRF key.</span><span>
+</span><span id="line-41"></span><span class="hs-comment">--</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- When a stake pool produces a block, the header contains the</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- full VRF verification key and VRF value for leader election.</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- We check the VRF key against the value in 'IndividualPoolStake'</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- and we check the VRF value using the epoch nonce and</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- the relative stake of the pool as given in 'IndividualPoolStake'.</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- The stake is relative to the total amount of active stake</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- in the network. Stake is active if it is both registered and</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- delegated to a registered stake pool.</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="IndividualPoolStake"><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-var">IndividualPoolStake</span></a></span></span><span> </span><span id="local-6989586621679416592"><span class="annot"><a href="#local-6989586621679416592"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IndividualPoolStake"><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-var">IndividualPoolStake</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="individualPoolStake"><span class="annot"><span class="annottext">forall c. IndividualPoolStake c -&gt; Rational
+</span><a href="Cardano.Ledger.PoolDistr.html#individualPoolStake"><span class="hs-identifier hs-var hs-var">individualPoolStake</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#Rational"><span class="hs-identifier hs-type">Rational</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="individualPoolStakeVrf"><span class="annot"><span class="annottext">forall c. IndividualPoolStake c -&gt; Hash c (VerKeyVRF c)
+</span><a href="Cardano.Ledger.PoolDistr.html#individualPoolStakeVrf"><span class="hs-identifier hs-var hs-var">individualPoolStakeVrf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#Hash"><span class="hs-identifier hs-type">Hash</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416592"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#VerKeyVRF"><span class="hs-identifier hs-type">VerKeyVRF</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416592"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679416889"><span id="local-6989586621679416898"><span id="local-6989586621679416902"><span class="annot"><span class="annottext">Int -&gt; IndividualPoolStake c -&gt; ShowS
+[IndividualPoolStake c] -&gt; ShowS
+IndividualPoolStake c -&gt; String
+(Int -&gt; IndividualPoolStake c -&gt; ShowS)
+-&gt; (IndividualPoolStake c -&gt; String)
+-&gt; ([IndividualPoolStake c] -&gt; ShowS)
+-&gt; Show (IndividualPoolStake c)
+forall c. Int -&gt; IndividualPoolStake c -&gt; ShowS
+forall c. [IndividualPoolStake c] -&gt; ShowS
+forall c. IndividualPoolStake c -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall c. Int -&gt; IndividualPoolStake c -&gt; ShowS
+showsPrec :: Int -&gt; IndividualPoolStake c -&gt; ShowS
+$cshow :: forall c. IndividualPoolStake c -&gt; String
+show :: IndividualPoolStake c -&gt; String
+$cshowList :: forall c. [IndividualPoolStake c] -&gt; ShowS
+showList :: [IndividualPoolStake c] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679416907"><span id="local-6989586621679416914"><span class="annot"><span class="annottext">IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+(IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool)
+-&gt; (IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool)
+-&gt; Eq (IndividualPoolStake c)
+forall c. IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall c. IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+== :: IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+$c/= :: forall c. IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+/= :: IndividualPoolStake c -&gt; IndividualPoolStake c -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679416920"><span id="local-6989586621679416922"><span class="annot"><span class="annottext">(forall x. IndividualPoolStake c -&gt; Rep (IndividualPoolStake c) x)
+-&gt; (forall x.
+    Rep (IndividualPoolStake c) x -&gt; IndividualPoolStake c)
+-&gt; Generic (IndividualPoolStake c)
+forall x. Rep (IndividualPoolStake c) x -&gt; IndividualPoolStake c
+forall x. IndividualPoolStake c -&gt; Rep (IndividualPoolStake c) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall c x. Rep (IndividualPoolStake c) x -&gt; IndividualPoolStake c
+forall c x. IndividualPoolStake c -&gt; Rep (IndividualPoolStake c) x
+$cfrom :: forall c x. IndividualPoolStake c -&gt; Rep (IndividualPoolStake c) x
+from :: forall x. IndividualPoolStake c -&gt; Rep (IndividualPoolStake c) x
+$cto :: forall c x. Rep (IndividualPoolStake c) x -&gt; IndividualPoolStake c
+to :: forall x. Rep (IndividualPoolStake c) x -&gt; IndividualPoolStake c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679416926"><span class="annot"><span class="annottext">IndividualPoolStake c -&gt; ()
+(IndividualPoolStake c -&gt; ()) -&gt; NFData (IndividualPoolStake c)
+forall c. IndividualPoolStake c -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall c. IndividualPoolStake c -&gt; ()
+rnf :: IndividualPoolStake c -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679416949"><span id="local-6989586621679416953"><span id="local-6989586621679416959"><span class="annot"><span class="annottext">Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+Proxy (IndividualPoolStake c) -&gt; String
+(Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (IndividualPoolStake c) -&gt; String)
+-&gt; NoThunks (IndividualPoolStake c)
+forall c. Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+forall c. Proxy (IndividualPoolStake c) -&gt; String
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: forall c. Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: forall c. Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; IndividualPoolStake c -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: forall c. Proxy (IndividualPoolStake c) -&gt; String
+showTypeOf :: Proxy (IndividualPoolStake c) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679416693"><span id="local-6989586621679417002"><span id="local-6989586621679417006"><span class="annot"><a href="Cardano.Ledger.Crypto.html#Crypto"><span class="hs-identifier hs-type">Crypto</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416693"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416693"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621679417026"><span class="annot"><span class="annottext">encCBOR :: IndividualPoolStake c -&gt; Encoding
+</span><a href="#local-6989586621679417026"><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span id="local-6989586621679417028"><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679417028"><span class="hs-identifier hs-var">stake</span></a></span></span><span> </span><span id="local-6989586621679417029"><span class="annot"><span class="annottext">Hash (HASH c) (VerKeyVRF (VRF c))
+</span><a href="#local-6989586621679417029"><span class="hs-identifier hs-var">vrf</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">[Encoding] -&gt; Encoding
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; Encoding
+forall a. EncCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encCBOR</span></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679417028"><span class="hs-identifier hs-var">stake</span></a></span><span>
+</span><span id="line-62"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; Encoding
+forall a. EncCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encCBOR</span></span><span> </span><span class="annot"><span class="annottext">Hash (HASH c) (VerKeyVRF (VRF c))
+</span><a href="#local-6989586621679417029"><span class="hs-identifier hs-var">vrf</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679416705"><span id="local-6989586621679417037"><span id="local-6989586621679417041"><span class="annot"><a href="Cardano.Ledger.Crypto.html#Crypto"><span class="hs-identifier hs-type">Crypto</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416705"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416705"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621679417061"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (IndividualPoolStake c)
+</span><a href="#local-6989586621679417061"><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; (IndividualPoolStake c -&gt; Int)
+-&gt; Decoder s (IndividualPoolStake c)
+-&gt; Decoder s (IndividualPoolStake c)
+forall a s. Text -&gt; (a -&gt; Int) -&gt; Decoder s a -&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decodeRecordNamed</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;IndividualPoolStake&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; IndividualPoolStake c -&gt; Int
+forall a b. a -&gt; b -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#const"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Decoder s (IndividualPoolStake c)
+ -&gt; Decoder s (IndividualPoolStake c))
+-&gt; Decoder s (IndividualPoolStake c)
+-&gt; Decoder s (IndividualPoolStake c)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">Rational
+-&gt; Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; IndividualPoolStake c
+forall c. Rational -&gt; Hash c (VerKeyVRF c) -&gt; IndividualPoolStake c
+</span><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-var">IndividualPoolStake</span></a></span><span>
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">(Rational
+ -&gt; Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; IndividualPoolStake c)
+-&gt; Decoder s Rational
+-&gt; Decoder
+     s (Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; IndividualPoolStake c)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s Rational
+forall s. Decoder s Rational
+forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decCBOR</span></span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">Decoder
+  s (Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; IndividualPoolStake c)
+-&gt; Decoder s (Hash (HASH c) (VerKeyVRF (VRF c)))
+-&gt; Decoder s (IndividualPoolStake c)
+forall a b. Decoder s (a -&gt; b) -&gt; Decoder s a -&gt; Decoder s b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s (Hash (HASH c) (VerKeyVRF (VRF c)))
+forall s. Decoder s (Hash (HASH c) (VerKeyVRF (VRF c)))
+forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decCBOR</span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679416729"><span id="local-6989586621679417069"><span id="local-6989586621679417073"><span class="annot"><a href="Cardano.Ledger.Crypto.html#Crypto"><span class="hs-identifier hs-type">Crypto</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416729"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416729"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621679417081"><span class="annot"><span class="annottext">toJSON :: IndividualPoolStake c -&gt; Value
+</span><a href="#local-6989586621679417081"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value)
+-&gt; (IndividualPoolStake c -&gt; [Pair])
+-&gt; IndividualPoolStake c
+-&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">IndividualPoolStake c -&gt; [Pair]
+forall a c. (KeyValue a, Crypto c) =&gt; IndividualPoolStake c -&gt; [a]
+</span><a href="Cardano.Ledger.PoolDistr.html#toIndividualPoolStakePair"><span class="hs-identifier hs-var">toIndividualPoolStakePair</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679417090"><span class="annot"><span class="annottext">toEncoding :: IndividualPoolStake c -&gt; Encoding
+</span><a href="#local-6989586621679417090"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Series -&gt; Encoding
+</span><span class="hs-identifier hs-var">pairs</span></span><span> </span><span class="annot"><span class="annottext">(Series -&gt; Encoding)
+-&gt; (IndividualPoolStake c -&gt; Series)
+-&gt; IndividualPoolStake c
+-&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[Series] -&gt; Series
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">([Series] -&gt; Series)
+-&gt; (IndividualPoolStake c -&gt; [Series])
+-&gt; IndividualPoolStake c
+-&gt; Series
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">IndividualPoolStake c -&gt; [Series]
+forall a c. (KeyValue a, Crypto c) =&gt; IndividualPoolStake c -&gt; [a]
+</span><a href="Cardano.Ledger.PoolDistr.html#toIndividualPoolStakePair"><span class="hs-identifier hs-var">toIndividualPoolStakePair</span></a></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span id="local-6989586621679416741"><span id="local-6989586621679416742"><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#toIndividualPoolStakePair"><span class="hs-identifier hs-type">toIndividualPoolStakePair</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyValue</span></span><span> </span><span class="annot"><a href="#local-6989586621679416741"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Crypto.html#Crypto"><span class="hs-identifier hs-type">Crypto</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416742"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416742"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679416741"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-77"></span><span id="toIndividualPoolStakePair"><span class="annot"><span class="annottext">toIndividualPoolStakePair :: forall a c. (KeyValue a, Crypto c) =&gt; IndividualPoolStake c -&gt; [a]
+</span><a href="Cardano.Ledger.PoolDistr.html#toIndividualPoolStakePair"><span class="hs-identifier hs-var hs-var">toIndividualPoolStakePair</span></a></span></span><span> </span><span id="local-6989586621679417108"><span class="annot"><span class="annottext">indivPoolStake :: IndividualPoolStake c
+</span><a href="#local-6989586621679417108"><span class="hs-identifier hs-var">indivPoolStake</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Hash (HASH c) (VerKeyVRF (VRF c))
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679417109"><span id="local-6989586621679417110"><span class="annot"><span class="annottext">Rational
+Hash (HASH c) (VerKeyVRF (VRF c))
+individualPoolStake :: forall c. IndividualPoolStake c -&gt; Rational
+individualPoolStakeVrf :: forall c. IndividualPoolStake c -&gt; Hash c (VerKeyVRF c)
+individualPoolStake :: Rational
+individualPoolStakeVrf :: Hash (HASH c) (VerKeyVRF (VRF c))
+</span><a href="Cardano.Ledger.PoolDistr.html#individualPoolStake"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IndividualPoolStake c
+</span><a href="#local-6989586621679417108"><span class="hs-identifier hs-var">indivPoolStake</span></a></span><span>
+</span><span id="line-79"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;individualPoolStake&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Rational -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Rational
+</span><a href="#local-6989586621679417109"><span class="hs-identifier hs-var">individualPoolStake</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;individualPoolStakeVrf&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Hash (HASH c) (VerKeyVRF (VRF c)) -&gt; a
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; a
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Hash (HASH c) (VerKeyVRF (VRF c))
+</span><a href="#local-6989586621679417110"><span class="hs-identifier hs-var">individualPoolStakeVrf</span></a></span><span>
+</span><span id="line-81"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-comment">-- | A map of stake pool IDs (the hash of the stake pool operator's</span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- verification key) to 'IndividualPoolStake'.</span><span>
+</span><span id="line-85"></span><span class="hs-keyword">newtype</span><span> </span><span id="PoolDistr"><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-var">PoolDistr</span></a></span></span><span> </span><span id="local-6989586621679416751"><span class="annot"><a href="#local-6989586621679416751"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PoolDistr"><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-var">PoolDistr</span></a></span></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unPoolDistr"><span class="annot"><span class="annottext">forall c.
+PoolDistr c -&gt; Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="Cardano.Ledger.PoolDistr.html#unPoolDistr"><span class="hs-identifier hs-var hs-var">unPoolDistr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#KeyHash"><span class="hs-identifier hs-type">KeyHash</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Cardano.Ledger.Keys.html#StakePool"><span class="hs-identifier hs-type">StakePool</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416751"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416751"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679417114"><span id="local-6989586621679417121"><span id="local-6989586621679417125"><span class="annot"><span class="annottext">Int -&gt; PoolDistr c -&gt; ShowS
+[PoolDistr c] -&gt; ShowS
+PoolDistr c -&gt; String
+(Int -&gt; PoolDistr c -&gt; ShowS)
+-&gt; (PoolDistr c -&gt; String)
+-&gt; ([PoolDistr c] -&gt; ShowS)
+-&gt; Show (PoolDistr c)
+forall c. Int -&gt; PoolDistr c -&gt; ShowS
+forall c. [PoolDistr c] -&gt; ShowS
+forall c. PoolDistr c -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall c. Int -&gt; PoolDistr c -&gt; ShowS
+showsPrec :: Int -&gt; PoolDistr c -&gt; ShowS
+$cshow :: forall c. PoolDistr c -&gt; String
+show :: PoolDistr c -&gt; String
+$cshowList :: forall c. [PoolDistr c] -&gt; ShowS
+showList :: [PoolDistr c] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417129"><span id="local-6989586621679417135"><span class="annot"><span class="annottext">PoolDistr c -&gt; PoolDistr c -&gt; Bool
+(PoolDistr c -&gt; PoolDistr c -&gt; Bool)
+-&gt; (PoolDistr c -&gt; PoolDistr c -&gt; Bool) -&gt; Eq (PoolDistr c)
+forall c. PoolDistr c -&gt; PoolDistr c -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall c. PoolDistr c -&gt; PoolDistr c -&gt; Bool
+== :: PoolDistr c -&gt; PoolDistr c -&gt; Bool
+$c/= :: forall c. PoolDistr c -&gt; PoolDistr c -&gt; Bool
+/= :: PoolDistr c -&gt; PoolDistr c -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417140"><span id="local-6989586621679417142"><span class="annot"><span class="annottext">(forall x. PoolDistr c -&gt; Rep (PoolDistr c) x)
+-&gt; (forall x. Rep (PoolDistr c) x -&gt; PoolDistr c)
+-&gt; Generic (PoolDistr c)
+forall x. Rep (PoolDistr c) x -&gt; PoolDistr c
+forall x. PoolDistr c -&gt; Rep (PoolDistr c) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall c x. Rep (PoolDistr c) x -&gt; PoolDistr c
+forall c x. PoolDistr c -&gt; Rep (PoolDistr c) x
+$cfrom :: forall c x. PoolDistr c -&gt; Rep (PoolDistr c) x
+from :: forall x. PoolDistr c -&gt; Rep (PoolDistr c) x
+$cto :: forall c x. Rep (PoolDistr c) x -&gt; PoolDistr c
+to :: forall x. Rep (PoolDistr c) x -&gt; PoolDistr c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679417150"><span id="local-6989586621679417160"><span id="local-6989586621679417169"><span class="annot"><span class="annottext">Typeable (PoolDistr c)
+Typeable (PoolDistr c) =&gt;
+(PoolDistr c -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy (PoolDistr c) -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy [PoolDistr c] -&gt; Size)
+-&gt; EncCBOR (PoolDistr c)
+PoolDistr c -&gt; Encoding
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [PoolDistr c] -&gt; Size
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (PoolDistr c) -&gt; Size
+forall a.
+Typeable a =&gt;
+(a -&gt; Encoding)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy a -&gt; Size)
+-&gt; ((forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [a] -&gt; Size)
+-&gt; EncCBOR a
+forall c. Crypto c =&gt; Typeable (PoolDistr c)
+forall c. Crypto c =&gt; PoolDistr c -&gt; Encoding
+forall c.
+Crypto c =&gt;
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [PoolDistr c] -&gt; Size
+forall c.
+Crypto c =&gt;
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (PoolDistr c) -&gt; Size
+$cencCBOR :: forall c. Crypto c =&gt; PoolDistr c -&gt; Encoding
+encCBOR :: PoolDistr c -&gt; Encoding
+$cencodedSizeExpr :: forall c.
+Crypto c =&gt;
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (PoolDistr c) -&gt; Size
+encodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (PoolDistr c) -&gt; Size
+$cencodedListSizeExpr :: forall c.
+Crypto c =&gt;
+(forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [PoolDistr c] -&gt; Size
+encodedListSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [PoolDistr c] -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">EncCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417187"><span id="local-6989586621679417195"><span id="local-6989586621679417202"><span class="annot"><span class="annottext">Typeable (PoolDistr c)
+Typeable (PoolDistr c) =&gt;
+(forall s. Decoder s (PoolDistr c))
+-&gt; (forall s. Proxy (PoolDistr c) -&gt; Decoder s ())
+-&gt; (Proxy (PoolDistr c) -&gt; Text)
+-&gt; DecCBOR (PoolDistr c)
+Proxy (PoolDistr c) -&gt; Text
+forall s. Decoder s (PoolDistr c)
+forall a.
+Typeable a =&gt;
+(forall s. Decoder s a)
+-&gt; (forall s. Proxy a -&gt; Decoder s ())
+-&gt; (Proxy a -&gt; Text)
+-&gt; DecCBOR a
+forall s. Proxy (PoolDistr c) -&gt; Decoder s ()
+forall c. Crypto c =&gt; Typeable (PoolDistr c)
+forall c. Crypto c =&gt; Proxy (PoolDistr c) -&gt; Text
+forall c s. Crypto c =&gt; Decoder s (PoolDistr c)
+forall c s. Crypto c =&gt; Proxy (PoolDistr c) -&gt; Decoder s ()
+$cdecCBOR :: forall c s. Crypto c =&gt; Decoder s (PoolDistr c)
+decCBOR :: forall s. Decoder s (PoolDistr c)
+$cdropCBOR :: forall c s. Crypto c =&gt; Proxy (PoolDistr c) -&gt; Decoder s ()
+dropCBOR :: forall s. Proxy (PoolDistr c) -&gt; Decoder s ()
+$clabel :: forall c. Crypto c =&gt; Proxy (PoolDistr c) -&gt; Text
+label :: Proxy (PoolDistr c) -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">DecCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417214"><span class="annot"><span class="annottext">PoolDistr c -&gt; ()
+(PoolDistr c -&gt; ()) -&gt; NFData (PoolDistr c)
+forall c. PoolDistr c -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall c. PoolDistr c -&gt; ()
+rnf :: PoolDistr c -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417223"><span id="local-6989586621679417230"><span id="local-6989586621679417236"><span class="annot"><span class="annottext">Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+Proxy (PoolDistr c) -&gt; String
+(Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (PoolDistr c) -&gt; String)
+-&gt; NoThunks (PoolDistr c)
+forall c. Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+forall c. Proxy (PoolDistr c) -&gt; String
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: forall c. Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: forall c. Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; PoolDistr c -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: forall c. Proxy (PoolDistr c) -&gt; String
+showTypeOf :: Proxy (PoolDistr c) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679417245"><span id="local-6989586621679417252"><span id="local-6989586621679417258"><span id="local-6989586621679417264"><span class="annot"><span class="annottext">[PoolDistr c] -&gt; Value
+[PoolDistr c] -&gt; Encoding
+PoolDistr c -&gt; Value
+PoolDistr c -&gt; Encoding
+(PoolDistr c -&gt; Value)
+-&gt; (PoolDistr c -&gt; Encoding)
+-&gt; ([PoolDistr c] -&gt; Value)
+-&gt; ([PoolDistr c] -&gt; Encoding)
+-&gt; ToJSON (PoolDistr c)
+forall c. Crypto c =&gt; [PoolDistr c] -&gt; Value
+forall c. Crypto c =&gt; [PoolDistr c] -&gt; Encoding
+forall c. Crypto c =&gt; PoolDistr c -&gt; Value
+forall c. Crypto c =&gt; PoolDistr c -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: forall c. Crypto c =&gt; PoolDistr c -&gt; Value
+toJSON :: PoolDistr c -&gt; Value
+$ctoEncoding :: forall c. Crypto c =&gt; PoolDistr c -&gt; Encoding
+toEncoding :: PoolDistr c -&gt; Encoding
+$ctoJSONList :: forall c. Crypto c =&gt; [PoolDistr c] -&gt; Value
+toJSONList :: [PoolDistr c] -&gt; Value
+$ctoEncodingList :: forall c. Crypto c =&gt; [PoolDistr c] -&gt; Encoding
+toEncodingList :: [PoolDistr c] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- ===============================</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621679416814"><span class="annot"><span class="hs-identifier hs-type">HasExp</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-type">PoolDistr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416814"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span>
+</span><span id="line-97"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#KeyHash"><span class="hs-identifier hs-type">KeyHash</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Cardano.Ledger.Keys.html#StakePool"><span class="hs-identifier hs-type">StakePool</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416814"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416814"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-special">)</span></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621679417280"><span class="annot"><span class="annottext">toExp :: PoolDistr c
+-&gt; Exp (Map (KeyHash 'StakePool c) (IndividualPoolStake c))
+</span><a href="#local-6989586621679417280"><span class="hs-identifier hs-var hs-var hs-var hs-var">toExp</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-type">PoolDistr</span></a></span><span> </span><span id="local-6989586621679417282"><span class="annot"><span class="annottext">Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="#local-6989586621679417282"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BaseRep Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+-&gt; Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+-&gt; Exp (Map (KeyHash 'StakePool c) (IndividualPoolStake c))
+forall k (f :: * -&gt; * -&gt; *) v.
+(Ord k, Basic f, Iter f) =&gt;
+BaseRep f k v -&gt; f k v -&gt; Exp (f k v)
+</span><span class="hs-identifier hs-var">Base</span></span><span> </span><span class="annot"><span class="annottext">BaseRep Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+forall k v. Basic Map =&gt; BaseRep Map k v
+</span><span class="hs-identifier hs-var">MapR</span></span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="#local-6989586621679417282"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="annot"><span class="hs-comment">-- | We can Embed a Newtype around a Map (or other Iterable type) and then use it in a set expression.</span></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621679416827"><span class="annot"><span class="hs-identifier hs-type">Embed</span></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-type">PoolDistr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416827"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span>
+</span><span id="line-108"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Keys.html#KeyHash"><span class="hs-identifier hs-type">KeyHash</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Cardano.Ledger.Keys.html#StakePool"><span class="hs-identifier hs-type">StakePool</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416827"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416827"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-special">)</span></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621679417287"><span class="annot"><span class="annottext">toBase :: PoolDistr c -&gt; Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="#local-6989586621679417287"><span class="hs-identifier hs-var hs-var hs-var hs-var">toBase</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-type">PoolDistr</span></a></span><span> </span><span id="local-6989586621679417289"><span class="annot"><span class="annottext">Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="#local-6989586621679417289"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'StakePool c) (IndividualPoolStake c)
+</span><a href="#local-6989586621679417289"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621679417290"><span class="annot"><span class="annottext">fromBase :: Map (KeyHash 'StakePool c) (IndividualPoolStake c) -&gt; PoolDistr c
+</span><a href="#local-6989586621679417290"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromBase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'StakePool c) (IndividualPoolStake c) -&gt; PoolDistr c
+forall c.
+Map (KeyHash 'StakePool c) (IndividualPoolStake c) -&gt; PoolDistr c
+</span><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-var">PoolDistr</span></a></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- =======================================</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679416863"><span id="local-6989586621679417293"><span id="local-6989586621679417300"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#PoolDistr"><span class="hs-identifier hs-type">PoolDistr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416863"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679416862"><span id="local-6989586621679417337"><span id="local-6989586621679417343"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.PoolDistr.html#IndividualPoolStake"><span class="hs-identifier hs-type">IndividualPoolStake</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679416862"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-120"></span></pre></body></html>

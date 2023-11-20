@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Allegra.TxWits</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier">AllegraEra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html"><span class="hs-identifier">Cardano.Ledger.Allegra.TxAuxData</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraScript</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">upgradeScript</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EraTxWits</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Crypto</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">StandardCrypto</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.TxWits</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><span class="hs-identifier">ShelleyTxWits</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><span class="hs-identifier">addrShelleyTxWitsL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="annot"><span class="hs-identifier">bootAddrShelleyTxWitsL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier">scriptShelleyTxWitsL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679286753"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679286753"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraTxWits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286753"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-pragma">{-# SPECIALIZE</span><span> </span><span class="hs-pragma">instance</span><span> </span><span class="annot"><span class="hs-pragma hs-type">EraTxWits</span></span><span> </span><span class="hs-pragma">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-pragma hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><span class="hs-pragma hs-type">StandardCrypto</span></span><span class="hs-pragma">)</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="TxWits"><span class="annot"><span class="hs-identifier hs-var">TxWits</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286753"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyTxWits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286753"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679286844"><span class="annot"><span class="annottext">mkBasicTxWits :: TxWits (AllegraEra c)
+</span><a href="#local-6989586621679286844"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkBasicTxWits</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxWits (AllegraEra c)
+ShelleyTxWits (AllegraEra c)
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679286849"><span class="annot"><span class="annottext">addrTxWitsL :: Lens'
+  (TxWits (AllegraEra c))
+  (Set (WitVKey 'Witness (EraCrypto (AllegraEra c))))
+</span><a href="#local-6989586621679286849"><span class="hs-identifier hs-var hs-var hs-var hs-var">addrTxWitsL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Set (WitVKey 'Witness (EraCrypto (AllegraEra c)))
+ -&gt; f (Set (WitVKey 'Witness (EraCrypto (AllegraEra c)))))
+-&gt; TxWits (AllegraEra c) -&gt; f (TxWits (AllegraEra c))
+(Set (WitVKey 'Witness (EraCrypto (AllegraEra c)))
+ -&gt; f (Set (WitVKey 'Witness (EraCrypto (AllegraEra c)))))
+-&gt; ShelleyTxWits (AllegraEra c) -&gt; f (ShelleyTxWits (AllegraEra c))
+forall era.
+EraScript era =&gt;
+Lens' (ShelleyTxWits era) (Set (WitVKey 'Witness (EraCrypto era)))
+Lens'
+  (ShelleyTxWits (AllegraEra c))
+  (Set (WitVKey 'Witness (EraCrypto (AllegraEra c))))
+</span><span class="hs-identifier hs-var">addrShelleyTxWitsL</span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">addrTxWitsL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621679286854"><span class="annot"><span class="annottext">bootAddrTxWitsL :: Lens'
+  (TxWits (AllegraEra c))
+  (Set (BootstrapWitness (EraCrypto (AllegraEra c))))
+</span><a href="#local-6989586621679286854"><span class="hs-identifier hs-var hs-var hs-var hs-var">bootAddrTxWitsL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Set (BootstrapWitness (EraCrypto (AllegraEra c)))
+ -&gt; f (Set (BootstrapWitness (EraCrypto (AllegraEra c)))))
+-&gt; TxWits (AllegraEra c) -&gt; f (TxWits (AllegraEra c))
+(Set (BootstrapWitness (EraCrypto (AllegraEra c)))
+ -&gt; f (Set (BootstrapWitness (EraCrypto (AllegraEra c)))))
+-&gt; ShelleyTxWits (AllegraEra c) -&gt; f (ShelleyTxWits (AllegraEra c))
+forall era.
+EraScript era =&gt;
+Lens' (ShelleyTxWits era) (Set (BootstrapWitness (EraCrypto era)))
+Lens'
+  (ShelleyTxWits (AllegraEra c))
+  (Set (BootstrapWitness (EraCrypto (AllegraEra c))))
+</span><span class="hs-identifier hs-var">bootAddrShelleyTxWitsL</span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">bootAddrTxWitsL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621679286859"><span class="annot"><span class="annottext">scriptTxWitsL :: Lens'
+  (TxWits (AllegraEra c))
+  (Map
+     (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c)))
+</span><a href="#local-6989586621679286859"><span class="hs-identifier hs-var hs-var hs-var hs-var">scriptTxWitsL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Map
+   (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))
+ -&gt; f (Map
+         (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))))
+-&gt; TxWits (AllegraEra c) -&gt; f (TxWits (AllegraEra c))
+(Map
+   (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))
+ -&gt; f (Map
+         (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))))
+-&gt; ShelleyTxWits (AllegraEra c) -&gt; f (ShelleyTxWits (AllegraEra c))
+forall era.
+EraScript era =&gt;
+Lens'
+  (ShelleyTxWits era) (Map (ScriptHash (EraCrypto era)) (Script era))
+Lens'
+  (ShelleyTxWits (AllegraEra c))
+  (Map
+     (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c)))
+</span><span class="hs-identifier hs-var">scriptShelleyTxWitsL</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">scriptTxWitsL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621679286873"><span class="annot"><span class="annottext">upgradeTxWits :: EraTxWits (PreviousEra (AllegraEra c)) =&gt;
+TxWits (PreviousEra (AllegraEra c)) -&gt; TxWits (AllegraEra c)
+</span><a href="#local-6989586621679286873"><span class="hs-identifier hs-var hs-var hs-var hs-var">upgradeTxWits</span></a></span></span><span> </span><span id="local-6989586621679286875"><span class="annot"><span class="annottext">TxWits (PreviousEra (AllegraEra c))
+</span><a href="#local-6989586621679286875"><span class="hs-identifier hs-var">stw</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Set (WitVKey 'Witness (EraCrypto (AllegraEra c)))
+-&gt; Map
+     (ScriptHash (EraCrypto (AllegraEra c))) (Script (AllegraEra c))
+-&gt; Set (BootstrapWitness (EraCrypto (AllegraEra c)))
+-&gt; ShelleyTxWits (AllegraEra c)
+forall era.
+EraScript era =&gt;
+Set (WitVKey 'Witness (EraCrypto era))
+-&gt; Map (ScriptHash (EraCrypto era)) (Script era)
+-&gt; Set (BootstrapWitness (EraCrypto era))
+-&gt; ShelleyTxWits era
+</span><span class="hs-identifier hs-var">ShelleyTxWits</span></span><span>
+</span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShelleyTxWits (ShelleyEra c)
+-&gt; Set (WitVKey 'Witness (EraCrypto (ShelleyEra c)))
+forall era.
+EraScript era =&gt;
+ShelleyTxWits era -&gt; Set (WitVKey 'Witness (EraCrypto era))
+</span><span class="hs-identifier hs-var">addrWits</span></span><span> </span><span class="annot"><span class="annottext">TxWits (PreviousEra (AllegraEra c))
+ShelleyTxWits (ShelleyEra c)
+</span><a href="#local-6989586621679286875"><span class="hs-identifier hs-var">stw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Script (PreviousEra (AllegraEra c)) -&gt; Script (AllegraEra c)
+Script (PreviousEra (AllegraEra c)) -&gt; Timelock (AllegraEra c)
+forall era.
+(EraScript era, EraScript (PreviousEra era)) =&gt;
+Script (PreviousEra era) -&gt; Script era
+</span><span class="hs-identifier hs-var">upgradeScript</span></span><span> </span><span class="annot"><span class="annottext">(Script (PreviousEra (AllegraEra c)) -&gt; Timelock (AllegraEra c))
+-&gt; Map (ScriptHash c) (Script (PreviousEra (AllegraEra c)))
+-&gt; Map (ScriptHash c) (Timelock (AllegraEra c))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyTxWits (ShelleyEra c)
+-&gt; Map
+     (ScriptHash (EraCrypto (ShelleyEra c))) (Script (ShelleyEra c))
+forall era.
+EraScript era =&gt;
+ShelleyTxWits era -&gt; Map (ScriptHash (EraCrypto era)) (Script era)
+</span><span class="hs-identifier hs-var">scriptWits</span></span><span> </span><span class="annot"><span class="annottext">TxWits (PreviousEra (AllegraEra c))
+ShelleyTxWits (ShelleyEra c)
+</span><a href="#local-6989586621679286875"><span class="hs-identifier hs-var">stw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShelleyTxWits (ShelleyEra c)
+-&gt; Set (BootstrapWitness (EraCrypto (ShelleyEra c)))
+forall era.
+EraScript era =&gt;
+ShelleyTxWits era -&gt; Set (BootstrapWitness (EraCrypto era))
+</span><span class="hs-identifier hs-var">bootWits</span></span><span> </span><span class="annot"><span class="annottext">TxWits (PreviousEra (AllegraEra c))
+ShelleyTxWits (ShelleyEra c)
+</span><a href="#local-6989586621679286875"><span class="hs-identifier hs-var">stw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span></pre></body></html>

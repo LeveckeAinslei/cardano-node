@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass             #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric              #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies         #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia                #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving         #-}</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.NodeId</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Node IDs</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier">CoreNodeId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier">NodeId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#decodeNodeId"><span class="hs-identifier">decodeNodeId</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#encodeNodeId"><span class="hs-identifier">encodeNodeId</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#fromCoreNodeId"><span class="hs-identifier">fromCoreNodeId</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Codec.CBOR.Decoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CBOR</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Codec.CBOR.Encoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CBOR</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Codec.Serialise</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Serialise</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html"><span class="hs-identifier">Ouroboros.Consensus.Util.Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Util.ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Quiet</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Node IDs
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- TODO: It is not at all clear that this makes any sense anymore. The network</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- layer does not use or provide node ids (it uses addresses).</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="NodeId"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-var">NodeId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CoreId"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreId"><span class="hs-identifier hs-var">CoreId</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span><span>
+</span><span id="line-35"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span id="RelayId"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#RelayId"><span class="hs-identifier hs-var">RelayId</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679822434"><span id="local-6989586621679822440"><span class="annot"><span class="annottext">NodeId -&gt; NodeId -&gt; Bool
+(NodeId -&gt; NodeId -&gt; Bool)
+-&gt; (NodeId -&gt; NodeId -&gt; Bool) -&gt; Eq NodeId
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: NodeId -&gt; NodeId -&gt; Bool
+== :: NodeId -&gt; NodeId -&gt; Bool
+$c/= :: NodeId -&gt; NodeId -&gt; Bool
+/= :: NodeId -&gt; NodeId -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822447"><span id="local-6989586621679822453"><span id="local-6989586621679822457"><span id="local-6989586621679822461"><span id="local-6989586621679822464"><span id="local-6989586621679822467"><span id="local-6989586621679822470"><span class="annot"><span class="annottext">Eq NodeId
+Eq NodeId =&gt;
+(NodeId -&gt; NodeId -&gt; Ordering)
+-&gt; (NodeId -&gt; NodeId -&gt; Bool)
+-&gt; (NodeId -&gt; NodeId -&gt; Bool)
+-&gt; (NodeId -&gt; NodeId -&gt; Bool)
+-&gt; (NodeId -&gt; NodeId -&gt; Bool)
+-&gt; (NodeId -&gt; NodeId -&gt; NodeId)
+-&gt; (NodeId -&gt; NodeId -&gt; NodeId)
+-&gt; Ord NodeId
+NodeId -&gt; NodeId -&gt; Bool
+NodeId -&gt; NodeId -&gt; Ordering
+NodeId -&gt; NodeId -&gt; NodeId
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: NodeId -&gt; NodeId -&gt; Ordering
+compare :: NodeId -&gt; NodeId -&gt; Ordering
+$c&lt; :: NodeId -&gt; NodeId -&gt; Bool
+&lt; :: NodeId -&gt; NodeId -&gt; Bool
+$c&lt;= :: NodeId -&gt; NodeId -&gt; Bool
+&lt;= :: NodeId -&gt; NodeId -&gt; Bool
+$c&gt; :: NodeId -&gt; NodeId -&gt; Bool
+&gt; :: NodeId -&gt; NodeId -&gt; Bool
+$c&gt;= :: NodeId -&gt; NodeId -&gt; Bool
+&gt;= :: NodeId -&gt; NodeId -&gt; Bool
+$cmax :: NodeId -&gt; NodeId -&gt; NodeId
+max :: NodeId -&gt; NodeId -&gt; NodeId
+$cmin :: NodeId -&gt; NodeId -&gt; NodeId
+min :: NodeId -&gt; NodeId -&gt; NodeId
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822474"><span id="local-6989586621679822483"><span id="local-6989586621679822487"><span class="annot"><span class="annottext">Int -&gt; NodeId -&gt; ShowS
+[NodeId] -&gt; ShowS
+NodeId -&gt; String
+(Int -&gt; NodeId -&gt; ShowS)
+-&gt; (NodeId -&gt; String) -&gt; ([NodeId] -&gt; ShowS) -&gt; Show NodeId
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; NodeId -&gt; ShowS
+showsPrec :: Int -&gt; NodeId -&gt; ShowS
+$cshow :: NodeId -&gt; String
+show :: NodeId -&gt; String
+$cshowList :: [NodeId] -&gt; ShowS
+showList :: [NodeId] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822491"><span id="local-6989586621679822493"><span class="annot"><span class="annottext">(forall x. NodeId -&gt; Rep NodeId x)
+-&gt; (forall x. Rep NodeId x -&gt; NodeId) -&gt; Generic NodeId
+forall x. Rep NodeId x -&gt; NodeId
+forall x. NodeId -&gt; Rep NodeId x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. NodeId -&gt; Rep NodeId x
+from :: forall x. NodeId -&gt; Rep NodeId x
+$cto :: forall x. Rep NodeId x -&gt; NodeId
+to :: forall x. Rep NodeId x -&gt; NodeId
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822497"><span id="local-6989586621679822501"><span id="local-6989586621679822507"><span class="annot"><span class="annottext">Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo)
+Proxy NodeId -&gt; String
+(Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy NodeId -&gt; String)
+-&gt; NoThunks NodeId
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; NodeId -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy NodeId -&gt; String
+showTypeOf :: Proxy NodeId -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621679822542"><span class="annot"><span class="annottext">condense :: NodeId -&gt; String
+</span><a href="#local-6989586621679822542"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreId"><span class="hs-identifier hs-type">CoreId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span><span> </span><span id="local-6989586621679822545"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822545"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;c&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2B%2B"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822545"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var">condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#RelayId"><span class="hs-identifier hs-type">RelayId</span></a></span><span>            </span><span id="local-6989586621679822547"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822547"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;r&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2B%2B"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822547"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679822551"><span id="local-6989586621679822558"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | Core node ID</span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">newtype</span><span> </span><span id="CoreNodeId"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-var">CoreNodeId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CoreNodeId"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-var">CoreNodeId</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-46"></span><span>      </span><span id="unCoreNodeId"><span class="annot"><span class="annottext">CoreNodeId -&gt; Word64
+</span><a href="Ouroboros.Consensus.NodeId.html#unCoreNodeId"><span class="hs-identifier hs-var hs-var">unCoreNodeId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>   </span><span class="hs-special">(</span><span id="local-6989586621679822578"><span id="local-6989586621679822581"><span class="annot"><span class="annottext">CoreNodeId -&gt; CoreNodeId -&gt; Bool
+(CoreNodeId -&gt; CoreNodeId -&gt; Bool)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; Bool) -&gt; Eq CoreNodeId
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+== :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+$c/= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+/= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822586"><span id="local-6989586621679822589"><span id="local-6989586621679822592"><span id="local-6989586621679822595"><span id="local-6989586621679822598"><span id="local-6989586621679822601"><span id="local-6989586621679822604"><span class="annot"><span class="annottext">Eq CoreNodeId
+Eq CoreNodeId =&gt;
+(CoreNodeId -&gt; CoreNodeId -&gt; Ordering)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; Bool)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; Bool)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; Bool)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; Bool)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId)
+-&gt; (CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId)
+-&gt; Ord CoreNodeId
+CoreNodeId -&gt; CoreNodeId -&gt; Bool
+CoreNodeId -&gt; CoreNodeId -&gt; Ordering
+CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: CoreNodeId -&gt; CoreNodeId -&gt; Ordering
+compare :: CoreNodeId -&gt; CoreNodeId -&gt; Ordering
+$c&lt; :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+&lt; :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+$c&lt;= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+&lt;= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+$c&gt; :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+&gt; :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+$c&gt;= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+&gt;= :: CoreNodeId -&gt; CoreNodeId -&gt; Bool
+$cmax :: CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId
+max :: CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId
+$cmin :: CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId
+min :: CoreNodeId -&gt; CoreNodeId -&gt; CoreNodeId
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822607"><span id="local-6989586621679822609"><span class="annot"><span class="annottext">(forall x. CoreNodeId -&gt; Rep CoreNodeId x)
+-&gt; (forall x. Rep CoreNodeId x -&gt; CoreNodeId) -&gt; Generic CoreNodeId
+forall x. Rep CoreNodeId x -&gt; CoreNodeId
+forall x. CoreNodeId -&gt; Rep CoreNodeId x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. CoreNodeId -&gt; Rep CoreNodeId x
+from :: forall x. CoreNodeId -&gt; Rep CoreNodeId x
+$cto :: forall x. Rep CoreNodeId x -&gt; CoreNodeId
+to :: forall x. Rep CoreNodeId x -&gt; CoreNodeId
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679822612"><span class="annot"><span class="annottext">CoreNodeId -&gt; String
+(CoreNodeId -&gt; String) -&gt; Condense CoreNodeId
+forall a. (a -&gt; String) -&gt; Condense a
+$ccondense :: CoreNodeId -&gt; String
+condense :: CoreNodeId -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">Condense</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822618"><span id="local-6989586621679822623"><span id="local-6989586621679822627"><span id="local-6989586621679822631"><span class="annot"><span class="annottext">[CoreNodeId] -&gt; Encoding
+CoreNodeId -&gt; Encoding
+(CoreNodeId -&gt; Encoding)
+-&gt; (forall s. Decoder s CoreNodeId)
+-&gt; ([CoreNodeId] -&gt; Encoding)
+-&gt; (forall s. Decoder s [CoreNodeId])
+-&gt; Serialise CoreNodeId
+forall s. Decoder s [CoreNodeId]
+forall s. Decoder s CoreNodeId
+forall a.
+(a -&gt; Encoding)
+-&gt; (forall s. Decoder s a)
+-&gt; ([a] -&gt; Encoding)
+-&gt; (forall s. Decoder s [a])
+-&gt; Serialise a
+$cencode :: CoreNodeId -&gt; Encoding
+encode :: CoreNodeId -&gt; Encoding
+$cdecode :: forall s. Decoder s CoreNodeId
+decode :: forall s. Decoder s CoreNodeId
+$cencodeList :: [CoreNodeId] -&gt; Encoding
+encodeList :: [CoreNodeId] -&gt; Encoding
+$cdecodeList :: forall s. Decoder s [CoreNodeId]
+decodeList :: forall s. Decoder s [CoreNodeId]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Serialise</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679822637"><span id="local-6989586621679822641"><span id="local-6989586621679822645"><span class="annot"><span class="annottext">Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo)
+Proxy CoreNodeId -&gt; String
+(Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy CoreNodeId -&gt; String)
+-&gt; NoThunks CoreNodeId
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; CoreNodeId -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy CoreNodeId -&gt; String
+showTypeOf :: Proxy CoreNodeId -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679822649"><span id="local-6989586621679822656"><span id="local-6989586621679822662"><span class="annot"><span class="annottext">Int -&gt; CoreNodeId -&gt; ShowS
+[CoreNodeId] -&gt; ShowS
+CoreNodeId -&gt; String
+(Int -&gt; CoreNodeId -&gt; ShowS)
+-&gt; (CoreNodeId -&gt; String)
+-&gt; ([CoreNodeId] -&gt; ShowS)
+-&gt; Show CoreNodeId
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CoreNodeId -&gt; ShowS
+showsPrec :: Int -&gt; CoreNodeId -&gt; ShowS
+$cshow :: CoreNodeId -&gt; String
+show :: CoreNodeId -&gt; String
+$cshowList :: [CoreNodeId] -&gt; ShowS
+showList :: [CoreNodeId] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Quiet</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679822704"><span id="local-6989586621679822710"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShowProxy</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679822719"><span class="annot"><span class="annottext">showProxy :: Proxy NodeId -&gt; String
+</span><a href="#local-6989586621679822719"><span class="hs-identifier hs-var hs-var hs-var hs-var">showProxy</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy NodeId
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;NodeId&quot;</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#encodeNodeId"><span class="hs-identifier hs-type">encodeNodeId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CBOR.Encoding</span></span><span>
+</span><span id="line-58"></span><span id="encodeNodeId"><span class="annot"><span class="annottext">encodeNodeId :: NodeId -&gt; Encoding
+</span><a href="Ouroboros.Consensus.NodeId.html#encodeNodeId"><span class="hs-identifier hs-var hs-var">encodeNodeId</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreId"><span class="hs-identifier hs-type">CoreId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span><span> </span><span id="local-6989586621679822721"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822721"><span class="hs-identifier hs-var">wo</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-59"></span><span>                                     </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeWord</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-60"></span><span>                                     </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeWord64</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822721"><span class="hs-identifier hs-var">wo</span></a></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#encodeNodeId"><span class="hs-identifier hs-var">encodeNodeId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#RelayId"><span class="hs-identifier hs-type">RelayId</span></a></span><span> </span><span id="local-6989586621679822725"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822725"><span class="hs-identifier hs-var">wo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-62"></span><span>                         </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeWord</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-63"></span><span>                         </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Encoding
+</span><span class="hs-identifier hs-var">CBOR.encodeWord64</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679822725"><span class="hs-identifier hs-var">wo</span></a></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span id="local-6989586621679822407"><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#decodeNodeId"><span class="hs-identifier hs-type">decodeNodeId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CBOR.Decoder</span></span><span> </span><span class="annot"><a href="#local-6989586621679822407"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span></span><span>
+</span><span id="line-66"></span><span id="decodeNodeId"><span class="annot"><span class="annottext">decodeNodeId :: forall s. Decoder s NodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#decodeNodeId"><span class="hs-identifier hs-var hs-var">decodeNodeId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s Int
+forall s. Decoder s Int
+</span><span class="hs-identifier hs-var">CBOR.decodeListLen</span></span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679822743"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679822743"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s Word
+forall s. Decoder s Word
+</span><span class="hs-identifier hs-var">CBOR.decodeWord</span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679822743"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoreNodeId -&gt; NodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#CoreId"><span class="hs-identifier hs-var">CoreId</span></a></span><span> </span><span class="annot"><span class="annottext">(CoreNodeId -&gt; NodeId)
+-&gt; (Word64 -&gt; CoreNodeId) -&gt; Word64 -&gt; NodeId
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; CoreNodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-var">CoreNodeId</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; NodeId) -&gt; Decoder s Word64 -&gt; Decoder s NodeId
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s Word64
+forall s. Decoder s Word64
+</span><span class="hs-identifier hs-var">CBOR.decodeWord64</span></span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; NodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#RelayId"><span class="hs-identifier hs-var">RelayId</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; NodeId) -&gt; Decoder s Word64 -&gt; Decoder s NodeId
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s Word64
+forall s. Decoder s Word64
+</span><span class="hs-identifier hs-var">CBOR.decodeWord64</span></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder s NodeId
+forall a. String -&gt; Decoder s a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;decodeNodeId: unknown tok:&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2B%2B"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621679822743"><span class="hs-identifier hs-var">tok</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#fromCoreNodeId"><span class="hs-identifier hs-type">fromCoreNodeId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#CoreNodeId"><span class="hs-identifier hs-type">CoreNodeId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.NodeId.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span>
+</span><span id="line-75"></span><span id="fromCoreNodeId"><span class="annot"><span class="annottext">fromCoreNodeId :: CoreNodeId -&gt; NodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#fromCoreNodeId"><span class="hs-identifier hs-var hs-var">fromCoreNodeId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CoreNodeId -&gt; NodeId
+</span><a href="Ouroboros.Consensus.NodeId.html#CoreId"><span class="hs-identifier hs-var">CoreId</span></a></span><span>
+</span><span id="line-76"></span></pre></body></html>

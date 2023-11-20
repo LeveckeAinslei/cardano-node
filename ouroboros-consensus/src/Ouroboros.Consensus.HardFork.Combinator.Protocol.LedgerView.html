@@ -1,0 +1,127 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleContexts    #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances   #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards     #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving  #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications    #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies        #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators       #-}</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Hard fork</span></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView"><span class="hs-identifier">HardForkLedgerView</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView_"><span class="hs-identifier">HardForkLedgerView_</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Type family instances</span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Ticked.html#Ticked"><span class="hs-identifier">Ticked</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.BasicFunctors</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Constraint</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Dict</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Strict</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Abstract.html"><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.Abstract</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Instances.html"><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.State.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html"><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.State.Types</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Ticked.html"><span class="hs-identifier">Ouroboros.Consensus.Ticked</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html"><span class="hs-identifier">Ouroboros.Consensus.TypeFamilyWrappers</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  HardForkLedgerView
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">data</span><span> </span><span id="HardForkLedgerView_"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView_"><span class="hs-identifier hs-var">HardForkLedgerView_</span></a></span></span><span> </span><span id="local-6989586621679874107"><span class="annot"><a href="#local-6989586621679874107"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679874108"><span class="annot"><a href="#local-6989586621679874108"><span class="hs-identifier hs-type">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HardForkLedgerView"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView"><span class="hs-identifier hs-var">HardForkLedgerView</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="hs-comment">-- | Information about the transition to the next era, if known</span></span><span>
+</span><span id="line-34"></span><span>      </span><span id="hardForkLedgerViewTransition"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) (xs :: [*]).
+HardForkLedgerView_ f xs -&gt; TransitionInfo
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#hardForkLedgerViewTransition"><span class="hs-identifier hs-var hs-var">hardForkLedgerViewTransition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionInfo"><span class="hs-identifier hs-type">TransitionInfo</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="hs-comment">-- | The underlying ledger view</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="hardForkLedgerViewPerEra"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) (xs :: [*]).
+HardForkLedgerView_ f xs -&gt; HardForkState f xs
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#hardForkLedgerViewPerEra"><span class="hs-identifier hs-var hs-var">hardForkLedgerViewPerEra</span></a></span></span><span>     </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-type">HardForkState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679874107"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679874108"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621679874127"><span id="local-6989586621679874185"><span id="local-6989586621679874195"><span id="local-6989586621679874199"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Abstract.CanHardFork.html#CanHardFork"><span class="hs-identifier hs-type">CanHardFork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679874127"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView_"><span class="hs-identifier hs-type">HardForkLedgerView_</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html#WrapLedgerView"><span class="hs-identifier hs-type">WrapLedgerView</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679874127"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">type</span><span> </span><span id="HardForkLedgerView"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView"><span class="hs-identifier hs-var">HardForkLedgerView</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView_"><span class="hs-identifier hs-type">HardForkLedgerView_</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html#WrapLedgerView"><span class="hs-identifier hs-type">WrapLedgerView</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Show instance for the benefit of tests
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679874132"><span id="local-6989586621679874133"><span id="local-6989586621679874206"><span id="local-6989586621679874211"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SListI</span></span><span> </span><span class="annot"><a href="#local-6989586621679874132"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679874133"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView_"><span class="hs-identifier hs-type">HardForkLedgerView_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">K</span></span><span> </span><span class="annot"><a href="#local-6989586621679874133"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679874132"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621679874218"><span class="annot"><span class="annottext">show :: HardForkLedgerView_ (K a) xs -&gt; String
+</span><a href="#local-6989586621679874218"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#HardForkLedgerView"><span class="hs-identifier hs-type">HardForkLedgerView</span></a></span><span class="hs-special">{</span><span id="local-6989586621679874220"><span id="local-6989586621679874221"><span class="annot"><span class="annottext">TransitionInfo
+HardForkState (K a) xs
+hardForkLedgerViewTransition :: forall (f :: * -&gt; *) (xs :: [*]).
+HardForkLedgerView_ f xs -&gt; TransitionInfo
+hardForkLedgerViewPerEra :: forall (f :: * -&gt; *) (xs :: [*]).
+HardForkLedgerView_ f xs -&gt; HardForkState f xs
+hardForkLedgerViewTransition :: TransitionInfo
+hardForkLedgerViewPerEra :: HardForkState (K a) xs
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Protocol.LedgerView.html#hardForkLedgerViewTransition"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Dict (All (Compose Show (K Past))) xs
+</span><a href="#local-6989586621679874222"><span class="hs-identifier hs-var">dictPast</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Dict (All (Compose Show (Current (K a)))) xs
+</span><a href="#local-6989586621679874223"><span class="hs-identifier hs-var">dictCurrent</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-51"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Dict (All (Compose Show (K Past))) xs
+</span><span class="hs-identifier hs-var">Dict</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Dict (All (Compose Show (Current (K a)))) xs
+</span><span class="hs-identifier hs-var">Dict</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(TransitionInfo, Telescope (K Past) (Current (K a)) xs) -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-52"></span><span>            </span><span class="annot"><span class="annottext">TransitionInfo
+</span><a href="#local-6989586621679874220"><span class="hs-identifier hs-var">hardForkLedgerViewTransition</span></a></span><span>
+</span><span id="line-53"></span><span>          </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HardForkState (K a) xs -&gt; Telescope (K Past) (Current (K a)) xs
+forall (f :: * -&gt; *) (xs :: [*]).
+HardForkState f xs -&gt; Telescope (K Past) (Current f) xs
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#getHardForkState"><span class="hs-identifier hs-var">getHardForkState</span></a></span><span> </span><span class="annot"><span class="annottext">HardForkState (K a) xs
+</span><a href="#local-6989586621679874221"><span class="hs-identifier hs-var">hardForkLedgerViewPerEra</span></a></span><span>
+</span><span id="line-54"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><a href="#local-6989586621679874222"><span class="hs-identifier hs-type">dictPast</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Compose</span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">K</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Past"><span class="hs-identifier hs-type">Past</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679874132"><span class="hs-identifier hs-type">xs</span></a></span><span>
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621679874222"><span class="annot"><span class="annottext">dictPast :: Dict (All (Compose Show (K Past))) xs
+</span><a href="#local-6989586621679874222"><span class="hs-identifier hs-var hs-var">dictPast</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NP (Dict (Compose Show (K Past))) xs
+-&gt; Dict (All (Compose Show (K Past))) xs
+forall {k} (c :: k -&gt; Constraint) (xs :: [k]).
+NP (Dict c) xs -&gt; Dict (All c) xs
+</span><span class="hs-identifier hs-var">all_NP</span></span><span> </span><span class="annot"><span class="annottext">(NP (Dict (Compose Show (K Past))) xs
+ -&gt; Dict (All (Compose Show (K Past))) xs)
+-&gt; NP (Dict (Compose Show (K Past))) xs
+-&gt; Dict (All (Compose Show (K Past))) xs
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(forall a. Dict (Compose Show (K Past)) a)
+-&gt; NP (Dict (Compose Show (K Past))) xs
+forall (xs :: [*]) (f :: * -&gt; *).
+SListIN NP xs =&gt;
+(forall a. f a) -&gt; NP f xs
+forall k l (h :: (k -&gt; *) -&gt; l -&gt; *) (xs :: l) (f :: k -&gt; *).
+(HPure h, SListIN h xs) =&gt;
+(forall (a :: k). f a) -&gt; h f xs
+</span><span class="hs-identifier hs-var">hpure</span></span><span> </span><span class="annot"><span class="annottext">Dict (Compose Show (K Past)) a
+forall a. Dict (Compose Show (K Past)) a
+forall {k} (c :: k -&gt; Constraint) (a :: k). c a =&gt; Dict c a
+</span><span class="hs-identifier hs-var">Dict</span></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span>      </span><span class="annot"><a href="#local-6989586621679874223"><span class="hs-identifier hs-type">dictCurrent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Compose</span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-type">Current</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">K</span></span><span> </span><span class="annot"><a href="#local-6989586621679874133"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679874132"><span class="hs-identifier hs-type">xs</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621679874223"><span class="annot"><span class="annottext">dictCurrent :: Dict (All (Compose Show (Current (K a)))) xs
+</span><a href="#local-6989586621679874223"><span class="hs-identifier hs-var hs-var">dictCurrent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NP (Dict (Compose Show (Current (K a)))) xs
+-&gt; Dict (All (Compose Show (Current (K a)))) xs
+forall {k} (c :: k -&gt; Constraint) (xs :: [k]).
+NP (Dict c) xs -&gt; Dict (All c) xs
+</span><span class="hs-identifier hs-var">all_NP</span></span><span> </span><span class="annot"><span class="annottext">(NP (Dict (Compose Show (Current (K a)))) xs
+ -&gt; Dict (All (Compose Show (Current (K a)))) xs)
+-&gt; NP (Dict (Compose Show (Current (K a)))) xs
+-&gt; Dict (All (Compose Show (Current (K a)))) xs
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(forall a. Dict (Compose Show (Current (K a))) a)
+-&gt; NP (Dict (Compose Show (Current (K a)))) xs
+forall (xs :: [*]) (f :: * -&gt; *).
+SListIN NP xs =&gt;
+(forall a. f a) -&gt; NP f xs
+forall k l (h :: (k -&gt; *) -&gt; l -&gt; *) (xs :: l) (f :: k -&gt; *).
+(HPure h, SListIN h xs) =&gt;
+(forall (a :: k). f a) -&gt; h f xs
+</span><span class="hs-identifier hs-var">hpure</span></span><span> </span><span class="annot"><span class="annottext">Dict (Compose Show (Current (K a))) a
+forall a. Dict (Compose Show (Current (K a))) a
+forall {k} (c :: k -&gt; Constraint) (a :: k). c a =&gt; Dict c a
+</span><span class="hs-identifier hs-var">Dict</span></span><span>
+</span><span id="line-61"></span></pre></body></html>

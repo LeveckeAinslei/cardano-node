@@ -1,0 +1,624 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="annot"><span class="hs-comment">-- | Mock implementations of verifiable random functions.</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Crypto.VRF.Mock</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier">MockVRF</span></a></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#VerKeyVRF"><span class="hs-identifier">VerKeyVRF</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#SignKeyVRF"><span class="hs-identifier">SignKeyVRF</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier">Word64</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html"><span class="hs-identifier">Data.Proxy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier">Proxy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Binary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromCBOR</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">FromCBOR</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.Hash.html"><span class="hs-identifier">Cardano.Crypto.Hash</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.Util.html"><span class="hs-identifier">Cardano.Crypto.Util</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.Seed.html"><span class="hs-identifier">Cardano.Crypto.Seed</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html"><span class="hs-identifier">Cardano.Crypto.VRF.Class</span></a></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="MockVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-var">MockVRF</span></a></span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679194755"><span id="local-6989586621679194764"><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#VRFAlgorithm"><span class="hs-identifier hs-type">VRFAlgorithm</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-comment">-- Key and signature types</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="VerKeyVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#VerKeyVRF"><span class="hs-identifier hs-var">VerKeyVRF</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="VerKeyMockVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#VerKeyMockVRF"><span class="hs-identifier hs-var">VerKeyMockVRF</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span>
+</span><span id="line-36"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679194780"><span id="local-6989586621679194786"><span id="local-6989586621679194789"><span class="annot"><span class="annottext">Int -&gt; VerKeyVRF MockVRF -&gt; ShowS
+[VerKeyVRF MockVRF] -&gt; ShowS
+VerKeyVRF MockVRF -&gt; String
+(Int -&gt; VerKeyVRF MockVRF -&gt; ShowS)
+-&gt; (VerKeyVRF MockVRF -&gt; String)
+-&gt; ([VerKeyVRF MockVRF] -&gt; ShowS)
+-&gt; Show (VerKeyVRF MockVRF)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; VerKeyVRF MockVRF -&gt; ShowS
+showsPrec :: Int -&gt; VerKeyVRF MockVRF -&gt; ShowS
+$cshow :: VerKeyVRF MockVRF -&gt; String
+show :: VerKeyVRF MockVRF -&gt; String
+$cshowList :: [VerKeyVRF MockVRF] -&gt; ShowS
+showList :: [VerKeyVRF MockVRF] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194793"><span id="local-6989586621679194798"><span class="annot"><span class="annottext">VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+(VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; Eq (VerKeyVRF MockVRF)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+== :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+$c/= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+/= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194805"><span id="local-6989586621679194810"><span id="local-6989586621679194814"><span id="local-6989586621679194818"><span id="local-6989586621679194822"><span id="local-6989586621679194826"><span id="local-6989586621679194830"><span class="annot"><span class="annottext">Eq (VerKeyVRF MockVRF)
+Eq (VerKeyVRF MockVRF) =&gt;
+(VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Ordering)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF)
+-&gt; (VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF)
+-&gt; Ord (VerKeyVRF MockVRF)
+VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Ordering
+VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Ordering
+compare :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Ordering
+$c&lt; :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+&lt; :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+$c&lt;= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+&lt;= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+$c&gt; :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+&gt; :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+$c&gt;= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+&gt;= :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; Bool
+$cmax :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+max :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+$cmin :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+min :: VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194836"><span id="local-6989586621679194838"><span class="annot"><span class="annottext">(forall x. VerKeyVRF MockVRF -&gt; Rep (VerKeyVRF MockVRF) x)
+-&gt; (forall x. Rep (VerKeyVRF MockVRF) x -&gt; VerKeyVRF MockVRF)
+-&gt; Generic (VerKeyVRF MockVRF)
+forall x. Rep (VerKeyVRF MockVRF) x -&gt; VerKeyVRF MockVRF
+forall x. VerKeyVRF MockVRF -&gt; Rep (VerKeyVRF MockVRF) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. VerKeyVRF MockVRF -&gt; Rep (VerKeyVRF MockVRF) x
+from :: forall x. VerKeyVRF MockVRF -&gt; Rep (VerKeyVRF MockVRF) x
+$cto :: forall x. Rep (VerKeyVRF MockVRF) x -&gt; VerKeyVRF MockVRF
+to :: forall x. Rep (VerKeyVRF MockVRF) x -&gt; VerKeyVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194842"><span id="local-6989586621679194847"><span id="local-6989586621679194851"><span class="annot"><span class="annottext">Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+Proxy (VerKeyVRF MockVRF) -&gt; String
+(Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (VerKeyVRF MockVRF) -&gt; String)
+-&gt; NoThunks (VerKeyVRF MockVRF)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; VerKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (VerKeyVRF MockVRF) -&gt; String
+showTypeOf :: Proxy (VerKeyVRF MockVRF) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="SignKeyVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#SignKeyVRF"><span class="hs-identifier hs-var">SignKeyVRF</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SignKeyMockVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-var">SignKeyMockVRF</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679194857"><span id="local-6989586621679194861"><span id="local-6989586621679194864"><span class="annot"><span class="annottext">Int -&gt; SignKeyVRF MockVRF -&gt; ShowS
+[SignKeyVRF MockVRF] -&gt; ShowS
+SignKeyVRF MockVRF -&gt; String
+(Int -&gt; SignKeyVRF MockVRF -&gt; ShowS)
+-&gt; (SignKeyVRF MockVRF -&gt; String)
+-&gt; ([SignKeyVRF MockVRF] -&gt; ShowS)
+-&gt; Show (SignKeyVRF MockVRF)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SignKeyVRF MockVRF -&gt; ShowS
+showsPrec :: Int -&gt; SignKeyVRF MockVRF -&gt; ShowS
+$cshow :: SignKeyVRF MockVRF -&gt; String
+show :: SignKeyVRF MockVRF -&gt; String
+$cshowList :: [SignKeyVRF MockVRF] -&gt; ShowS
+showList :: [SignKeyVRF MockVRF] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194867"><span id="local-6989586621679194871"><span class="annot"><span class="annottext">SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+(SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; Eq (SignKeyVRF MockVRF)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+== :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+$c/= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+/= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194878"><span id="local-6989586621679194882"><span id="local-6989586621679194886"><span id="local-6989586621679194890"><span id="local-6989586621679194894"><span id="local-6989586621679194898"><span id="local-6989586621679194902"><span class="annot"><span class="annottext">Eq (SignKeyVRF MockVRF)
+Eq (SignKeyVRF MockVRF) =&gt;
+(SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Ordering)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF)
+-&gt; (SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF)
+-&gt; Ord (SignKeyVRF MockVRF)
+SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Ordering
+SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Ordering
+compare :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Ordering
+$c&lt; :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+&lt; :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+$c&lt;= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+&lt;= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+$c&gt; :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+&gt; :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+$c&gt;= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+&gt;= :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; Bool
+$cmax :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF
+max :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF
+$cmin :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF
+min :: SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF -&gt; SignKeyVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194907"><span id="local-6989586621679194909"><span class="annot"><span class="annottext">(forall x. SignKeyVRF MockVRF -&gt; Rep (SignKeyVRF MockVRF) x)
+-&gt; (forall x. Rep (SignKeyVRF MockVRF) x -&gt; SignKeyVRF MockVRF)
+-&gt; Generic (SignKeyVRF MockVRF)
+forall x. Rep (SignKeyVRF MockVRF) x -&gt; SignKeyVRF MockVRF
+forall x. SignKeyVRF MockVRF -&gt; Rep (SignKeyVRF MockVRF) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SignKeyVRF MockVRF -&gt; Rep (SignKeyVRF MockVRF) x
+from :: forall x. SignKeyVRF MockVRF -&gt; Rep (SignKeyVRF MockVRF) x
+$cto :: forall x. Rep (SignKeyVRF MockVRF) x -&gt; SignKeyVRF MockVRF
+to :: forall x. Rep (SignKeyVRF MockVRF) x -&gt; SignKeyVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194912"><span id="local-6989586621679194916"><span id="local-6989586621679194920"><span class="annot"><span class="annottext">Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+Proxy (SignKeyVRF MockVRF) -&gt; String
+(Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (SignKeyVRF MockVRF) -&gt; String)
+-&gt; NoThunks (SignKeyVRF MockVRF)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SignKeyVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (SignKeyVRF MockVRF) -&gt; String
+showTypeOf :: Proxy (SignKeyVRF MockVRF) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="CertVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#CertVRF"><span class="hs-identifier hs-var">CertVRF</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CertMockVRF"><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#CertMockVRF"><span class="hs-identifier hs-var">CertMockVRF</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679194925"><span id="local-6989586621679194929"><span id="local-6989586621679194932"><span class="annot"><span class="annottext">Int -&gt; CertVRF MockVRF -&gt; ShowS
+[CertVRF MockVRF] -&gt; ShowS
+CertVRF MockVRF -&gt; String
+(Int -&gt; CertVRF MockVRF -&gt; ShowS)
+-&gt; (CertVRF MockVRF -&gt; String)
+-&gt; ([CertVRF MockVRF] -&gt; ShowS)
+-&gt; Show (CertVRF MockVRF)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CertVRF MockVRF -&gt; ShowS
+showsPrec :: Int -&gt; CertVRF MockVRF -&gt; ShowS
+$cshow :: CertVRF MockVRF -&gt; String
+show :: CertVRF MockVRF -&gt; String
+$cshowList :: [CertVRF MockVRF] -&gt; ShowS
+showList :: [CertVRF MockVRF] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194935"><span id="local-6989586621679194939"><span class="annot"><span class="annottext">CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+(CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; Eq (CertVRF MockVRF)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+== :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+$c/= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+/= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194945"><span id="local-6989586621679194949"><span id="local-6989586621679194953"><span id="local-6989586621679194957"><span id="local-6989586621679194961"><span id="local-6989586621679194965"><span id="local-6989586621679194969"><span class="annot"><span class="annottext">Eq (CertVRF MockVRF)
+Eq (CertVRF MockVRF) =&gt;
+(CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Ordering)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF)
+-&gt; (CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF)
+-&gt; Ord (CertVRF MockVRF)
+CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Ordering
+CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Ordering
+compare :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Ordering
+$c&lt; :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+&lt; :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+$c&lt;= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+&lt;= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+$c&gt; :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+&gt; :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+$c&gt;= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+&gt;= :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+$cmax :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF
+max :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF
+$cmin :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF
+min :: CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; CertVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194974"><span id="local-6989586621679194976"><span class="annot"><span class="annottext">(forall x. CertVRF MockVRF -&gt; Rep (CertVRF MockVRF) x)
+-&gt; (forall x. Rep (CertVRF MockVRF) x -&gt; CertVRF MockVRF)
+-&gt; Generic (CertVRF MockVRF)
+forall x. Rep (CertVRF MockVRF) x -&gt; CertVRF MockVRF
+forall x. CertVRF MockVRF -&gt; Rep (CertVRF MockVRF) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. CertVRF MockVRF -&gt; Rep (CertVRF MockVRF) x
+from :: forall x. CertVRF MockVRF -&gt; Rep (CertVRF MockVRF) x
+$cto :: forall x. Rep (CertVRF MockVRF) x -&gt; CertVRF MockVRF
+to :: forall x. Rep (CertVRF MockVRF) x -&gt; CertVRF MockVRF
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679194979"><span id="local-6989586621679194983"><span id="local-6989586621679194987"><span class="annot"><span class="annottext">Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+Proxy (CertVRF MockVRF) -&gt; String
+(Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (CertVRF MockVRF) -&gt; String)
+-&gt; NoThunks (CertVRF MockVRF)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; CertVRF MockVRF -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (CertVRF MockVRF) -&gt; String
+showTypeOf :: Proxy (CertVRF MockVRF) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-comment">-- Metadata and basic key operations</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679194990"><span class="annot"><span class="annottext">algorithmNameVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; String
+</span><a href="#local-6989586621679194990"><span class="hs-identifier hs-var hs-var hs-var hs-var">algorithmNameVRF</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;mock&quot;</span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679194992"><span class="annot"><span class="annottext">deriveVerKeyVRF :: SignKeyVRF MockVRF -&gt; VerKeyVRF MockVRF
+</span><a href="#local-6989586621679194992"><span class="hs-identifier hs-var hs-var hs-var hs-var">deriveVerKeyVRF</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-type">SignKeyMockVRF</span></a></span><span> </span><span id="local-6989586621679194994"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679194994"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; VerKeyVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#VerKeyMockVRF"><span class="hs-identifier hs-var">VerKeyMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679194994"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-comment">-- Core algorithm operations</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Signable"><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#Signable"><span class="hs-identifier hs-var">Signable</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Crypto.Util.html#SignableRepresentation"><span class="hs-identifier hs-type">SignableRepresentation</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621679194999"><span class="annot"><span class="annottext">evalVRF :: forall a.
+(HasCallStack, Signable MockVRF a) =&gt;
+ContextVRF MockVRF
+-&gt; a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+</span><a href="#local-6989586621679194999"><span class="hs-identifier hs-var hs-var hs-var hs-var">evalVRF</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679195001"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195001"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679195002"><span class="annot"><span class="annottext">SignKeyVRF MockVRF
+</span><a href="#local-6989586621679195002"><span class="hs-identifier hs-var">sk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+forall a.
+SignableRepresentation a =&gt;
+a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+</span><a href="Cardano.Crypto.VRF.Mock.html#evalVRF%27"><span class="hs-identifier hs-var">evalVRF'</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195001"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">SignKeyVRF MockVRF
+</span><a href="#local-6989586621679195002"><span class="hs-identifier hs-var">sk</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679195009"><span class="annot"><span class="annottext">verifyVRF :: forall a.
+(HasCallStack, Signable MockVRF a) =&gt;
+ContextVRF MockVRF
+-&gt; VerKeyVRF MockVRF
+-&gt; a
+-&gt; CertVRF MockVRF
+-&gt; Maybe (OutputVRF MockVRF)
+</span><a href="#local-6989586621679195009"><span class="hs-identifier hs-var hs-var hs-var hs-var">verifyVRF</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#VerKeyMockVRF"><span class="hs-identifier hs-type">VerKeyMockVRF</span></a></span><span> </span><span id="local-6989586621679195011"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195011"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679195012"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195012"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679195013"><span class="annot"><span class="annottext">CertVRF MockVRF
+</span><a href="#local-6989586621679195013"><span class="hs-identifier hs-var">c</span></a></span></span><span>
+</span><span id="line-62"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">CertVRF MockVRF
+</span><a href="#local-6989586621679195013"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">CertVRF MockVRF -&gt; CertVRF MockVRF -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3D%3D"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">CertVRF MockVRF
+</span><a href="#local-6989586621679195014"><span class="hs-identifier hs-var">c'</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OutputVRF MockVRF -&gt; Maybe (OutputVRF MockVRF)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">OutputVRF MockVRF
+</span><a href="#local-6989586621679195015"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (OutputVRF MockVRF)
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679195015"><span class="annot"><span class="annottext">OutputVRF MockVRF
+</span><a href="#local-6989586621679195015"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679195014"><span class="annot"><span class="annottext">CertVRF MockVRF
+</span><a href="#local-6989586621679195014"><span class="hs-identifier hs-var">c'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+forall a.
+SignableRepresentation a =&gt;
+a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+</span><a href="Cardano.Crypto.VRF.Mock.html#evalVRF%27"><span class="hs-identifier hs-var">evalVRF'</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195012"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; SignKeyVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-var">SignKeyMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195011"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679195021"><span class="annot"><span class="annottext">sizeOutputVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; Word
+</span><a href="#local-6989586621679195021"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeOutputVRF</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy ShortHash -&gt; Word
+forall h (proxy :: * -&gt; *). HashAlgorithm h =&gt; proxy h -&gt; Word
+</span><a href="Cardano.Crypto.Hash.Class.html#sizeHash"><span class="hs-identifier hs-var">sizeHash</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy ShortHash
+forall {k} (t :: k). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-type">Proxy</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.Hash.Short.html#ShortHash"><span class="hs-identifier hs-type">ShortHash</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-comment">-- Key generation</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621679195025"><span class="annot"><span class="annottext">seedSizeVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; Word
+</span><a href="#local-6989586621679195025"><span class="hs-identifier hs-var hs-var hs-var hs-var">seedSizeVRF</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">8</span></span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679195027"><span class="annot"><span class="annottext">genKeyVRF :: Seed -&gt; SignKeyVRF MockVRF
+</span><a href="#local-6989586621679195027"><span class="hs-identifier hs-var hs-var hs-var hs-var">genKeyVRF</span></a></span></span><span> </span><span id="local-6989586621679195029"><span class="annot"><span class="annottext">Seed
+</span><a href="#local-6989586621679195029"><span class="hs-identifier hs-var">seed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; SignKeyVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-var">SignKeyMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195030"><span class="hs-identifier hs-var">sk</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621679195030"><span class="annot"><span class="annottext">sk :: Word64
+</span><a href="#local-6989586621679195030"><span class="hs-identifier hs-var hs-var">sk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Seed -&gt; (forall (m :: * -&gt; *). MonadRandom m =&gt; m Word64) -&gt; Word64
+forall a. Seed -&gt; (forall (m :: * -&gt; *). MonadRandom m =&gt; m a) -&gt; a
+</span><a href="Cardano.Crypto.Seed.html#runMonadRandomWithSeed"><span class="hs-identifier hs-var">runMonadRandomWithSeed</span></a></span><span> </span><span class="annot"><span class="annottext">Seed
+</span><a href="#local-6989586621679195029"><span class="hs-identifier hs-var">seed</span></a></span><span> </span><span class="annot"><span class="annottext">m Word64
+forall (m :: * -&gt; *). MonadRandom m =&gt; m Word64
+</span><a href="Cardano.Crypto.Util.html#getRandomWord64"><span class="hs-identifier hs-var">getRandomWord64</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-comment">-- raw serialise/deserialise</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621679195035"><span class="annot"><span class="annottext">sizeVerKeyVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; Word
+</span><a href="#local-6989586621679195035"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeVerKeyVRF</span></a></span></span><span>  </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">8</span></span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679195037"><span class="annot"><span class="annottext">sizeSignKeyVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; Word
+</span><a href="#local-6989586621679195037"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeSignKeyVRF</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">8</span></span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621679195039"><span class="annot"><span class="annottext">sizeCertVRF :: forall (proxy :: * -&gt; *). proxy MockVRF -&gt; Word
+</span><a href="#local-6989586621679195039"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeCertVRF</span></a></span></span><span>    </span><span class="annot"><span class="annottext">proxy MockVRF
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">8</span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621679195041"><span class="annot"><span class="annottext">rawSerialiseVerKeyVRF :: VerKeyVRF MockVRF -&gt; ByteString
+</span><a href="#local-6989586621679195041"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseVerKeyVRF</span></a></span></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#VerKeyMockVRF"><span class="hs-identifier hs-type">VerKeyMockVRF</span></a></span><span>  </span><span id="local-6989586621679195043"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195043"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; ByteString
+</span><a href="Cardano.Crypto.Util.html#writeBinaryWord64"><span class="hs-identifier hs-var">writeBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195043"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679195045"><span class="annot"><span class="annottext">rawSerialiseSignKeyVRF :: SignKeyVRF MockVRF -&gt; ByteString
+</span><a href="#local-6989586621679195045"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseSignKeyVRF</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-type">SignKeyMockVRF</span></a></span><span> </span><span id="local-6989586621679195047"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195047"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; ByteString
+</span><a href="Cardano.Crypto.Util.html#writeBinaryWord64"><span class="hs-identifier hs-var">writeBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195047"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621679195048"><span class="annot"><span class="annottext">rawSerialiseCertVRF :: CertVRF MockVRF -&gt; ByteString
+</span><a href="#local-6989586621679195048"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseCertVRF</span></a></span></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#CertMockVRF"><span class="hs-identifier hs-type">CertMockVRF</span></a></span><span>    </span><span id="local-6989586621679195050"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195050"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; ByteString
+</span><a href="Cardano.Crypto.Util.html#writeBinaryWord64"><span class="hs-identifier hs-var">writeBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195050"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621679195051"><span class="annot"><span class="annottext">rawDeserialiseVerKeyVRF :: ByteString -&gt; Maybe (VerKeyVRF MockVRF)
+</span><a href="#local-6989586621679195051"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseVerKeyVRF</span></a></span></span><span> </span><span id="local-6989586621679195053"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195053"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span id="local-6989586621679195054"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195054"><span class="hs-identifier hs-var">kb</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; ByteString -&gt; [ByteString]
+</span><a href="Cardano.Crypto.Util.html#splitsAt"><span class="hs-identifier hs-var">splitsAt</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195053"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679195056"><span class="annot"><span class="annottext">k :: Word64
+</span><a href="#local-6989586621679195056"><span class="hs-identifier hs-var hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word64
+</span><a href="Cardano.Crypto.Util.html#readBinaryWord64"><span class="hs-identifier hs-var">readBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195054"><span class="hs-identifier hs-var">kb</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyVRF MockVRF -&gt; Maybe (VerKeyVRF MockVRF)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(VerKeyVRF MockVRF -&gt; Maybe (VerKeyVRF MockVRF))
+-&gt; VerKeyVRF MockVRF -&gt; Maybe (VerKeyVRF MockVRF)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24%21"><span class="hs-operator hs-var">$!</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; VerKeyVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#VerKeyMockVRF"><span class="hs-identifier hs-var">VerKeyMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195056"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (VerKeyVRF MockVRF)
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621679195059"><span class="annot"><span class="annottext">rawDeserialiseSignKeyVRF :: ByteString -&gt; Maybe (SignKeyVRF MockVRF)
+</span><a href="#local-6989586621679195059"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseSignKeyVRF</span></a></span></span><span> </span><span id="local-6989586621679195061"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195061"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span id="local-6989586621679195062"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195062"><span class="hs-identifier hs-var">kb</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; ByteString -&gt; [ByteString]
+</span><a href="Cardano.Crypto.Util.html#splitsAt"><span class="hs-identifier hs-var">splitsAt</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195061"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679195063"><span class="annot"><span class="annottext">k :: Word64
+</span><a href="#local-6989586621679195063"><span class="hs-identifier hs-var hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word64
+</span><a href="Cardano.Crypto.Util.html#readBinaryWord64"><span class="hs-identifier hs-var">readBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195062"><span class="hs-identifier hs-var">kb</span></a></span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyVRF MockVRF -&gt; Maybe (SignKeyVRF MockVRF)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(SignKeyVRF MockVRF -&gt; Maybe (SignKeyVRF MockVRF))
+-&gt; SignKeyVRF MockVRF -&gt; Maybe (SignKeyVRF MockVRF)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24%21"><span class="hs-operator hs-var">$!</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; SignKeyVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-var">SignKeyMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195063"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (SignKeyVRF MockVRF)
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621679195064"><span class="annot"><span class="annottext">rawDeserialiseCertVRF :: ByteString -&gt; Maybe (CertVRF MockVRF)
+</span><a href="#local-6989586621679195064"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseCertVRF</span></a></span></span><span> </span><span id="local-6989586621679195066"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195066"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span id="local-6989586621679195067"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195067"><span class="hs-identifier hs-var">kb</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; ByteString -&gt; [ByteString]
+</span><a href="Cardano.Crypto.Util.html#splitsAt"><span class="hs-identifier hs-var">splitsAt</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">8</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195066"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679195068"><span class="annot"><span class="annottext">k :: Word64
+</span><a href="#local-6989586621679195068"><span class="hs-identifier hs-var hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word64
+</span><a href="Cardano.Crypto.Util.html#readBinaryWord64"><span class="hs-identifier hs-var">readBinaryWord64</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195067"><span class="hs-identifier hs-var">kb</span></a></span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CertVRF MockVRF -&gt; Maybe (CertVRF MockVRF)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(CertVRF MockVRF -&gt; Maybe (CertVRF MockVRF))
+-&gt; CertVRF MockVRF -&gt; Maybe (CertVRF MockVRF)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24%21"><span class="hs-operator hs-var">$!</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; CertVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#CertMockVRF"><span class="hs-identifier hs-var">CertMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195068"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (CertVRF MockVRF)
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195076"><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#VerKeyVRF"><span class="hs-identifier hs-type">VerKeyVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621679195081"><span class="annot"><span class="annottext">toCBOR :: VerKeyVRF MockVRF -&gt; Encoding
+</span><a href="#local-6989586621679195081"><span class="hs-identifier hs-var hs-var hs-var hs-var">toCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyVRF MockVRF -&gt; Encoding
+forall v. VRFAlgorithm v =&gt; VerKeyVRF v -&gt; Encoding
+</span><a href="Cardano.Crypto.VRF.Class.html#encodeVerKeyVRF"><span class="hs-identifier hs-var">encodeVerKeyVRF</span></a></span><span>
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621679195085"><span class="annot"><span class="annottext">encodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (VerKeyVRF MockVRF) -&gt; Size
+</span><a href="#local-6989586621679195085"><span class="hs-identifier hs-var hs-var hs-var hs-var">encodedSizeExpr</span></a></span></span><span> </span><span id="local-6989586621679195087"><span class="annot"><span class="annottext">forall t. ToCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679195087"><span class="hs-identifier hs-var">_size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy (VerKeyVRF MockVRF) -&gt; Size
+forall v. VRFAlgorithm v =&gt; Proxy (VerKeyVRF v) -&gt; Size
+</span><a href="Cardano.Crypto.VRF.Class.html#encodedVerKeyVRFSizeExpr"><span class="hs-identifier hs-var">encodedVerKeyVRFSizeExpr</span></a></span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195095"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#VerKeyVRF"><span class="hs-identifier hs-type">VerKeyVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621679195100"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s (VerKeyVRF MockVRF)
+</span><a href="#local-6989586621679195100"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s (VerKeyVRF MockVRF)
+forall v s. VRFAlgorithm v =&gt; Decoder s (VerKeyVRF v)
+</span><a href="Cardano.Crypto.VRF.Class.html#decodeVerKeyVRF"><span class="hs-identifier hs-var">decodeVerKeyVRF</span></a></span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195110"><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#SignKeyVRF"><span class="hs-identifier hs-type">SignKeyVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621679195114"><span class="annot"><span class="annottext">toCBOR :: SignKeyVRF MockVRF -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyVRF MockVRF -&gt; Encoding
+forall v. VRFAlgorithm v =&gt; SignKeyVRF v -&gt; Encoding
+</span><a href="Cardano.Crypto.VRF.Class.html#encodeSignKeyVRF"><span class="hs-identifier hs-var">encodeSignKeyVRF</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621679195117"><span class="annot"><span class="annottext">encodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (SignKeyVRF MockVRF) -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encodedSizeExpr</span></span></span><span> </span><span id="local-6989586621679195118"><span class="annot"><span class="annottext">forall t. ToCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679195118"><span class="hs-identifier hs-var">_size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy (SignKeyVRF MockVRF) -&gt; Size
+forall v. VRFAlgorithm v =&gt; Proxy (SignKeyVRF v) -&gt; Size
+</span><a href="Cardano.Crypto.VRF.Class.html#encodedSignKeyVRFSizeExpr"><span class="hs-identifier hs-var">encodedSignKeyVRFSizeExpr</span></a></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195126"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#SignKeyVRF"><span class="hs-identifier hs-type">SignKeyVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621679195130"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s (SignKeyVRF MockVRF)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s (SignKeyVRF MockVRF)
+forall v s. VRFAlgorithm v =&gt; Decoder s (SignKeyVRF v)
+</span><a href="Cardano.Crypto.VRF.Class.html#decodeSignKeyVRF"><span class="hs-identifier hs-var">decodeSignKeyVRF</span></a></span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195139"><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#CertVRF"><span class="hs-identifier hs-type">CertVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621679195143"><span class="annot"><span class="annottext">toCBOR :: CertVRF MockVRF -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CertVRF MockVRF -&gt; Encoding
+forall v. VRFAlgorithm v =&gt; CertVRF v -&gt; Encoding
+</span><a href="Cardano.Crypto.VRF.Class.html#encodeCertVRF"><span class="hs-identifier hs-var">encodeCertVRF</span></a></span><span>
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621679195146"><span class="annot"><span class="annottext">encodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (CertVRF MockVRF) -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">encodedSizeExpr</span></span></span><span> </span><span id="local-6989586621679195147"><span class="annot"><span class="annottext">forall t. ToCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679195147"><span class="hs-identifier hs-var">_size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy (CertVRF MockVRF) -&gt; Size
+forall v. VRFAlgorithm v =&gt; Proxy (CertVRF v) -&gt; Size
+</span><a href="Cardano.Crypto.VRF.Class.html#encodedCertVRFSizeExpr"><span class="hs-identifier hs-var">encodedCertVRFSizeExpr</span></a></span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679195155"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#CertVRF"><span class="hs-identifier hs-type">CertVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621679195159"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s (CertVRF MockVRF)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s (CertVRF MockVRF)
+forall v s. VRFAlgorithm v =&gt; Decoder s (CertVRF v)
+</span><a href="Cardano.Crypto.VRF.Class.html#decodeCertVRF"><span class="hs-identifier hs-var">decodeCertVRF</span></a></span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span id="local-6989586621679194663"><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#evalVRF%27"><span class="hs-identifier hs-type">evalVRF'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Cardano.Crypto.Util.html#SignableRepresentation"><span class="hs-identifier hs-type">SignableRepresentation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679194663"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-139"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679194663"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-140"></span><span>         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#SignKeyVRF"><span class="hs-identifier hs-type">SignKeyVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span>
+</span><span id="line-141"></span><span>         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#OutputVRF"><span class="hs-identifier hs-type">OutputVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Class.html#CertVRF"><span class="hs-identifier hs-type">CertVRF</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#MockVRF"><span class="hs-identifier hs-type">MockVRF</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-142"></span><span id="evalVRF%27"><span class="annot"><span class="annottext">evalVRF' :: forall a.
+SignableRepresentation a =&gt;
+a -&gt; SignKeyVRF MockVRF -&gt; (OutputVRF MockVRF, CertVRF MockVRF)
+</span><a href="Cardano.Crypto.VRF.Mock.html#evalVRF%27"><span class="hs-identifier hs-var hs-var">evalVRF'</span></a></span></span><span> </span><span id="local-6989586621679195172"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195172"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679195173"><span class="annot"><span class="annottext">sk :: SignKeyVRF MockVRF
+</span><a href="#local-6989586621679195173"><span class="hs-identifier hs-var">sk</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Crypto.VRF.Mock.html#SignKeyMockVRF"><span class="hs-identifier hs-type">SignKeyMockVRF</span></a></span><span> </span><span id="local-6989586621679195174"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195174"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679195175"><span class="annot"><span class="annottext">y :: ByteString
+</span><a href="#local-6989586621679195175"><span class="hs-identifier hs-var hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Hash ShortHash Encoding -&gt; ByteString
+forall h a. Hash h a -&gt; ByteString
+</span><a href="Cardano.Crypto.Hash.Class.html#hashToBytes"><span class="hs-identifier hs-var">hashToBytes</span></a></span><span> </span><span class="annot"><span class="annottext">(Hash ShortHash Encoding -&gt; ByteString)
+-&gt; Hash ShortHash Encoding -&gt; ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall h a. HashAlgorithm h =&gt; (a -&gt; Encoding) -&gt; a -&gt; Hash h a
+</span><a href="Cardano.Crypto.Hash.Class.html#hashWithSerialiser"><span class="hs-identifier hs-var">hashWithSerialiser</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Cardano.Crypto.Hash.Short.html#ShortHash"><span class="hs-identifier hs-type">ShortHash</span></a></span><span> </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding
+forall a. a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span> </span><span class="annot"><span class="annottext">(Encoding -&gt; Hash ShortHash Encoding)
+-&gt; Encoding -&gt; Hash ShortHash Encoding
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-144"></span><span>            </span><span class="annot"><span class="annottext">ByteString -&gt; Encoding
+forall a. ToCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">toCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; ByteString
+forall a. SignableRepresentation a =&gt; a -&gt; ByteString
+</span><a href="Cardano.Crypto.Util.html#getSignableRepresentation"><span class="hs-identifier hs-var">getSignableRepresentation</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679195172"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SignKeyVRF MockVRF -&gt; Encoding
+forall a. ToCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">toCBOR</span></span><span> </span><span class="annot"><span class="annottext">SignKeyVRF MockVRF
+</span><a href="#local-6989586621679195173"><span class="hs-identifier hs-var">sk</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; OutputVRF MockVRF
+forall v. ByteString -&gt; OutputVRF v
+</span><a href="Cardano.Crypto.VRF.Class.html#OutputVRF"><span class="hs-identifier hs-var">OutputVRF</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679195175"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; CertVRF MockVRF
+</span><a href="Cardano.Crypto.VRF.Mock.html#CertMockVRF"><span class="hs-identifier hs-var">CertMockVRF</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679195174"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span></pre></body></html>

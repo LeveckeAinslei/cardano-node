@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric              #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia                #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.Config.SecurityParam</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Config.SecurityParam.html#SecurityParam"><span class="hs-identifier">SecurityParam</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Quiet</span></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- | Protocol security parameter</span><span>
+</span><span id="line-13"></span><span class="hs-comment">--</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- We interpret this as the number of rollbacks we support.</span><span>
+</span><span id="line-15"></span><span class="hs-comment">--</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- i.e., k == 0: we can't roll back at all</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--       k == 1: we can roll back at most one block, etc</span><span>
+</span><span id="line-18"></span><span class="hs-comment">--</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- NOTE: This talks about the number of /blocks/ we can roll back, not</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- the number of /slots/.</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">newtype</span><span> </span><span id="SecurityParam"><span class="annot"><a href="Ouroboros.Consensus.Config.SecurityParam.html#SecurityParam"><span class="hs-identifier hs-var">SecurityParam</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SecurityParam"><span class="annot"><a href="Ouroboros.Consensus.Config.SecurityParam.html#SecurityParam"><span class="hs-identifier hs-var">SecurityParam</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="maxRollbacks"><span class="annot"><span class="annottext">SecurityParam -&gt; Word64
+</span><a href="Ouroboros.Consensus.Config.SecurityParam.html#maxRollbacks"><span class="hs-identifier hs-var hs-var">maxRollbacks</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679819077"><span id="local-6989586621679819082"><span class="annot"><span class="annottext">SecurityParam -&gt; SecurityParam -&gt; Bool
+(SecurityParam -&gt; SecurityParam -&gt; Bool)
+-&gt; (SecurityParam -&gt; SecurityParam -&gt; Bool) -&gt; Eq SecurityParam
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SecurityParam -&gt; SecurityParam -&gt; Bool
+== :: SecurityParam -&gt; SecurityParam -&gt; Bool
+$c/= :: SecurityParam -&gt; SecurityParam -&gt; Bool
+/= :: SecurityParam -&gt; SecurityParam -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679819088"><span id="local-6989586621679819090"><span class="annot"><span class="annottext">(forall x. SecurityParam -&gt; Rep SecurityParam x)
+-&gt; (forall x. Rep SecurityParam x -&gt; SecurityParam)
+-&gt; Generic SecurityParam
+forall x. Rep SecurityParam x -&gt; SecurityParam
+forall x. SecurityParam -&gt; Rep SecurityParam x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SecurityParam -&gt; Rep SecurityParam x
+from :: forall x. SecurityParam -&gt; Rep SecurityParam x
+$cto :: forall x. Rep SecurityParam x -&gt; SecurityParam
+to :: forall x. Rep SecurityParam x -&gt; SecurityParam
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679819094"><span id="local-6989586621679819099"><span id="local-6989586621679819103"><span class="annot"><span class="annottext">Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo)
+Proxy SecurityParam -&gt; String
+(Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy SecurityParam -&gt; String)
+-&gt; NoThunks SecurityParam
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SecurityParam -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy SecurityParam -&gt; String
+showTypeOf :: Proxy SecurityParam -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679819109"><span id="local-6989586621679819116"><span id="local-6989586621679819122"><span class="annot"><span class="annottext">Int -&gt; SecurityParam -&gt; ShowS
+[SecurityParam] -&gt; ShowS
+SecurityParam -&gt; String
+(Int -&gt; SecurityParam -&gt; ShowS)
+-&gt; (SecurityParam -&gt; String)
+-&gt; ([SecurityParam] -&gt; ShowS)
+-&gt; Show SecurityParam
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SecurityParam -&gt; ShowS
+showsPrec :: Int -&gt; SecurityParam -&gt; ShowS
+$cshow :: SecurityParam -&gt; String
+show :: SecurityParam -&gt; String
+$cshowList :: [SecurityParam] -&gt; ShowS
+showList :: [SecurityParam] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Quiet</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Config.SecurityParam.html#SecurityParam"><span class="hs-identifier hs-type">SecurityParam</span></a></span><span>
+</span><span id="line-24"></span></pre></body></html>

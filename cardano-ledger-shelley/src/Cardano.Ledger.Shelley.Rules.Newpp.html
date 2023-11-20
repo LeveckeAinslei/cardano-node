@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Shelley.Rules.Newpp</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier">ShelleyNEWPP</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppState"><span class="hs-identifier">ShelleyNewppState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppEnv"><span class="hs-identifier">NewppEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppPredFailure"><span class="hs-identifier">ShelleyNewppPredFailure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><span class="hs-identifier">PredicateFailure</span></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BaseTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShelleyBase</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Coin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coin</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html"><span class="hs-identifier">Cardano.Ledger.Shelley.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier">ShelleyNEWPP</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html"><span class="hs-identifier">Cardano.Ledger.Shelley.Governance</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.html"><span class="hs-identifier">Cardano.Ledger.Shelley.LedgerState</span></a></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier">CertState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">DState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier">PState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#UTxOState"><span class="hs-identifier">UTxOState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#utxosDeposited"><span class="hs-identifier">utxosDeposited</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#totalObligation"><span class="hs-identifier">totalObligation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#utxosGovStateL"><span class="hs-identifier">utxosGovStateL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html"><span class="hs-identifier">Cardano.Ledger.Shelley.PParams</span></a></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html#ProposedPPUpdates"><span class="hs-identifier">ProposedPPUpdates</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html#ProposedPPUpdates"><span class="hs-identifier">ProposedPPUpdates</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html#emptyPPPUpdates"><span class="hs-identifier">emptyPPPUpdates</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html#pvCanFollow"><span class="hs-identifier">pvCanFollow</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.State.Transition</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier">STS</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier">TRC</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="hs-identifier">TransitionRule</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier">judgmentContext</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="hs-operator">(?!)</span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Default.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Default</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">def</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Function.html#%26"><span class="hs-operator">(&amp;)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="ShelleyNewppState"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppState"><span class="hs-identifier hs-var">ShelleyNewppState</span></a></span></span><span> </span><span id="local-6989586621679623457"><span class="annot"><a href="#local-6989586621679623457"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NewppState"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-var">NewppState</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679623457"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#ShelleyGovState"><span class="hs-identifier hs-type">ShelleyGovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623457"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">data</span><span> </span><span id="NewppEnv"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppEnv"><span class="hs-identifier hs-var">NewppEnv</span></a></span></span><span> </span><span id="local-6989586621679623539"><span class="annot"><a href="#local-6989586621679623539"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NewppEnv"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppEnv"><span class="hs-identifier hs-var">NewppEnv</span></a></span></span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DState</span></span><span> </span><span class="annot"><a href="#local-6989586621679623539"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PState</span></span><span> </span><span class="annot"><a href="#local-6989586621679623539"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#UTxOState"><span class="hs-identifier hs-type">UTxOState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623539"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">data</span><span> </span><span id="ShelleyNewppPredFailure"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppPredFailure"><span class="hs-identifier hs-var">ShelleyNewppPredFailure</span></a></span></span><span> </span><span id="local-6989586621679623491"><span class="annot"><a href="#local-6989586621679623491"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UnexpectedDepositPot"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#UnexpectedDepositPot"><span class="hs-identifier hs-var">UnexpectedDepositPot</span></a></span></span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span> </span><span class="hs-comment">-- The total outstanding deposits</span><span>
+</span><span id="line-62"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span> </span><span class="hs-comment">-- The deposit pot</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679623543"><span id="local-6989586621679623550"><span id="local-6989586621679623554"><span class="annot"><span class="annottext">Int -&gt; ShelleyNewppPredFailure era -&gt; ShowS
+[ShelleyNewppPredFailure era] -&gt; ShowS
+ShelleyNewppPredFailure era -&gt; String
+(Int -&gt; ShelleyNewppPredFailure era -&gt; ShowS)
+-&gt; (ShelleyNewppPredFailure era -&gt; String)
+-&gt; ([ShelleyNewppPredFailure era] -&gt; ShowS)
+-&gt; Show (ShelleyNewppPredFailure era)
+forall era. Int -&gt; ShelleyNewppPredFailure era -&gt; ShowS
+forall era. [ShelleyNewppPredFailure era] -&gt; ShowS
+forall era. ShelleyNewppPredFailure era -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall era. Int -&gt; ShelleyNewppPredFailure era -&gt; ShowS
+showsPrec :: Int -&gt; ShelleyNewppPredFailure era -&gt; ShowS
+$cshow :: forall era. ShelleyNewppPredFailure era -&gt; String
+show :: ShelleyNewppPredFailure era -&gt; String
+$cshowList :: forall era. [ShelleyNewppPredFailure era] -&gt; ShowS
+showList :: [ShelleyNewppPredFailure era] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679623558"><span id="local-6989586621679623563"><span class="annot"><span class="annottext">ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+(ShelleyNewppPredFailure era
+ -&gt; ShelleyNewppPredFailure era -&gt; Bool)
+-&gt; (ShelleyNewppPredFailure era
+    -&gt; ShelleyNewppPredFailure era -&gt; Bool)
+-&gt; Eq (ShelleyNewppPredFailure era)
+forall era.
+ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall era.
+ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+== :: ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+$c/= :: forall era.
+ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+/= :: ShelleyNewppPredFailure era -&gt; ShelleyNewppPredFailure era -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679623568"><span id="local-6989586621679623570"><span class="annot"><span class="annottext">(forall x.
+ ShelleyNewppPredFailure era -&gt; Rep (ShelleyNewppPredFailure era) x)
+-&gt; (forall x.
+    Rep (ShelleyNewppPredFailure era) x -&gt; ShelleyNewppPredFailure era)
+-&gt; Generic (ShelleyNewppPredFailure era)
+forall x.
+Rep (ShelleyNewppPredFailure era) x -&gt; ShelleyNewppPredFailure era
+forall x.
+ShelleyNewppPredFailure era -&gt; Rep (ShelleyNewppPredFailure era) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall era x.
+Rep (ShelleyNewppPredFailure era) x -&gt; ShelleyNewppPredFailure era
+forall era x.
+ShelleyNewppPredFailure era -&gt; Rep (ShelleyNewppPredFailure era) x
+$cfrom :: forall era x.
+ShelleyNewppPredFailure era -&gt; Rep (ShelleyNewppPredFailure era) x
+from :: forall x.
+ShelleyNewppPredFailure era -&gt; Rep (ShelleyNewppPredFailure era) x
+$cto :: forall era x.
+Rep (ShelleyNewppPredFailure era) x -&gt; ShelleyNewppPredFailure era
+to :: forall x.
+Rep (ShelleyNewppPredFailure era) x -&gt; ShelleyNewppPredFailure era
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679623399"><span id="local-6989586621679623574"><span id="local-6989586621679623578"><span id="local-6989586621679623584"><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppPredFailure"><span class="hs-identifier hs-type">ShelleyNewppPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623399"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679623415"><span id="local-6989586621679623611"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppPredFailure"><span class="hs-identifier hs-type">ShelleyNewppPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623415"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621679623450"><span id="local-6989586621679623645"><span id="local-6989586621679623654"><span id="local-6989586621679623659"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#EraGov"><span class="hs-identifier hs-type">EraGov</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#GovState"><span class="hs-identifier hs-type">GovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#~"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#ShelleyGovState"><span class="hs-identifier hs-type">ShelleyGovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProtVerAtMost</span></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STS</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="State"><span class="annot"><span class="hs-identifier hs-var">State</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppState"><span class="hs-identifier hs-type">ShelleyNewppState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Signal"><span class="annot"><span class="hs-identifier hs-var">Signal</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Environment"><span class="annot"><span class="hs-identifier hs-var">Environment</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppEnv"><span class="hs-identifier hs-type">NewppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BaseM"><span class="annot"><span class="hs-identifier hs-var">BaseM</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyBase</span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="PredicateFailure"><span class="annot"><span class="hs-identifier hs-var">PredicateFailure</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppPredFailure"><span class="hs-identifier hs-type">ShelleyNewppPredFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623450"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621679623683"><span class="annot"><span class="annottext">transitionRules :: [TransitionRule (ShelleyNEWPP era)]
+</span><a href="#local-6989586621679623683"><span class="hs-identifier hs-var hs-var hs-var hs-var">transitionRules</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">TransitionRule (ShelleyNEWPP era)
+forall era.
+(GovState era ~ ShelleyGovState era, EraGov era,
+ ProtVerAtMost era 8) =&gt;
+TransitionRule (ShelleyNEWPP era)
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#newPpTransition"><span class="hs-identifier hs-var">newPpTransition</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679623449"><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679623449"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Default</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#ShelleyNewppState"><span class="hs-identifier hs-type">ShelleyNewppState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623449"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679623693"><span class="annot"><span class="annottext">def :: ShelleyNewppState era
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">def</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+forall era.
+PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-var">NewppState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#newPpTransition"><span class="hs-identifier hs-type">newPpTransition</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679623451"><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#GovState"><span class="hs-identifier hs-type">GovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#~"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#ShelleyGovState"><span class="hs-identifier hs-type">ShelleyGovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#EraGov"><span class="hs-identifier hs-type">EraGov</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProtVerAtMost</span></span><span> </span><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TransitionRule</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Era.html#ShelleyNEWPP"><span class="hs-identifier hs-type">ShelleyNEWPP</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623451"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span id="newPpTransition"><span class="annot"><span class="annottext">newPpTransition :: forall era.
+(GovState era ~ ShelleyGovState era, EraGov era,
+ ProtVerAtMost era 8) =&gt;
+TransitionRule (ShelleyNEWPP era)
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#newPpTransition"><span class="hs-identifier hs-var hs-var">newPpTransition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TRC</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppEnv"><span class="hs-identifier hs-type">NewppEnv</span></a></span><span> </span><span id="local-6989586621679623737"><span class="annot"><span class="annottext">DState era
+</span><a href="#local-6989586621679623737"><span class="hs-identifier hs-var">dstate</span></a></span></span><span> </span><span id="local-6989586621679623738"><span class="annot"><span class="annottext">PState era
+</span><a href="#local-6989586621679623738"><span class="hs-identifier hs-var">pstate</span></a></span></span><span> </span><span id="local-6989586621679623739"><span class="annot"><span class="annottext">UTxOState era
+</span><a href="#local-6989586621679623739"><span class="hs-identifier hs-var">utxoSt</span></a></span></span><span>
+</span><span id="line-96"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-type">NewppState</span></a></span><span> </span><span id="local-6989586621679623740"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623740"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679623741"><span class="annot"><span class="annottext">ShelleyGovState era
+</span><a href="#local-6989586621679623741"><span class="hs-identifier hs-var">ppupSt</span></a></span></span><span>
+</span><span id="line-97"></span><span>      </span><span class="hs-special">,</span><span> </span><span id="local-6989586621679623742"><span class="annot"><span class="annottext">Signal (ShelleyNEWPP era)
+</span><a href="#local-6989586621679623742"><span class="hs-identifier hs-var">ppNew</span></a></span></span><span>
+</span><span id="line-98"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">Rule
+  (ShelleyNEWPP era)
+  'Transition
+  (RuleContext 'Transition (ShelleyNEWPP era))
+F (Clause (ShelleyNEWPP era) 'Transition) (TRC (ShelleyNEWPP era))
+forall sts (rtype :: RuleType).
+Rule sts rtype (RuleContext rtype sts)
+</span><span class="hs-identifier hs-var">judgmentContext</span></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Signal (ShelleyNEWPP era)
+</span><a href="#local-6989586621679623742"><span class="hs-identifier hs-var">ppNew</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679623743"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-103"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span> </span><span id="local-6989586621679623745"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679623745"><span class="hs-identifier hs-var">oblgCurr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>            </span><span class="annot"><span class="annottext">CertState era -&gt; GovState era -&gt; Coin
+forall era. EraGov era =&gt; CertState era -&gt; GovState era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#totalObligation"><span class="hs-identifier hs-var">totalObligation</span></a></span><span>
+</span><span id="line-105"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VState era -&gt; PState era -&gt; DState era -&gt; CertState era
+forall era. VState era -&gt; PState era -&gt; DState era -&gt; CertState era
+</span><span class="hs-identifier hs-var">CertState</span></span><span> </span><span class="annot"><span class="annottext">VState era
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">PState era
+</span><a href="#local-6989586621679623738"><span class="hs-identifier hs-var">pstate</span></a></span><span> </span><span class="annot"><span class="annottext">DState era
+</span><a href="#local-6989586621679623737"><span class="hs-identifier hs-var">dstate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UTxOState era
+</span><a href="#local-6989586621679623739"><span class="hs-identifier hs-var">utxoSt</span></a></span><span> </span><span class="annot"><span class="annottext">UTxOState era
+-&gt; Getting
+     (ShelleyGovState era) (UTxOState era) (ShelleyGovState era)
+-&gt; ShelleyGovState era
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting (ShelleyGovState era) (UTxOState era) (ShelleyGovState era)
+(GovState era -&gt; Const (ShelleyGovState era) (GovState era))
+-&gt; UTxOState era -&gt; Const (ShelleyGovState era) (UTxOState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(GovState era -&gt; f (GovState era))
+-&gt; UTxOState era -&gt; f (UTxOState era)
+</span><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#utxosGovStateL"><span class="hs-identifier hs-var">utxosGovStateL</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">Integer -&gt; Coin
+</span><span class="hs-identifier hs-var">Coin</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679623745"><span class="hs-identifier hs-var">oblgCurr</span></a></span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">Coin -&gt; Coin -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3D%3D"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">UTxOState era -&gt; Coin
+forall era. UTxOState era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#utxosDeposited"><span class="hs-identifier hs-var">utxosDeposited</span></a></span><span> </span><span class="annot"><span class="annottext">UTxOState era
+</span><a href="#local-6989586621679623739"><span class="hs-identifier hs-var">utxoSt</span></a></span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">Bool
+-&gt; PredicateFailure (ShelleyNEWPP era)
+-&gt; Rule (ShelleyNEWPP era) 'Transition ()
+forall sts (ctx :: RuleType).
+Bool -&gt; PredicateFailure sts -&gt; Rule sts ctx ()
+</span><span class="hs-operator hs-var">?!</span></span><span> </span><span class="annot"><span class="annottext">Coin -&gt; Coin -&gt; ShelleyNewppPredFailure era
+forall era. Coin -&gt; Coin -&gt; ShelleyNewppPredFailure era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#UnexpectedDepositPot"><span class="hs-identifier hs-var">UnexpectedDepositPot</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Coin
+</span><span class="hs-identifier hs-var">Coin</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679623745"><span class="hs-identifier hs-var">oblgCurr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UTxOState era -&gt; Coin
+forall era. UTxOState era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.Types.html#utxosDeposited"><span class="hs-identifier hs-var">utxosDeposited</span></a></span><span> </span><span class="annot"><span class="annottext">UTxOState era
+</span><a href="#local-6989586621679623739"><span class="hs-identifier hs-var">utxoSt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Natural (PParams era) Natural -&gt; Natural
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Natural (PParams era) Natural
+forall era. EraPParams era =&gt; Lens' (PParams era) Natural
+Lens' (PParams era) Natural
+</span><span class="hs-identifier hs-var">ppMaxTxSizeL</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2B"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Natural (PParams era) Natural -&gt; Natural
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Natural (PParams era) Natural
+forall era. EraPParams era =&gt; Lens' (PParams era) Natural
+Lens' (PParams era) Natural
+</span><span class="hs-identifier hs-var">ppMaxBHSizeL</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3C"><span class="hs-operator hs-var">&lt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Natural (PParams era) Natural -&gt; Natural
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Natural (PParams era) Natural
+forall era. EraPParams era =&gt; Lens' (PParams era) Natural
+Lens' (PParams era) Natural
+</span><span class="hs-identifier hs-var">ppMaxBBSizeL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a. a -&gt; F (Clause (ShelleyNEWPP era) 'Transition) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(ShelleyNewppState era
+ -&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+      (ShelleyNewppState era))
+-&gt; ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+forall era.
+PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-var">NewppState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GovState era -&gt; PParams era -&gt; ShelleyGovState era
+forall era.
+(EraPParams era, GovState era ~ ShelleyGovState era,
+ ProtVerAtMost era 8) =&gt;
+GovState era -&gt; PParams era -&gt; ShelleyGovState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#updatePpup"><span class="hs-identifier hs-var">updatePpup</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era
+GovState era
+</span><a href="#local-6989586621679623741"><span class="hs-identifier hs-var">ppupSt</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623743"><span class="hs-identifier hs-var">ppNew'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a. a -&gt; F (Clause (ShelleyNEWPP era) 'Transition) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(ShelleyNewppState era
+ -&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+      (ShelleyNewppState era))
+-&gt; ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+forall era.
+PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-var">NewppState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623740"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GovState era -&gt; PParams era -&gt; ShelleyGovState era
+forall era.
+(EraPParams era, GovState era ~ ShelleyGovState era,
+ ProtVerAtMost era 8) =&gt;
+GovState era -&gt; PParams era -&gt; ShelleyGovState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#updatePpup"><span class="hs-identifier hs-var">updatePpup</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era
+GovState era
+</span><a href="#local-6989586621679623741"><span class="hs-identifier hs-var">ppupSt</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623740"><span class="hs-identifier hs-var">pp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">Maybe (PParams era)
+Signal (ShelleyNEWPP era)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a. a -&gt; F (Clause (ShelleyNEWPP era) 'Transition) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(ShelleyNewppState era
+ -&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+      (ShelleyNewppState era))
+-&gt; ShelleyNewppState era
+-&gt; F (Clause (ShelleyNEWPP era) 'Transition)
+     (ShelleyNewppState era)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+forall era.
+PParams era -&gt; ShelleyGovState era -&gt; ShelleyNewppState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#NewppState"><span class="hs-identifier hs-var">NewppState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623740"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GovState era -&gt; PParams era -&gt; ShelleyGovState era
+forall era.
+(EraPParams era, GovState era ~ ShelleyGovState era,
+ ProtVerAtMost era 8) =&gt;
+GovState era -&gt; PParams era -&gt; ShelleyGovState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#updatePpup"><span class="hs-identifier hs-var">updatePpup</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era
+GovState era
+</span><a href="#local-6989586621679623741"><span class="hs-identifier hs-var">ppupSt</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623740"><span class="hs-identifier hs-var">pp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- | Update the protocol parameter updates by clearing out the proposals</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- and making the future proposals become the new proposals,</span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- provided the new proposals can follow (otherwise reset them).</span><span>
+</span><span id="line-119"></span><span id="local-6989586621679623501"><span class="annot"><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#updatePpup"><span class="hs-identifier hs-type">updatePpup</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#GovState"><span class="hs-identifier hs-type">GovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#~"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#ShelleyGovState"><span class="hs-identifier hs-type">ShelleyGovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProtVerAtMost</span></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#GovState"><span class="hs-identifier hs-type">GovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Governance.html#ShelleyGovState"><span class="hs-identifier hs-type">ShelleyGovState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679623501"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-127"></span><span id="updatePpup"><span class="annot"><span class="annottext">updatePpup :: forall era.
+(EraPParams era, GovState era ~ ShelleyGovState era,
+ ProtVerAtMost era 8) =&gt;
+GovState era -&gt; PParams era -&gt; ShelleyGovState era
+</span><a href="Cardano.Ledger.Shelley.Rules.Newpp.html#updatePpup"><span class="hs-identifier hs-var hs-var">updatePpup</span></a></span></span><span> </span><span id="local-6989586621679623771"><span class="annot"><span class="annottext">GovState era
+</span><a href="#local-6989586621679623771"><span class="hs-identifier hs-var">ppupSt</span></a></span></span><span> </span><span id="local-6989586621679623772"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623772"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><span class="annottext">ShelleyGovState era
+GovState era
+</span><a href="#local-6989586621679623771"><span class="hs-identifier hs-var">ppupSt</span></a></span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><span class="annottext">ShelleyGovState era
+-&gt; (ShelleyGovState era -&gt; ShelleyGovState era)
+-&gt; ShelleyGovState era
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Function.html#%26"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">(ProposedPPUpdates era -&gt; Identity (ProposedPPUpdates era))
+-&gt; ShelleyGovState era -&gt; Identity (ShelleyGovState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(ProposedPPUpdates era -&gt; f (ProposedPPUpdates era))
+-&gt; ShelleyGovState era -&gt; f (ShelleyGovState era)
+</span><a href="Cardano.Ledger.Shelley.Governance.html#proposalsL"><span class="hs-identifier hs-var">proposalsL</span></a></span><span> </span><span class="annot"><span class="annottext">((ProposedPPUpdates era -&gt; Identity (ProposedPPUpdates era))
+ -&gt; ShelleyGovState era -&gt; Identity (ShelleyGovState era))
+-&gt; ProposedPPUpdates era
+-&gt; ShelleyGovState era
+-&gt; ShelleyGovState era
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">ProposedPPUpdates era
+</span><a href="#local-6989586621679623774"><span class="hs-identifier hs-var">ps</span></a></span><span>
+</span><span id="line-130"></span><span>    </span><span class="annot"><span class="annottext">ShelleyGovState era
+-&gt; (ShelleyGovState era -&gt; ShelleyGovState era)
+-&gt; ShelleyGovState era
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Function.html#%26"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">(ProposedPPUpdates era -&gt; Identity (ProposedPPUpdates era))
+-&gt; ShelleyGovState era -&gt; Identity (ShelleyGovState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(ProposedPPUpdates era -&gt; f (ProposedPPUpdates era))
+-&gt; ShelleyGovState era -&gt; f (ShelleyGovState era)
+</span><a href="Cardano.Ledger.Shelley.Governance.html#futureProposalsL"><span class="hs-identifier hs-var">futureProposalsL</span></a></span><span> </span><span class="annot"><span class="annottext">((ProposedPPUpdates era -&gt; Identity (ProposedPPUpdates era))
+ -&gt; ShelleyGovState era -&gt; Identity (ShelleyGovState era))
+-&gt; ProposedPPUpdates era
+-&gt; ShelleyGovState era
+-&gt; ShelleyGovState era
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">ProposedPPUpdates era
+forall era. ProposedPPUpdates era
+</span><a href="Cardano.Ledger.Shelley.PParams.html#emptyPPPUpdates"><span class="hs-identifier hs-var">emptyPPPUpdates</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="Cardano.Ledger.Shelley.PParams.html#ProposedPPUpdates"><span class="hs-identifier hs-type">ProposedPPUpdates</span></a></span><span> </span><span id="local-6989586621679623776"><span class="annot"><span class="annottext">Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+</span><a href="#local-6989586621679623776"><span class="hs-identifier hs-var">newProposals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era -&gt; ProposedPPUpdates era
+forall era. ShelleyGovState era -&gt; ProposedPPUpdates era
+</span><a href="Cardano.Ledger.Shelley.Governance.html#futureProposals"><span class="hs-identifier hs-var">futureProposals</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState era
+GovState era
+</span><a href="#local-6989586621679623771"><span class="hs-identifier hs-var">ppupSt</span></a></span><span>
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621679623778"><span class="annot"><span class="annottext">goodPV :: PParamsUpdate era -&gt; Bool
+</span><a href="#local-6989586621679623778"><span class="hs-identifier hs-var hs-var">goodPV</span></a></span></span><span> </span><span id="local-6989586621679623779"><span class="annot"><span class="annottext">PParamsUpdate era
+</span><a href="#local-6989586621679623779"><span class="hs-identifier hs-var">ppu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">ProtVer -&gt; StrictMaybe ProtVer -&gt; Bool
+</span><a href="Cardano.Ledger.Shelley.PParams.html#pvCanFollow"><span class="hs-identifier hs-var">pvCanFollow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679623772"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting ProtVer (PParams era) ProtVer -&gt; ProtVer
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting ProtVer (PParams era) ProtVer
+forall era.
+(EraPParams era, EraPParams era) =&gt;
+Lens' (PParams era) ProtVer
+Lens' (PParams era) ProtVer
+</span><span class="hs-identifier hs-var">ppProtocolVersionL</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(StrictMaybe ProtVer -&gt; Bool) -&gt; StrictMaybe ProtVer -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PParamsUpdate era
+</span><a href="#local-6989586621679623779"><span class="hs-identifier hs-var">ppu</span></a></span><span> </span><span class="annot"><span class="annottext">PParamsUpdate era
+-&gt; Getting
+     (StrictMaybe ProtVer) (PParamsUpdate era) (StrictMaybe ProtVer)
+-&gt; StrictMaybe ProtVer
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting
+  (StrictMaybe ProtVer) (PParamsUpdate era) (StrictMaybe ProtVer)
+forall era.
+(EraPParams era, ProtVerAtMost era 8, EraPParams era) =&gt;
+Lens' (PParamsUpdate era) (StrictMaybe ProtVer)
+Lens' (PParamsUpdate era) (StrictMaybe ProtVer)
+</span><span class="hs-identifier hs-var">ppuProtocolVersionL</span></span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621679623774"><span class="annot"><span class="annottext">ps :: ProposedPPUpdates era
+</span><a href="#local-6989586621679623774"><span class="hs-identifier hs-var hs-var">ps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-136"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">(PParamsUpdate era -&gt; Bool)
+-&gt; Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+-&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#all"><span class="hs-identifier hs-var">all</span></a></span><span> </span><span class="annot"><span class="annottext">PParamsUpdate era -&gt; Bool
+</span><a href="#local-6989586621679623778"><span class="hs-identifier hs-var">goodPV</span></a></span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+</span><a href="#local-6989586621679623776"><span class="hs-identifier hs-var">newProposals</span></a></span><span>
+</span><span id="line-137"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+-&gt; ProposedPPUpdates era
+forall era.
+Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+-&gt; ProposedPPUpdates era
+</span><a href="Cardano.Ledger.Shelley.PParams.html#ProposedPPUpdates"><span class="hs-identifier hs-var">ProposedPPUpdates</span></a></span><span> </span><span class="annot"><span class="annottext">Map (KeyHash 'Genesis (EraCrypto era)) (PParamsUpdate era)
+</span><a href="#local-6989586621679623776"><span class="hs-identifier hs-var">newProposals</span></a></span><span>
+</span><span id="line-138"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ProposedPPUpdates era
+forall era. ProposedPPUpdates era
+</span><a href="Cardano.Ledger.Shelley.PParams.html#emptyPPPUpdates"><span class="hs-identifier hs-var">emptyPPPUpdates</span></a></span><span>
+</span><span id="line-139"></span></pre></body></html>

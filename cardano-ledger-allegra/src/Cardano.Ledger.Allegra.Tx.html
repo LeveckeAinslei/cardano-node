@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Allegra.Tx</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-10"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Allegra.Tx.html#validateTimelock"><span class="hs-identifier">validateTimelock</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier">AllegraEra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.PParams.html"><span class="hs-identifier">Cardano.Ledger.Allegra.PParams</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Scripts</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#Timelock"><span class="hs-identifier">Timelock</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#evalTimelock"><span class="hs-identifier">evalTimelock</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html"><span class="hs-identifier">Cardano.Ledger.Allegra.TxAuxData</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxBody.html"><span class="hs-identifier">Cardano.Ledger.Allegra.TxBody</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Core.html#AllegraEraTxBody"><span class="hs-identifier">AllegraEraTxBody</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxWits.html"><span class="hs-identifier">Cardano.Ledger.Allegra.TxWits</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraTx</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EraTxAuxData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">upgradeTxAuxData</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">EraTxWits</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">upgradeTxBody</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Crypto</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">StandardCrypto</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys.WitVKey</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">witVKeyHash</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.Tx</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="hs-identifier">ShelleyTx</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier">auxDataShelleyTxL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">bodyShelleyTxL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier">mkBasicShelleyTx</span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier">shelleyMinFeeTx</span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier">sizeShelleyTxF</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier">witsShelleyTxL</span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#map"><span class="hs-identifier">map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- ========================================</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679286981"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679286981"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraTx</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286981"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-pragma">{-# SPECIALIZE</span><span> </span><span class="hs-pragma">instance</span><span> </span><span class="annot"><span class="hs-pragma hs-type">EraTx</span></span><span> </span><span class="hs-pragma">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-pragma hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><span class="hs-pragma hs-type">StandardCrypto</span></span><span class="hs-pragma">)</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Tx"><span class="annot"><span class="hs-identifier hs-var">Tx</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286981"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyTx</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286981"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679287229"><span class="annot"><span class="annottext">mkBasicTx :: TxBody (AllegraEra c) -&gt; Tx (AllegraEra c)
+</span><a href="#local-6989586621679287229"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkBasicTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxBody (AllegraEra c) -&gt; ShelleyTx (AllegraEra c)
+TxBody (AllegraEra c) -&gt; Tx (AllegraEra c)
+forall era. EraTx era =&gt; TxBody era -&gt; ShelleyTx era
+</span><span class="hs-identifier hs-var">mkBasicShelleyTx</span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679287234"><span class="annot"><span class="annottext">bodyTxL :: Lens' (Tx (AllegraEra c)) (TxBody (AllegraEra c))
+</span><a href="#local-6989586621679287234"><span class="hs-identifier hs-var hs-var hs-var hs-var">bodyTxL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TxBody (AllegraEra c) -&gt; f (TxBody (AllegraEra c)))
+-&gt; ShelleyTx (AllegraEra c) -&gt; f (ShelleyTx (AllegraEra c))
+(TxBody (AllegraEra c) -&gt; f (TxBody (AllegraEra c)))
+-&gt; Tx (AllegraEra c) -&gt; f (Tx (AllegraEra c))
+forall era. EraTx era =&gt; Lens' (ShelleyTx era) (TxBody era)
+Lens' (ShelleyTx (AllegraEra c)) (TxBody (AllegraEra c))
+</span><span class="hs-identifier hs-var">bodyShelleyTxL</span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">bodyTxL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679287239"><span class="annot"><span class="annottext">witsTxL :: Lens' (Tx (AllegraEra c)) (TxWits (AllegraEra c))
+</span><a href="#local-6989586621679287239"><span class="hs-identifier hs-var hs-var hs-var hs-var">witsTxL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TxWits (AllegraEra c) -&gt; f (TxWits (AllegraEra c)))
+-&gt; ShelleyTx (AllegraEra c) -&gt; f (ShelleyTx (AllegraEra c))
+(TxWits (AllegraEra c) -&gt; f (TxWits (AllegraEra c)))
+-&gt; Tx (AllegraEra c) -&gt; f (Tx (AllegraEra c))
+forall era. EraTx era =&gt; Lens' (ShelleyTx era) (TxWits era)
+Lens' (ShelleyTx (AllegraEra c)) (TxWits (AllegraEra c))
+</span><span class="hs-identifier hs-var">witsShelleyTxL</span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">witsTxL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679287244"><span class="annot"><span class="annottext">auxDataTxL :: Lens'
+  (Tx (AllegraEra c)) (StrictMaybe (AuxiliaryData (AllegraEra c)))
+</span><a href="#local-6989586621679287244"><span class="hs-identifier hs-var hs-var hs-var hs-var">auxDataTxL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(StrictMaybe (AuxiliaryData (AllegraEra c))
+ -&gt; f (StrictMaybe (AuxiliaryData (AllegraEra c))))
+-&gt; ShelleyTx (AllegraEra c) -&gt; f (ShelleyTx (AllegraEra c))
+(StrictMaybe (AuxiliaryData (AllegraEra c))
+ -&gt; f (StrictMaybe (AuxiliaryData (AllegraEra c))))
+-&gt; Tx (AllegraEra c) -&gt; f (Tx (AllegraEra c))
+forall era.
+EraTx era =&gt;
+Lens' (ShelleyTx era) (StrictMaybe (TxAuxData era))
+Lens'
+  (ShelleyTx (AllegraEra c))
+  (StrictMaybe (AuxiliaryData (AllegraEra c)))
+</span><span class="hs-identifier hs-var">auxDataShelleyTxL</span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">auxDataTxL</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679287247"><span class="annot"><span class="annottext">sizeTxF :: SimpleGetter (Tx (AllegraEra c)) Integer
+</span><a href="#local-6989586621679287247"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeTxF</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Getting r (ShelleyTx (AllegraEra c)) Integer
+(Integer -&gt; Const r Integer)
+-&gt; Tx (AllegraEra c) -&gt; Const r (Tx (AllegraEra c))
+forall era. Era era =&gt; SimpleGetter (ShelleyTx era) Integer
+SimpleGetter (ShelleyTx (AllegraEra c)) Integer
+</span><span class="hs-identifier hs-var">sizeShelleyTxF</span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">sizeTxF</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679287252"><span class="annot"><span class="annottext">validateNativeScript :: Tx (AllegraEra c) -&gt; NativeScript (AllegraEra c) -&gt; Bool
+</span><a href="#local-6989586621679287252"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateNativeScript</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tx (AllegraEra c) -&gt; NativeScript (AllegraEra c) -&gt; Bool
+Tx (AllegraEra c) -&gt; Timelock (AllegraEra c) -&gt; Bool
+forall era.
+(EraTx era, AllegraEraTxBody era) =&gt;
+Tx era -&gt; Timelock era -&gt; Bool
+</span><a href="Cardano.Ledger.Allegra.Tx.html#validateTimelock"><span class="hs-identifier hs-var">validateTimelock</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-pragma">{-# INLINE</span><span> </span><span class="annot"><span class="hs-pragma hs-type">validateNativeScript</span></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621679287255"><span class="annot"><span class="annottext">getMinFeeTx :: PParams (AllegraEra c) -&gt; Tx (AllegraEra c) -&gt; Coin
+</span><a href="#local-6989586621679287255"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMinFeeTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams (AllegraEra c) -&gt; Tx (AllegraEra c) -&gt; Coin
+forall era. EraTx era =&gt; PParams era -&gt; Tx era -&gt; Coin
+</span><span class="hs-identifier hs-var">shelleyMinFeeTx</span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679287285"><span class="annot"><span class="annottext">upgradeTx :: EraTx (PreviousEra (AllegraEra c)) =&gt;
+Tx (PreviousEra (AllegraEra c))
+-&gt; Either (TxUpgradeError (AllegraEra c)) (Tx (AllegraEra c))
+</span><a href="#local-6989586621679287285"><span class="hs-identifier hs-var hs-var hs-var hs-var">upgradeTx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ShelleyTx</span></span><span> </span><span id="local-6989586621679287288"><span class="annot"><span class="annottext">TxBody (ShelleyEra c)
+</span><a href="#local-6989586621679287288"><span class="hs-identifier hs-var">txb</span></a></span></span><span> </span><span id="local-6989586621679287289"><span class="annot"><span class="annottext">TxWits (ShelleyEra c)
+</span><a href="#local-6989586621679287289"><span class="hs-identifier hs-var">txwits</span></a></span></span><span> </span><span id="local-6989586621679287290"><span class="annot"><span class="annottext">StrictMaybe (TxAuxData (ShelleyEra c))
+</span><a href="#local-6989586621679287290"><span class="hs-identifier hs-var">txAux</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">TxBody (AllegraEra c)
+-&gt; TxWits (AllegraEra c)
+-&gt; StrictMaybe (AuxiliaryData (AllegraEra c))
+-&gt; ShelleyTx (AllegraEra c)
+AllegraTxBody (AllegraEra c)
+-&gt; ShelleyTxWits (AllegraEra c)
+-&gt; StrictMaybe (AllegraTxAuxData (AllegraEra c))
+-&gt; ShelleyTx (AllegraEra c)
+forall era.
+EraTx era =&gt;
+TxBody era
+-&gt; TxWits era -&gt; StrictMaybe (TxAuxData era) -&gt; ShelleyTx era
+</span><span class="hs-identifier hs-var">ShelleyTx</span></span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">(AllegraTxBody (AllegraEra c)
+ -&gt; ShelleyTxWits (AllegraEra c)
+ -&gt; StrictMaybe (AllegraTxAuxData (AllegraEra c))
+ -&gt; ShelleyTx (AllegraEra c))
+-&gt; Either Void (AllegraTxBody (AllegraEra c))
+-&gt; Either
+     Void
+     (ShelleyTxWits (AllegraEra c)
+      -&gt; StrictMaybe (AllegraTxAuxData (AllegraEra c))
+      -&gt; ShelleyTx (AllegraEra c))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TxBody (PreviousEra (AllegraEra c))
+-&gt; Either
+     (TxBodyUpgradeError (AllegraEra c)) (TxBody (AllegraEra c))
+forall era.
+(EraTxBody era, EraTxBody (PreviousEra era)) =&gt;
+TxBody (PreviousEra era)
+-&gt; Either (TxBodyUpgradeError era) (TxBody era)
+</span><span class="hs-identifier hs-var">upgradeTxBody</span></span><span> </span><span class="annot"><span class="annottext">TxBody (ShelleyEra c)
+TxBody (PreviousEra (AllegraEra c))
+</span><a href="#local-6989586621679287288"><span class="hs-identifier hs-var">txb</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">Either
+  Void
+  (ShelleyTxWits (AllegraEra c)
+   -&gt; StrictMaybe (AllegraTxAuxData (AllegraEra c))
+   -&gt; ShelleyTx (AllegraEra c))
+-&gt; Either Void (ShelleyTxWits (AllegraEra c))
+-&gt; Either
+     Void
+     (StrictMaybe (AllegraTxAuxData (AllegraEra c))
+      -&gt; ShelleyTx (AllegraEra c))
+forall a b. Either Void (a -&gt; b) -&gt; Either Void a -&gt; Either Void b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyTxWits (AllegraEra c)
+-&gt; Either Void (ShelleyTxWits (AllegraEra c))
+forall a. a -&gt; Either Void a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxWits (PreviousEra (AllegraEra c)) -&gt; TxWits (AllegraEra c)
+forall era.
+(EraTxWits era, EraTxWits (PreviousEra era)) =&gt;
+TxWits (PreviousEra era) -&gt; TxWits era
+</span><span class="hs-identifier hs-var">upgradeTxWits</span></span><span> </span><span class="annot"><span class="annottext">TxWits (ShelleyEra c)
+TxWits (PreviousEra (AllegraEra c))
+</span><a href="#local-6989586621679287289"><span class="hs-identifier hs-var">txwits</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">Either
+  Void
+  (StrictMaybe (AllegraTxAuxData (AllegraEra c))
+   -&gt; ShelleyTx (AllegraEra c))
+-&gt; Either Void (StrictMaybe (AllegraTxAuxData (AllegraEra c)))
+-&gt; Either Void (ShelleyTx (AllegraEra c))
+forall a b. Either Void (a -&gt; b) -&gt; Either Void a -&gt; Either Void b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe (AllegraTxAuxData (AllegraEra c))
+-&gt; Either Void (StrictMaybe (AllegraTxAuxData (AllegraEra c)))
+forall a. a -&gt; Either Void a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TxAuxData (PreviousEra (AllegraEra c))
+ -&gt; AllegraTxAuxData (AllegraEra c))
+-&gt; StrictMaybe (TxAuxData (PreviousEra (AllegraEra c)))
+-&gt; StrictMaybe (AllegraTxAuxData (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">TxAuxData (PreviousEra (AllegraEra c))
+-&gt; AuxiliaryData (AllegraEra c)
+TxAuxData (PreviousEra (AllegraEra c))
+-&gt; AllegraTxAuxData (AllegraEra c)
+forall era.
+(EraTxAuxData era, EraTxAuxData (PreviousEra era)) =&gt;
+TxAuxData (PreviousEra era) -&gt; TxAuxData era
+</span><span class="hs-identifier hs-var">upgradeTxAuxData</span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe (TxAuxData (ShelleyEra c))
+StrictMaybe (TxAuxData (PreviousEra (AllegraEra c)))
+</span><a href="#local-6989586621679287290"><span class="hs-identifier hs-var">txAux</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- =======================================================</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- Validating timelock scripts</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- We extract ValidityInterval from TxBody with vldtTxBodyL getter</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- We still need to correctly compute the witness set for TxBody as well.</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span id="local-6989586621679286995"><span class="annot"><a href="Cardano.Ledger.Allegra.Tx.html#validateTimelock"><span class="hs-identifier hs-type">validateTimelock</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraTx</span></span><span> </span><span class="annot"><a href="#local-6989586621679286995"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Core.html#AllegraEraTxBody"><span class="hs-identifier hs-type">AllegraEraTxBody</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286995"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tx</span></span><span> </span><span class="annot"><a href="#local-6989586621679286995"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#Timelock"><span class="hs-identifier hs-type">Timelock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679286995"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-74"></span><span id="validateTimelock"><span class="annot"><span class="annottext">validateTimelock :: forall era.
+(EraTx era, AllegraEraTxBody era) =&gt;
+Tx era -&gt; Timelock era -&gt; Bool
+</span><a href="Cardano.Ledger.Allegra.Tx.html#validateTimelock"><span class="hs-identifier hs-var hs-var">validateTimelock</span></a></span></span><span> </span><span id="local-6989586621679287311"><span class="annot"><span class="annottext">Tx era
+</span><a href="#local-6989586621679287311"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621679287312"><span class="annot"><span class="annottext">Timelock era
+</span><a href="#local-6989586621679287312"><span class="hs-identifier hs-var">timelock</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'Witness (EraCrypto era))
+-&gt; ValidityInterval -&gt; Timelock era -&gt; Bool
+forall era.
+Era era =&gt;
+Set (KeyHash 'Witness (EraCrypto era))
+-&gt; ValidityInterval -&gt; Timelock era -&gt; Bool
+</span><a href="Cardano.Ledger.Allegra.Scripts.html#evalTimelock"><span class="hs-identifier hs-var">evalTimelock</span></a></span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'Witness (EraCrypto era))
+</span><a href="#local-6989586621679287313"><span class="hs-identifier hs-var">vhks</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tx era
+</span><a href="#local-6989586621679287311"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">Tx era
+-&gt; Getting ValidityInterval (Tx era) ValidityInterval
+-&gt; ValidityInterval
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(TxBody era -&gt; Const ValidityInterval (TxBody era))
+-&gt; Tx era -&gt; Const ValidityInterval (Tx era)
+forall era. EraTx era =&gt; Lens' (Tx era) (TxBody era)
+Lens' (Tx era) (TxBody era)
+</span><span class="hs-identifier hs-var">bodyTxL</span></span><span> </span><span class="annot"><span class="annottext">((TxBody era -&gt; Const ValidityInterval (TxBody era))
+ -&gt; Tx era -&gt; Const ValidityInterval (Tx era))
+-&gt; ((ValidityInterval -&gt; Const ValidityInterval ValidityInterval)
+    -&gt; TxBody era -&gt; Const ValidityInterval (TxBody era))
+-&gt; Getting ValidityInterval (Tx era) ValidityInterval
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(ValidityInterval -&gt; Const ValidityInterval ValidityInterval)
+-&gt; TxBody era -&gt; Const ValidityInterval (TxBody era)
+forall era.
+AllegraEraTxBody era =&gt;
+Lens' (TxBody era) ValidityInterval
+Lens' (TxBody era) ValidityInterval
+</span><a href="Cardano.Ledger.Allegra.Core.html#vldtTxBodyL"><span class="hs-identifier hs-var">vldtTxBodyL</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Timelock era
+</span><a href="#local-6989586621679287312"><span class="hs-identifier hs-var">timelock</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621679287313"><span class="annot"><span class="annottext">vhks :: Set (KeyHash 'Witness (EraCrypto era))
+</span><a href="#local-6989586621679287313"><span class="hs-identifier hs-var hs-var">vhks</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(WitVKey 'Witness (EraCrypto era)
+ -&gt; KeyHash 'Witness (EraCrypto era))
+-&gt; Set (WitVKey 'Witness (EraCrypto era))
+-&gt; Set (KeyHash 'Witness (EraCrypto era))
+forall b a. Ord b =&gt; (a -&gt; b) -&gt; Set a -&gt; Set b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#map"><span class="hs-identifier hs-var">Set.map</span></a></span><span> </span><span class="annot"><span class="annottext">WitVKey 'Witness (EraCrypto era)
+-&gt; KeyHash 'Witness (EraCrypto era)
+forall (kr :: KeyRole) c. WitVKey kr c -&gt; KeyHash 'Witness c
+</span><span class="hs-identifier hs-var">witVKeyHash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tx era
+</span><a href="#local-6989586621679287311"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">Tx era
+-&gt; Getting
+     (Set (WitVKey 'Witness (EraCrypto era)))
+     (Tx era)
+     (Set (WitVKey 'Witness (EraCrypto era)))
+-&gt; Set (WitVKey 'Witness (EraCrypto era))
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(TxWits era
+ -&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (TxWits era))
+-&gt; Tx era
+-&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (Tx era)
+forall era. EraTx era =&gt; Lens' (Tx era) (TxWits era)
+Lens' (Tx era) (TxWits era)
+</span><span class="hs-identifier hs-var">witsTxL</span></span><span> </span><span class="annot"><span class="annottext">((TxWits era
+  -&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (TxWits era))
+ -&gt; Tx era
+ -&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (Tx era))
+-&gt; ((Set (WitVKey 'Witness (EraCrypto era))
+     -&gt; Const
+          (Set (WitVKey 'Witness (EraCrypto era)))
+          (Set (WitVKey 'Witness (EraCrypto era))))
+    -&gt; TxWits era
+    -&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (TxWits era))
+-&gt; Getting
+     (Set (WitVKey 'Witness (EraCrypto era)))
+     (Tx era)
+     (Set (WitVKey 'Witness (EraCrypto era)))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(Set (WitVKey 'Witness (EraCrypto era))
+ -&gt; Const
+      (Set (WitVKey 'Witness (EraCrypto era)))
+      (Set (WitVKey 'Witness (EraCrypto era))))
+-&gt; TxWits era
+-&gt; Const (Set (WitVKey 'Witness (EraCrypto era))) (TxWits era)
+forall era.
+EraTxWits era =&gt;
+Lens' (TxWits era) (Set (WitVKey 'Witness (EraCrypto era)))
+Lens' (TxWits era) (Set (WitVKey 'Witness (EraCrypto era)))
+</span><span class="hs-identifier hs-var">addrTxWitsL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Tx.html#validateTimelock"><span class="hs-pragma hs-type">validateTimelock</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-78"></span></pre></body></html>

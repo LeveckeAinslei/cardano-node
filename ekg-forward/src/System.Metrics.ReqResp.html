@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.Metrics.ReqResp</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier">MetricName</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier">MetricValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier">Request</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier">Response</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Codec.Serialise</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Serialise</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Int.html"><span class="hs-identifier">Data.Int</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier">Int64</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.List.NonEmpty.html"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#NonEmpty"><span class="hs-identifier">NonEmpty</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier">Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Util.ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShowProxy</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><span class="hs-comment">-- | Each EKG metric has a unique name.</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">type</span><span> </span><span id="MetricName"><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-var">MetricName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- | Metric value that will be transmitted from the forwarder to the acceptor.</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- Please note that EKG.Distribution is not supported yet.</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="MetricValue"><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier hs-var">MetricValue</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CounterValue"><span class="annot"><a href="System.Metrics.ReqResp.html#CounterValue"><span class="hs-identifier hs-var">CounterValue</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Counter value.</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GaugeValue"><span class="annot"><a href="System.Metrics.ReqResp.html#GaugeValue"><span class="hs-identifier hs-var">GaugeValue</span></a></span></span><span>   </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Gauge value.</span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LabelValue"><span class="annot"><a href="System.Metrics.ReqResp.html#LabelValue"><span class="hs-identifier hs-var">LabelValue</span></a></span></span><span>   </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>   </span><span class="annot"><span class="hs-comment">-- ^ Text label.</span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679109567"><span id="local-6989586621679109574"><span class="annot"><span class="annottext">MetricValue -&gt; MetricValue -&gt; Bool
+(MetricValue -&gt; MetricValue -&gt; Bool)
+-&gt; (MetricValue -&gt; MetricValue -&gt; Bool) -&gt; Eq MetricValue
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: MetricValue -&gt; MetricValue -&gt; Bool
+== :: MetricValue -&gt; MetricValue -&gt; Bool
+$c/= :: MetricValue -&gt; MetricValue -&gt; Bool
+/= :: MetricValue -&gt; MetricValue -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109579"><span id="local-6989586621679109590"><span id="local-6989586621679109594"><span class="annot"><span class="annottext">Int -&gt; MetricValue -&gt; ShowS
+[MetricValue] -&gt; ShowS
+MetricValue -&gt; String
+(Int -&gt; MetricValue -&gt; ShowS)
+-&gt; (MetricValue -&gt; String)
+-&gt; ([MetricValue] -&gt; ShowS)
+-&gt; Show MetricValue
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; MetricValue -&gt; ShowS
+showsPrec :: Int -&gt; MetricValue -&gt; ShowS
+$cshow :: MetricValue -&gt; String
+show :: MetricValue -&gt; String
+$cshowList :: [MetricValue] -&gt; ShowS
+showList :: [MetricValue] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109598"><span id="local-6989586621679109600"><span class="annot"><span class="annottext">(forall x. MetricValue -&gt; Rep MetricValue x)
+-&gt; (forall x. Rep MetricValue x -&gt; MetricValue)
+-&gt; Generic MetricValue
+forall x. Rep MetricValue x -&gt; MetricValue
+forall x. MetricValue -&gt; Rep MetricValue x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. MetricValue -&gt; Rep MetricValue x
+from :: forall x. MetricValue -&gt; Rep MetricValue x
+$cto :: forall x. Rep MetricValue x -&gt; MetricValue
+to :: forall x. Rep MetricValue x -&gt; MetricValue
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109604"><span class="annot"><span class="hs-identifier hs-type">ShowProxy</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier hs-type">MetricValue</span></a></span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109610"><span id="local-6989586621679109617"><span id="local-6989586621679109623"><span id="local-6989586621679109626"><span class="annot"><span class="hs-identifier hs-type">Serialise</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier hs-type">MetricValue</span></a></span></span></span></span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- | The request for the new metrics.</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- The acceptor will send this request to the forwarder.</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="Request"><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier hs-var">Request</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GetAllMetrics"><span class="annot"><a href="System.Metrics.ReqResp.html#GetAllMetrics"><span class="hs-identifier hs-var">GetAllMetrics</span></a></span></span><span>                      </span><span class="annot"><span class="hs-comment">-- ^ Get all metrics from the forwarder's local store.</span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GetMetrics"><span class="annot"><a href="System.Metrics.ReqResp.html#GetMetrics"><span class="hs-identifier hs-var">GetMetrics</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#NonEmpty"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span class="hs-special">)</span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Get specific metrics only.</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679109674"><span id="local-6989586621679109679"><span class="annot"><span class="annottext">Request -&gt; Request -&gt; Bool
+(Request -&gt; Request -&gt; Bool)
+-&gt; (Request -&gt; Request -&gt; Bool) -&gt; Eq Request
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Request -&gt; Request -&gt; Bool
+== :: Request -&gt; Request -&gt; Bool
+$c/= :: Request -&gt; Request -&gt; Bool
+/= :: Request -&gt; Request -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109683"><span id="local-6989586621679109685"><span class="annot"><span class="annottext">(forall x. Request -&gt; Rep Request x)
+-&gt; (forall x. Rep Request x -&gt; Request) -&gt; Generic Request
+forall x. Rep Request x -&gt; Request
+forall x. Request -&gt; Rep Request x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Request -&gt; Rep Request x
+from :: forall x. Request -&gt; Rep Request x
+$cto :: forall x. Rep Request x -&gt; Request
+to :: forall x. Rep Request x -&gt; Request
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109688"><span id="local-6989586621679109694"><span id="local-6989586621679109698"><span class="annot"><span class="annottext">Int -&gt; Request -&gt; ShowS
+[Request] -&gt; ShowS
+Request -&gt; String
+(Int -&gt; Request -&gt; ShowS)
+-&gt; (Request -&gt; String) -&gt; ([Request] -&gt; ShowS) -&gt; Show Request
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Request -&gt; ShowS
+showsPrec :: Int -&gt; Request -&gt; ShowS
+$cshow :: Request -&gt; String
+show :: Request -&gt; String
+$cshowList :: [Request] -&gt; ShowS
+showList :: [Request] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- | The response with the metrics.</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- The forwarder will send it to the acceptor as a reply for the request.</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- Please note that the list of metrics can be empty (for example, if the</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- forwarder's local store is empty).</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">newtype</span><span> </span><span id="Response"><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier hs-var">Response</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResponseMetrics"><span class="annot"><a href="System.Metrics.ReqResp.html#ResponseMetrics"><span class="hs-identifier hs-var">ResponseMetrics</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier hs-type">MetricValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679109702"><span id="local-6989586621679109704"><span class="annot"><span class="annottext">(forall x. Response -&gt; Rep Response x)
+-&gt; (forall x. Rep Response x -&gt; Response) -&gt; Generic Response
+forall x. Rep Response x -&gt; Response
+forall x. Response -&gt; Rep Response x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Response -&gt; Rep Response x
+from :: forall x. Response -&gt; Rep Response x
+$cto :: forall x. Rep Response x -&gt; Response
+to :: forall x. Rep Response x -&gt; Response
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109707"><span id="local-6989586621679109713"><span id="local-6989586621679109717"><span class="annot"><span class="annottext">Int -&gt; Response -&gt; ShowS
+[Response] -&gt; ShowS
+Response -&gt; String
+(Int -&gt; Response -&gt; ShowS)
+-&gt; (Response -&gt; String) -&gt; ([Response] -&gt; ShowS) -&gt; Show Response
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Response -&gt; ShowS
+showsPrec :: Int -&gt; Response -&gt; ShowS
+$cshow :: Response -&gt; String
+show :: Response -&gt; String
+$cshowList :: [Response] -&gt; ShowS
+showList :: [Response] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109723"><span class="annot"><span class="hs-identifier hs-type">ShowProxy</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier hs-type">Request</span></a></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109728"><span id="local-6989586621679109735"><span id="local-6989586621679109741"><span id="local-6989586621679109744"><span class="annot"><span class="hs-identifier hs-type">Serialise</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Request"><span class="hs-identifier hs-type">Request</span></a></span></span></span></span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109771"><span class="annot"><span class="hs-identifier hs-type">ShowProxy</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier hs-type">Response</span></a></span></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679109776"><span id="local-6989586621679109783"><span id="local-6989586621679109789"><span id="local-6989586621679109792"><span class="annot"><span class="hs-identifier hs-type">Serialise</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier hs-type">Response</span></a></span></span></span></span></span><span>
+</span><span id="line-50"></span></pre></body></html>

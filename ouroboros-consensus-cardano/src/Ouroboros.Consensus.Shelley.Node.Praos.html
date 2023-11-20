@@ -1,0 +1,335 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds           #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts    #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances   #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE GADTs               #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns      #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings   #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes          #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications    #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies        #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators       #-}</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.Shelley.Node.Praos</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * BlockForging</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosBlockForging"><span class="hs-identifier">praosBlockForging</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosSharedBlockForging"><span class="hs-identifier">praosSharedBlockForging</span></a></span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><span class="hs-comment">-- * ProtocolInfo</span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ProtocolParams</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.API</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SL</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Protocol.TPraos.OCert</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Absolute</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Protocol.TPraos.OCert</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SL</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Block</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Config</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">configConsensus</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Mempool</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Mempool</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Node.ProtocolInfo</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Protocol.Ledger.HotKey</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HotKey</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Protocol.Praos</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Praos</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">PraosParams</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>                     </span><span class="annot"><span class="hs-identifier">praosCheckCanForge</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Protocol.Praos.Common</span></span><span>
+</span><span id="line-32"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PraosCanBeLeader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">praosCanBeLeaderOpCert</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Eras.html"><span class="hs-identifier">Ouroboros.Consensus.Shelley.Eras</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BabbageEra</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ConwayEra</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>                     </span><span class="annot"><span class="hs-identifier">EraCrypto</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Eras.html#ShelleyBasedEra"><span class="hs-identifier">ShelleyBasedEra</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Eras.html#shelleyBasedEraName"><span class="hs-identifier">shelleyBasedEraName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.html"><span class="hs-identifier">Ouroboros.Consensus.Shelley.Ledger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier">ShelleyBlock</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>                     </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyCompatible"><span class="hs-identifier">ShelleyCompatible</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Forge.html#forgeShelleyBlock"><span class="hs-identifier">forgeShelleyBlock</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html"><span class="hs-identifier">Ouroboros.Consensus.Shelley.Node.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyEraWithCrypto"><span class="hs-identifier">ShelleyEraWithCrypto</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>                     </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyLeaderCredentials"><span class="hs-identifier">ShelleyLeaderCredentials</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Protocol.Praos.html"><span class="hs-identifier">Ouroboros.Consensus.Shelley.Protocol.Praos</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Util.IOLike</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IOLike</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  BlockForging
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><span class="hs-comment">-- | Create a 'BlockForging' record for a single era.</span></span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosBlockForging"><span class="hs-identifier hs-type">praosBlockForging</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-48"></span><span>     </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621680257305"><span class="annot"><a href="#local-6989586621680257305"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621680257300"><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span></span><span> </span><span id="local-6989586621680257298"><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-49"></span><span>     </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyCompatible"><span class="hs-identifier hs-type">ShelleyCompatible</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-50"></span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#~"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-51"></span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Mempool.TxLimits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOLike</span></span><span> </span><span class="annot"><a href="#local-6989586621680257305"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-53"></span><span>     </span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PraosParams</span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Mempool.TxOverrides</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyLeaderCredentials"><span class="hs-identifier hs-type">ShelleyLeaderCredentials</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621680257305"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">BlockForging</span></span><span> </span><span class="annot"><a href="#local-6989586621680257305"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257300"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span id="praosBlockForging"><span class="annot"><span class="annottext">praosBlockForging :: forall (m :: * -&gt; *) era c.
+(ShelleyCompatible (Praos c) era, c ~ EraCrypto era,
+ TxLimits (ShelleyBlock (Praos c) era), IOLike m) =&gt;
+PraosParams
+-&gt; TxOverrides (ShelleyBlock (Praos c) era)
+-&gt; ShelleyLeaderCredentials (EraCrypto era)
+-&gt; m (BlockForging m (ShelleyBlock (Praos c) era))
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosBlockForging"><span class="hs-identifier hs-var hs-var">praosBlockForging</span></a></span></span><span> </span><span id="local-6989586621680257461"><span class="annot"><span class="annottext">PraosParams
+</span><a href="#local-6989586621680257461"><span class="hs-identifier hs-var">praosParams</span></a></span></span><span> </span><span id="local-6989586621680257462"><span class="annot"><span class="annottext">TxOverrides (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257462"><span class="hs-identifier hs-var">maxTxCapacityOverrides</span></a></span></span><span> </span><span id="local-6989586621680257463"><span class="annot"><span class="annottext">ShelleyLeaderCredentials (EraCrypto era)
+</span><a href="#local-6989586621680257463"><span class="hs-identifier hs-var">credentials</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621680257464"><span class="annot"><span class="annottext">HotKey c m
+</span><a href="#local-6989586621680257464"><span class="hs-identifier hs-var">hotKey</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) c.
+(Crypto c, IOLike m) =&gt;
+SignKeyKES c -&gt; KESPeriod -&gt; Word64 -&gt; m (HotKey c m)
+</span><span class="hs-identifier hs-var">HotKey.mkHotKey</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621680257305"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621680257298"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><span class="annottext">SignKeyKES c
+SignKeyKES (EraCrypto era)
+</span><a href="#local-6989586621680257466"><span class="hs-identifier hs-var">initSignKey</span></a></span><span> </span><span class="annot"><span class="annottext">KESPeriod
+</span><a href="#local-6989586621680257467"><span class="hs-identifier hs-var">startPeriod</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680257468"><span class="hs-identifier hs-var">praosMaxKESEvo</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">BlockForging m (ShelleyBlock (Praos c) era)
+-&gt; m (BlockForging m (ShelleyBlock (Praos c) era))
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(BlockForging m (ShelleyBlock (Praos c) era)
+ -&gt; m (BlockForging m (ShelleyBlock (Praos c) era)))
+-&gt; BlockForging m (ShelleyBlock (Praos c) era)
+-&gt; m (BlockForging m (ShelleyBlock (Praos c) era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HotKey c m
+-&gt; (SlotNo -&gt; KESPeriod)
+-&gt; ShelleyLeaderCredentials c
+-&gt; TxOverrides (ShelleyBlock (Praos c) era)
+-&gt; BlockForging m (ShelleyBlock (Praos c) era)
+forall (m :: * -&gt; *) c era.
+(ShelleyEraWithCrypto c (Praos c) era, IOLike m) =&gt;
+HotKey c m
+-&gt; (SlotNo -&gt; KESPeriod)
+-&gt; ShelleyLeaderCredentials c
+-&gt; TxOverrides (ShelleyBlock (Praos c) era)
+-&gt; BlockForging m (ShelleyBlock (Praos c) era)
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosSharedBlockForging"><span class="hs-identifier hs-var">praosSharedBlockForging</span></a></span><span> </span><span class="annot"><span class="annottext">HotKey c m
+</span><a href="#local-6989586621680257464"><span class="hs-identifier hs-var">hotKey</span></a></span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; KESPeriod
+</span><a href="#local-6989586621680257469"><span class="hs-identifier hs-var">slotToPeriod</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyLeaderCredentials c
+ShelleyLeaderCredentials (EraCrypto era)
+</span><a href="#local-6989586621680257463"><span class="hs-identifier hs-var">credentials</span></a></span><span> </span><span class="annot"><span class="annottext">TxOverrides (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257462"><span class="hs-identifier hs-var">maxTxCapacityOverrides</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">PraosParams</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621680257468"><span class="annot"><span class="annottext">Word64
+praosMaxKESEvo :: Word64
+praosMaxKESEvo :: PraosParams -&gt; Word64
+</span><a href="#local-6989586621680257468"><span class="hs-identifier hs-var hs-var">praosMaxKESEvo</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680257472"><span class="annot"><span class="annottext">Word64
+praosSlotsPerKESPeriod :: Word64
+praosSlotsPerKESPeriod :: PraosParams -&gt; Word64
+</span><a href="#local-6989586621680257472"><span class="hs-identifier hs-var hs-var">praosSlotsPerKESPeriod</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PraosParams
+</span><a href="#local-6989586621680257461"><span class="hs-identifier hs-var">praosParams</span></a></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyLeaderCredentials"><span class="hs-identifier hs-type">ShelleyLeaderCredentials</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">shelleyLeaderCredentialsInitSignKey :: forall c. ShelleyLeaderCredentials c -&gt; SignKeyKES c
+</span><a href="Ouroboros.Consensus.Shelley.Node.Common.html#shelleyLeaderCredentialsInitSignKey"><span class="hs-identifier hs-var">shelleyLeaderCredentialsInitSignKey</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621680257466"><span class="annot"><span class="annottext">SignKeyKES (EraCrypto era)
+</span><a href="#local-6989586621680257466"><span class="hs-identifier hs-var">initSignKey</span></a></span></span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">shelleyLeaderCredentialsCanBeLeader :: forall c. ShelleyLeaderCredentials c -&gt; PraosCanBeLeader c
+</span><a href="Ouroboros.Consensus.Shelley.Node.Common.html#shelleyLeaderCredentialsCanBeLeader"><span class="hs-identifier hs-var">shelleyLeaderCredentialsCanBeLeader</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621680257477"><span class="annot"><span class="annottext">PraosCanBeLeader (EraCrypto era)
+</span><a href="#local-6989586621680257477"><span class="hs-identifier hs-var">canBeLeader</span></a></span></span><span>
+</span><span id="line-67"></span><span>      </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShelleyLeaderCredentials (EraCrypto era)
+</span><a href="#local-6989586621680257463"><span class="hs-identifier hs-var">credentials</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="#local-6989586621680257467"><span class="hs-identifier hs-type">startPeriod</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Absolute.KESPeriod</span></span><span>
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621680257467"><span class="annot"><span class="annottext">startPeriod :: KESPeriod
+</span><a href="#local-6989586621680257467"><span class="hs-identifier hs-var hs-var">startPeriod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OCert c -&gt; KESPeriod
+forall c. OCert c -&gt; KESPeriod
+</span><span class="hs-identifier hs-var">SL.ocertKESPeriod</span></span><span> </span><span class="annot"><span class="annottext">(OCert c -&gt; KESPeriod) -&gt; OCert c -&gt; KESPeriod
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PraosCanBeLeader c -&gt; OCert c
+forall c. PraosCanBeLeader c -&gt; OCert c
+</span><span class="hs-identifier hs-var">praosCanBeLeaderOpCert</span></span><span> </span><span class="annot"><span class="annottext">PraosCanBeLeader c
+PraosCanBeLeader (EraCrypto era)
+</span><a href="#local-6989586621680257477"><span class="hs-identifier hs-var">canBeLeader</span></a></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="#local-6989586621680257469"><span class="hs-identifier hs-type">slotToPeriod</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Absolute.KESPeriod</span></span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621680257469"><span class="annot"><span class="annottext">slotToPeriod :: SlotNo -&gt; KESPeriod
+</span><a href="#local-6989586621680257469"><span class="hs-identifier hs-var hs-var">slotToPeriod</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span id="local-6989586621680257480"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680257480"><span class="hs-identifier hs-var">slot</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">Word -&gt; KESPeriod
+</span><span class="hs-identifier hs-var">SL.KESPeriod</span></span><span> </span><span class="annot"><span class="annottext">(Word -&gt; KESPeriod) -&gt; Word -&gt; KESPeriod
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">(Word64 -&gt; Word) -&gt; Word64 -&gt; Word
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680257480"><span class="hs-identifier hs-var">slot</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; Word64
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#div"><span class="hs-operator hs-var">`div`</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680257472"><span class="hs-identifier hs-var">praosSlotsPerKESPeriod</span></a></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- | Create a 'BlockForging' record safely using the given 'Hotkey'.</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- The name of the era (separated by a @_@) will be appended to each</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- 'forgeLabel'.</span><span>
+</span><span id="line-80"></span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosSharedBlockForging"><span class="hs-identifier hs-type">praosSharedBlockForging</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-81"></span><span>     </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621680257349"><span class="annot"><a href="#local-6989586621680257349"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621680257347"><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span id="local-6989586621680257348"><span class="annot"><a href="#local-6989586621680257348"><span class="hs-identifier hs-type">era</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-82"></span><span>     </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyEraWithCrypto"><span class="hs-identifier hs-type">ShelleyEraWithCrypto</span></a></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257348"><span class="hs-identifier hs-type">era</span></a></span><span>
+</span><span id="line-83"></span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IOLike</span></span><span> </span><span class="annot"><a href="#local-6989586621680257349"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-84"></span><span>     </span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HotKey.HotKey</span></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><a href="#local-6989586621680257349"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Absolute.KESPeriod</span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyLeaderCredentials"><span class="hs-identifier hs-type">ShelleyLeaderCredentials</span></a></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Mempool.TxOverrides</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257348"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BlockForging</span></span><span> </span><span class="annot"><a href="#local-6989586621680257349"><span class="hs-identifier hs-type">m</span></a></span><span>     </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257347"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621680257348"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span id="praosSharedBlockForging"><span class="annot"><span class="annottext">praosSharedBlockForging :: forall (m :: * -&gt; *) c era.
+(ShelleyEraWithCrypto c (Praos c) era, IOLike m) =&gt;
+HotKey c m
+-&gt; (SlotNo -&gt; KESPeriod)
+-&gt; ShelleyLeaderCredentials c
+-&gt; TxOverrides (ShelleyBlock (Praos c) era)
+-&gt; BlockForging m (ShelleyBlock (Praos c) era)
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#praosSharedBlockForging"><span class="hs-identifier hs-var hs-var">praosSharedBlockForging</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621680257512"><span class="annot"><span class="annottext">HotKey c m
+</span><a href="#local-6989586621680257512"><span class="hs-identifier hs-var">hotKey</span></a></span></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621680257513"><span class="annot"><span class="annottext">SlotNo -&gt; KESPeriod
+</span><a href="#local-6989586621680257513"><span class="hs-identifier hs-var">slotToPeriod</span></a></span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Common.html#ShelleyLeaderCredentials"><span class="hs-identifier hs-type">ShelleyLeaderCredentials</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">shelleyLeaderCredentialsCanBeLeader :: forall c. ShelleyLeaderCredentials c -&gt; PraosCanBeLeader c
+</span><a href="Ouroboros.Consensus.Shelley.Node.Common.html#shelleyLeaderCredentialsCanBeLeader"><span class="hs-identifier hs-var">shelleyLeaderCredentialsCanBeLeader</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621680257514"><span class="annot"><span class="annottext">PraosCanBeLeader c
+</span><a href="#local-6989586621680257514"><span class="hs-identifier hs-var">canBeLeader</span></a></span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">shelleyLeaderCredentialsLabel :: forall c. ShelleyLeaderCredentials c -&gt; Text
+</span><a href="Ouroboros.Consensus.Shelley.Node.Common.html#shelleyLeaderCredentialsLabel"><span class="hs-identifier hs-var">shelleyLeaderCredentialsLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621680257516"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621680257516"><span class="hs-keyword hs-var">label</span></a></span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621680257517"><span class="annot"><span class="annottext">TxOverrides (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257517"><span class="hs-identifier hs-var">maxTxCapacityOverrides</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">BlockForging</span></span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">forgeLabel :: Text
+</span><span class="hs-identifier hs-var">forgeLabel</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621680257516"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy era -&gt; Text
+forall era (proxy :: * -&gt; *).
+ShelleyBasedEra era =&gt;
+proxy era -&gt; Text
+forall (proxy :: * -&gt; *). proxy era -&gt; Text
+</span><a href="Ouroboros.Consensus.Shelley.Eras.html#shelleyBasedEraName"><span class="hs-identifier hs-var">shelleyBasedEraName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall t. Proxy t
+forall {k} (t :: k). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621680257348"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">canBeLeader :: CanBeLeader (BlockProtocol (ShelleyBlock (Praos c) era))
+</span><span class="hs-identifier hs-var">canBeLeader</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CanBeLeader (BlockProtocol (ShelleyBlock (Praos c) era))
+PraosCanBeLeader c
+</span><a href="#local-6989586621680257514"><span class="hs-identifier hs-var">canBeLeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">updateForgeState :: TopLevelConfig (ShelleyBlock (Praos c) era)
+-&gt; SlotNo
+-&gt; Ticked
+     (ChainDepState (BlockProtocol (ShelleyBlock (Praos c) era)))
+-&gt; m (ForgeStateUpdateInfo (ShelleyBlock (Praos c) era))
+</span><span class="hs-identifier hs-var">updateForgeState</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621680257521"><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621680257521"><span class="hs-identifier hs-var">curSlot</span></a></span></span><span> </span><span class="annot"><span class="annottext">Ticked (ChainDepState (BlockProtocol (ShelleyBlock (Praos c) era)))
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">UpdateInfo
+  (ForgeStateInfo (ShelleyBlock (Praos c) era))
+  (ForgeStateUpdateError (ShelleyBlock (Praos c) era))
+-&gt; ForgeStateUpdateInfo (ShelleyBlock (Praos c) era)
+UpdateInfo KESInfo KESEvolutionError
+-&gt; ForgeStateUpdateInfo (ShelleyBlock (Praos c) era)
+forall blk.
+UpdateInfo (ForgeStateInfo blk) (ForgeStateUpdateError blk)
+-&gt; ForgeStateUpdateInfo blk
+</span><span class="hs-identifier hs-var">forgeStateUpdateInfoFromUpdateInfo</span></span><span>
+</span><span id="line-103"></span><span>            </span><span class="annot"><span class="annottext">(UpdateInfo KESInfo KESEvolutionError
+ -&gt; ForgeStateUpdateInfo (ShelleyBlock (Praos c) era))
+-&gt; m (UpdateInfo KESInfo KESEvolutionError)
+-&gt; m (ForgeStateUpdateInfo (ShelleyBlock (Praos c) era))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HotKey c m -&gt; KESPeriod -&gt; m (UpdateInfo KESInfo KESEvolutionError)
+forall c (m :: * -&gt; *).
+HotKey c m -&gt; KESPeriod -&gt; m (UpdateInfo KESInfo KESEvolutionError)
+</span><span class="hs-identifier hs-var">HotKey.evolve</span></span><span> </span><span class="annot"><span class="annottext">HotKey c m
+</span><a href="#local-6989586621680257512"><span class="hs-identifier hs-var">hotKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SlotNo -&gt; KESPeriod
+</span><a href="#local-6989586621680257513"><span class="hs-identifier hs-var">slotToPeriod</span></a></span><span> </span><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621680257521"><span class="hs-identifier hs-var">curSlot</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">checkCanForge :: TopLevelConfig (ShelleyBlock (Praos c) era)
+-&gt; SlotNo
+-&gt; Ticked
+     (ChainDepState (BlockProtocol (ShelleyBlock (Praos c) era)))
+-&gt; IsLeader (BlockProtocol (ShelleyBlock (Praos c) era))
+-&gt; ForgeStateInfo (ShelleyBlock (Praos c) era)
+-&gt; Either (CannotForge (ShelleyBlock (Praos c) era)) ()
+</span><span class="hs-identifier hs-var">checkCanForge</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621680257526"><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257526"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span id="local-6989586621680257527"><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621680257527"><span class="hs-identifier hs-var">curSlot</span></a></span></span><span> </span><span id="local-6989586621680257528"><span class="annot"><span class="annottext">Ticked (ChainDepState (BlockProtocol (ShelleyBlock (Praos c) era)))
+</span><a href="#local-6989586621680257528"><span class="hs-identifier hs-var">_tickedChainDepState</span></a></span></span><span> </span><span id="local-6989586621680257529"><span class="annot"><span class="annottext">IsLeader (BlockProtocol (ShelleyBlock (Praos c) era))
+</span><a href="#local-6989586621680257529"><span class="hs-identifier hs-var">_isLeader</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>          </span><span class="annot"><span class="annottext">ConsensusConfig (Praos c)
+-&gt; SlotNo -&gt; KESInfo -&gt; Either (PraosCannotForge c) ()
+forall c.
+ConsensusConfig (Praos c)
+-&gt; SlotNo -&gt; KESInfo -&gt; Either (PraosCannotForge c) ()
+</span><span class="hs-identifier hs-var">praosCheckCanForge</span></span><span>
+</span><span id="line-106"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+-&gt; ConsensusConfig (BlockProtocol (ShelleyBlock (Praos c) era))
+forall blk.
+TopLevelConfig blk -&gt; ConsensusConfig (BlockProtocol blk)
+</span><span class="hs-identifier hs-var">configConsensus</span></span><span> </span><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257526"><span class="hs-identifier hs-var">cfg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>            </span><span class="annot"><span class="annottext">SlotNo
+</span><a href="#local-6989586621680257527"><span class="hs-identifier hs-var">curSlot</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">forgeBlock :: TopLevelConfig (ShelleyBlock (Praos c) era)
+-&gt; BlockNo
+-&gt; SlotNo
+-&gt; TickedLedgerState (ShelleyBlock (Praos c) era)
+-&gt; [Validated (GenTx (ShelleyBlock (Praos c) era))]
+-&gt; IsLeader (BlockProtocol (ShelleyBlock (Praos c) era))
+-&gt; m (ShelleyBlock (Praos c) era)
+</span><span class="hs-identifier hs-var">forgeBlock</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621680257531"><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257531"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">HotKey (EraCrypto era) m
+-&gt; CanBeLeader (Praos c)
+-&gt; TopLevelConfig (ShelleyBlock (Praos c) era)
+-&gt; TxOverrides (ShelleyBlock (Praos c) era)
+-&gt; BlockNo
+-&gt; SlotNo
+-&gt; TickedLedgerState (ShelleyBlock (Praos c) era)
+-&gt; [Validated (GenTx (ShelleyBlock (Praos c) era))]
+-&gt; IsLeader (Praos c)
+-&gt; m (ShelleyBlock (Praos c) era)
+forall (m :: * -&gt; *) era proto.
+(ShelleyCompatible proto era, TxLimits (ShelleyBlock proto era),
+ Monad m) =&gt;
+HotKey (EraCrypto era) m
+-&gt; CanBeLeader proto
+-&gt; TopLevelConfig (ShelleyBlock proto era)
+-&gt; TxOverrides (ShelleyBlock proto era)
+-&gt; BlockNo
+-&gt; SlotNo
+-&gt; TickedLedgerState (ShelleyBlock proto era)
+-&gt; [Validated (GenTx (ShelleyBlock proto era))]
+-&gt; IsLeader proto
+-&gt; m (ShelleyBlock proto era)
+</span><a href="Ouroboros.Consensus.Shelley.Ledger.Forge.html#forgeShelleyBlock"><span class="hs-identifier hs-var">forgeShelleyBlock</span></a></span><span>
+</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">HotKey c m
+HotKey (EraCrypto era) m
+</span><a href="#local-6989586621680257512"><span class="hs-identifier hs-var">hotKey</span></a></span><span>
+</span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">CanBeLeader (Praos c)
+PraosCanBeLeader c
+</span><a href="#local-6989586621680257514"><span class="hs-identifier hs-var">canBeLeader</span></a></span><span>
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">TopLevelConfig (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257531"><span class="hs-identifier hs-var">cfg</span></a></span><span>
+</span><span id="line-113"></span><span>            </span><span class="annot"><span class="annottext">TxOverrides (ShelleyBlock (Praos c) era)
+</span><a href="#local-6989586621680257517"><span class="hs-identifier hs-var">maxTxCapacityOverrides</span></a></span><span>
+</span><span id="line-114"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  ProtocolInfo
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="ProtocolParams"><span class="annot"><span class="hs-identifier hs-var">ProtocolParams</span></span></span><span> </span><span id="local-6989586621680257404"><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257404"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">BabbageEra</span></span><span> </span><span class="annot"><a href="#local-6989586621680257404"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ProtocolParamsBabbage"><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#ProtocolParamsBabbage"><span class="hs-identifier hs-var">ProtocolParamsBabbage</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-121"></span><span>    </span><span id="babbageProtVer"><span class="annot"><span class="annottext">forall c.
+ProtocolParams (ShelleyBlock (Praos c) (BabbageEra c)) -&gt; ProtVer
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#babbageProtVer"><span class="hs-identifier hs-var hs-var">babbageProtVer</span></a></span></span><span>                </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SL.ProtVer</span></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="babbageMaxTxCapacityOverrides"><span class="annot"><span class="annottext">forall c.
+ProtocolParams (ShelleyBlock (Praos c) (BabbageEra c))
+-&gt; TxOverrides (ShelleyBlock (Praos c) (BabbageEra c))
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#babbageMaxTxCapacityOverrides"><span class="hs-identifier hs-var hs-var">babbageMaxTxCapacityOverrides</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Mempool.TxOverrides</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257404"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">BabbageEra</span></span><span> </span><span class="annot"><a href="#local-6989586621680257404"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="ProtocolParams"><span class="annot"><span class="hs-identifier hs-var">ProtocolParams</span></span></span><span> </span><span id="local-6989586621680257411"><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257411"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ConwayEra</span></span><span> </span><span class="annot"><a href="#local-6989586621680257411"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ProtocolParamsConway"><span class="annot"><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#ProtocolParamsConway"><span class="hs-identifier hs-var">ProtocolParamsConway</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-126"></span><span>    </span><span id="conwayProtVer"><span class="annot"><span class="annottext">forall c.
+ProtocolParams (ShelleyBlock (Praos c) (ConwayEra c)) -&gt; ProtVer
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#conwayProtVer"><span class="hs-identifier hs-var hs-var">conwayProtVer</span></a></span></span><span>                </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SL.ProtVer</span></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="conwayMaxTxCapacityOverrides"><span class="annot"><span class="annottext">forall c.
+ProtocolParams (ShelleyBlock (Praos c) (ConwayEra c))
+-&gt; TxOverrides (ShelleyBlock (Praos c) (ConwayEra c))
+</span><a href="Ouroboros.Consensus.Shelley.Node.Praos.html#conwayMaxTxCapacityOverrides"><span class="hs-identifier hs-var hs-var">conwayMaxTxCapacityOverrides</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Mempool.TxOverrides</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Shelley.Ledger.Block.html#ShelleyBlock"><span class="hs-identifier hs-type">ShelleyBlock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Praos</span></span><span> </span><span class="annot"><a href="#local-6989586621680257411"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ConwayEra</span></span><span> </span><span class="annot"><a href="#local-6989586621680257411"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-129"></span></pre></body></html>

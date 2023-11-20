@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Crypto.KES.NeverUsed</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier">NeverKES</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.Class.html#VerKeyKES"><span class="hs-identifier">VerKeyKES</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.Class.html#SignKeyKES"><span class="hs-identifier">SignKeyKES</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.Class.html#SigKES"><span class="hs-identifier">SigKES</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.Class.html"><span class="hs-identifier">Cardano.Crypto.KES.Class</span></a></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- | KES never used</span><span>
+</span><span id="line-21"></span><span class="hs-comment">--</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- The type of keys and signatures is isomorphic to unit, but when actually</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- trying to sign or verify something a runtime exception will be thrown.</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="NeverKES"><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-var">NeverKES</span></a></span></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679189338"><span id="local-6989586621679189349"><span id="local-6989586621679189352"><span class="annot"><a href="Cardano.Crypto.KES.Class.html#KESAlgorithm"><span class="hs-identifier hs-type">KESAlgorithm</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-type">NeverKES</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SeedSizeKES"><span class="annot"><a href="Cardano.Crypto.KES.Class.html#SeedSizeKES"><span class="hs-identifier hs-var">SeedSizeKES</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-type">NeverKES</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="VerKeyKES"><span class="annot"><a href="Cardano.Crypto.KES.Class.html#VerKeyKES"><span class="hs-identifier hs-var">VerKeyKES</span></a></span></span><span>  </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-type">NeverKES</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedVerKeyKES"><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedVerKeyKES"><span class="hs-identifier hs-var">NeverUsedVerKeyKES</span></a></span></span><span>
+</span><span id="line-30"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189366"><span id="local-6989586621679189368"><span id="local-6989586621679189371"><span class="annot"><span class="annottext">Int -&gt; VerKeyKES NeverKES -&gt; ShowS
+[VerKeyKES NeverKES] -&gt; ShowS
+VerKeyKES NeverKES -&gt; String
+(Int -&gt; VerKeyKES NeverKES -&gt; ShowS)
+-&gt; (VerKeyKES NeverKES -&gt; String)
+-&gt; ([VerKeyKES NeverKES] -&gt; ShowS)
+-&gt; Show (VerKeyKES NeverKES)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; VerKeyKES NeverKES -&gt; ShowS
+showsPrec :: Int -&gt; VerKeyKES NeverKES -&gt; ShowS
+$cshow :: VerKeyKES NeverKES -&gt; String
+show :: VerKeyKES NeverKES -&gt; String
+$cshowList :: [VerKeyKES NeverKES] -&gt; ShowS
+showList :: [VerKeyKES NeverKES] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189375"><span id="local-6989586621679189377"><span class="annot"><span class="annottext">VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool
+(VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool)
+-&gt; (VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool)
+-&gt; Eq (VerKeyKES NeverKES)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool
+== :: VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool
+$c/= :: VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool
+/= :: VerKeyKES NeverKES -&gt; VerKeyKES NeverKES -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189381"><span id="local-6989586621679189383"><span class="annot"><span class="annottext">(forall x. VerKeyKES NeverKES -&gt; Rep (VerKeyKES NeverKES) x)
+-&gt; (forall x. Rep (VerKeyKES NeverKES) x -&gt; VerKeyKES NeverKES)
+-&gt; Generic (VerKeyKES NeverKES)
+forall x. Rep (VerKeyKES NeverKES) x -&gt; VerKeyKES NeverKES
+forall x. VerKeyKES NeverKES -&gt; Rep (VerKeyKES NeverKES) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. VerKeyKES NeverKES -&gt; Rep (VerKeyKES NeverKES) x
+from :: forall x. VerKeyKES NeverKES -&gt; Rep (VerKeyKES NeverKES) x
+$cto :: forall x. Rep (VerKeyKES NeverKES) x -&gt; VerKeyKES NeverKES
+to :: forall x. Rep (VerKeyKES NeverKES) x -&gt; VerKeyKES NeverKES
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189387"><span id="local-6989586621679189390"><span id="local-6989586621679189396"><span class="annot"><span class="annottext">Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+Proxy (VerKeyKES NeverKES) -&gt; String
+(Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (VerKeyKES NeverKES) -&gt; String)
+-&gt; NoThunks (VerKeyKES NeverKES)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; VerKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (VerKeyKES NeverKES) -&gt; String
+showTypeOf :: Proxy (VerKeyKES NeverKES) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="SignKeyKES"><span class="annot"><a href="Cardano.Crypto.KES.Class.html#SignKeyKES"><span class="hs-identifier hs-var">SignKeyKES</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-type">NeverKES</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedSignKeyKES"><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedSignKeyKES"><span class="hs-identifier hs-var">NeverUsedSignKeyKES</span></a></span></span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189417"><span id="local-6989586621679189419"><span id="local-6989586621679189422"><span class="annot"><span class="annottext">Int -&gt; SignKeyKES NeverKES -&gt; ShowS
+[SignKeyKES NeverKES] -&gt; ShowS
+SignKeyKES NeverKES -&gt; String
+(Int -&gt; SignKeyKES NeverKES -&gt; ShowS)
+-&gt; (SignKeyKES NeverKES -&gt; String)
+-&gt; ([SignKeyKES NeverKES] -&gt; ShowS)
+-&gt; Show (SignKeyKES NeverKES)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SignKeyKES NeverKES -&gt; ShowS
+showsPrec :: Int -&gt; SignKeyKES NeverKES -&gt; ShowS
+$cshow :: SignKeyKES NeverKES -&gt; String
+show :: SignKeyKES NeverKES -&gt; String
+$cshowList :: [SignKeyKES NeverKES] -&gt; ShowS
+showList :: [SignKeyKES NeverKES] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189425"><span id="local-6989586621679189427"><span class="annot"><span class="annottext">SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool
+(SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool)
+-&gt; (SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool)
+-&gt; Eq (SignKeyKES NeverKES)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool
+== :: SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool
+$c/= :: SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool
+/= :: SignKeyKES NeverKES -&gt; SignKeyKES NeverKES -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189431"><span id="local-6989586621679189433"><span class="annot"><span class="annottext">(forall x. SignKeyKES NeverKES -&gt; Rep (SignKeyKES NeverKES) x)
+-&gt; (forall x. Rep (SignKeyKES NeverKES) x -&gt; SignKeyKES NeverKES)
+-&gt; Generic (SignKeyKES NeverKES)
+forall x. Rep (SignKeyKES NeverKES) x -&gt; SignKeyKES NeverKES
+forall x. SignKeyKES NeverKES -&gt; Rep (SignKeyKES NeverKES) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SignKeyKES NeverKES -&gt; Rep (SignKeyKES NeverKES) x
+from :: forall x. SignKeyKES NeverKES -&gt; Rep (SignKeyKES NeverKES) x
+$cto :: forall x. Rep (SignKeyKES NeverKES) x -&gt; SignKeyKES NeverKES
+to :: forall x. Rep (SignKeyKES NeverKES) x -&gt; SignKeyKES NeverKES
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189436"><span id="local-6989586621679189439"><span id="local-6989586621679189445"><span class="annot"><span class="annottext">Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+Proxy (SignKeyKES NeverKES) -&gt; String
+(Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (SignKeyKES NeverKES) -&gt; String)
+-&gt; NoThunks (SignKeyKES NeverKES)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SignKeyKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (SignKeyKES NeverKES) -&gt; String
+showTypeOf :: Proxy (SignKeyKES NeverKES) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="SigKES"><span class="annot"><a href="Cardano.Crypto.KES.Class.html#SigKES"><span class="hs-identifier hs-var">SigKES</span></a></span></span><span>     </span><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverKES"><span class="hs-identifier hs-type">NeverKES</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedSigKES"><span class="annot"><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedSigKES"><span class="hs-identifier hs-var">NeverUsedSigKES</span></a></span></span><span>
+</span><span id="line-36"></span><span>      </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189459"><span id="local-6989586621679189461"><span id="local-6989586621679189464"><span class="annot"><span class="annottext">Int -&gt; SigKES NeverKES -&gt; ShowS
+[SigKES NeverKES] -&gt; ShowS
+SigKES NeverKES -&gt; String
+(Int -&gt; SigKES NeverKES -&gt; ShowS)
+-&gt; (SigKES NeverKES -&gt; String)
+-&gt; ([SigKES NeverKES] -&gt; ShowS)
+-&gt; Show (SigKES NeverKES)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SigKES NeverKES -&gt; ShowS
+showsPrec :: Int -&gt; SigKES NeverKES -&gt; ShowS
+$cshow :: SigKES NeverKES -&gt; String
+show :: SigKES NeverKES -&gt; String
+$cshowList :: [SigKES NeverKES] -&gt; ShowS
+showList :: [SigKES NeverKES] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189467"><span id="local-6989586621679189469"><span class="annot"><span class="annottext">SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool
+(SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool)
+-&gt; (SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool)
+-&gt; Eq (SigKES NeverKES)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool
+== :: SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool
+$c/= :: SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool
+/= :: SigKES NeverKES -&gt; SigKES NeverKES -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189472"><span id="local-6989586621679189474"><span class="annot"><span class="annottext">(forall x. SigKES NeverKES -&gt; Rep (SigKES NeverKES) x)
+-&gt; (forall x. Rep (SigKES NeverKES) x -&gt; SigKES NeverKES)
+-&gt; Generic (SigKES NeverKES)
+forall x. Rep (SigKES NeverKES) x -&gt; SigKES NeverKES
+forall x. SigKES NeverKES -&gt; Rep (SigKES NeverKES) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SigKES NeverKES -&gt; Rep (SigKES NeverKES) x
+from :: forall x. SigKES NeverKES -&gt; Rep (SigKES NeverKES) x
+$cto :: forall x. Rep (SigKES NeverKES) x -&gt; SigKES NeverKES
+to :: forall x. Rep (SigKES NeverKES) x -&gt; SigKES NeverKES
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189477"><span id="local-6989586621679189480"><span id="local-6989586621679189486"><span class="annot"><span class="annottext">Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo)
+Proxy (SigKES NeverKES) -&gt; String
+(Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (SigKES NeverKES) -&gt; String)
+-&gt; NoThunks (SigKES NeverKES)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SigKES NeverKES -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (SigKES NeverKES) -&gt; String
+showTypeOf :: Proxy (SigKES NeverKES) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621679189498"><span class="annot"><span class="annottext">algorithmNameKES :: forall (proxy :: * -&gt; *). proxy NeverKES -&gt; String
+</span><a href="#local-6989586621679189498"><span class="hs-identifier hs-var hs-var hs-var hs-var">algorithmNameKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;never&quot;</span></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621679189500"><span class="annot"><span class="annottext">deriveVerKeyKES :: SignKeyKES NeverKES -&gt; VerKeyKES NeverKES
+</span><a href="#local-6989586621679189500"><span class="hs-identifier hs-var hs-var hs-var hs-var">deriveVerKeyKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">SignKeyKES NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyKES NeverKES
+</span><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedVerKeyKES"><span class="hs-identifier hs-var">NeverUsedVerKeyKES</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679189506"><span class="annot"><span class="annottext">signKES :: forall a.
+(Signable NeverKES a, HasCallStack) =&gt;
+ContextKES NeverKES
+-&gt; Period -&gt; a -&gt; SignKeyKES NeverKES -&gt; SigKES NeverKES
+</span><a href="#local-6989586621679189506"><span class="hs-identifier hs-var hs-var hs-var hs-var">signKES</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; () -&gt; Period -&gt; a -&gt; SignKeyKES NeverKES -&gt; SigKES NeverKES
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;KES not available&quot;</span></span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621679189513"><span class="annot"><span class="annottext">verifyKES :: forall a.
+(Signable NeverKES a, HasCallStack) =&gt;
+ContextKES NeverKES
+-&gt; VerKeyKES NeverKES
+-&gt; Period
+-&gt; a
+-&gt; SigKES NeverKES
+-&gt; Either String ()
+</span><a href="#local-6989586621679189513"><span class="hs-identifier hs-var hs-var hs-var hs-var">verifyKES</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ()
+-&gt; VerKeyKES NeverKES
+-&gt; Period
+-&gt; a
+-&gt; SigKES NeverKES
+-&gt; Either String ()
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;KES not available&quot;</span></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679189518"><span class="annot"><span class="annottext">updateKES :: HasCallStack =&gt;
+ContextKES NeverKES
+-&gt; SignKeyKES NeverKES -&gt; Period -&gt; Maybe (SignKeyKES NeverKES)
+</span><a href="#local-6989586621679189518"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateKES</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ()
+-&gt; SignKeyKES NeverKES
+-&gt; Period
+-&gt; Maybe (SignKeyKES NeverKES)
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;KES not available&quot;</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621679189520"><span class="annot"><span class="annottext">totalPeriodsKES :: forall (proxy :: * -&gt; *). proxy NeverKES -&gt; Period
+</span><a href="#local-6989586621679189520"><span class="hs-identifier hs-var hs-var hs-var hs-var">totalPeriodsKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Period
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679189522"><span class="annot"><span class="annottext">genKeyKES :: Seed -&gt; SignKeyKES NeverKES
+</span><a href="#local-6989586621679189522"><span class="hs-identifier hs-var hs-var hs-var hs-var">genKeyKES</span></a></span></span><span>       </span><span class="annot"><span class="annottext">Seed
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyKES NeverKES
+</span><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedSignKeyKES"><span class="hs-identifier hs-var">NeverUsedSignKeyKES</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679189524"><span class="annot"><span class="annottext">sizeVerKeyKES :: forall (proxy :: * -&gt; *). proxy NeverKES -&gt; Period
+</span><a href="#local-6989586621679189524"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeVerKeyKES</span></a></span></span><span>  </span><span class="annot"><span class="annottext">proxy NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Period
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679189526"><span class="annot"><span class="annottext">sizeSignKeyKES :: forall (proxy :: * -&gt; *). proxy NeverKES -&gt; Period
+</span><a href="#local-6989586621679189526"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeSignKeyKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Period
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679189528"><span class="annot"><span class="annottext">sizeSigKES :: forall (proxy :: * -&gt; *). proxy NeverKES -&gt; Period
+</span><a href="#local-6989586621679189528"><span class="hs-identifier hs-var hs-var hs-var hs-var">sizeSigKES</span></a></span></span><span>     </span><span class="annot"><span class="annottext">proxy NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Period
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621679189532"><span class="annot"><span class="annottext">rawSerialiseVerKeyKES :: VerKeyKES NeverKES -&gt; ByteString
+</span><a href="#local-6989586621679189532"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseVerKeyKES</span></a></span></span><span>  </span><span class="annot"><span class="annottext">VerKeyKES NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679189535"><span class="annot"><span class="annottext">rawSerialiseSignKeyKES :: SignKeyKES NeverKES -&gt; ByteString
+</span><a href="#local-6989586621679189535"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseSignKeyKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">SignKeyKES NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679189538"><span class="annot"><span class="annottext">rawSerialiseSigKES :: SigKES NeverKES -&gt; ByteString
+</span><a href="#local-6989586621679189538"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseSigKES</span></a></span></span><span>     </span><span class="annot"><span class="annottext">SigKES NeverKES
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621679189540"><span class="annot"><span class="annottext">rawDeserialiseVerKeyKES :: ByteString -&gt; Maybe (VerKeyKES NeverKES)
+</span><a href="#local-6989586621679189540"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseVerKeyKES</span></a></span></span><span>  </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyKES NeverKES -&gt; Maybe (VerKeyKES NeverKES)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">VerKeyKES NeverKES
+</span><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedVerKeyKES"><span class="hs-identifier hs-var">NeverUsedVerKeyKES</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621679189542"><span class="annot"><span class="annottext">rawDeserialiseSignKeyKES :: ByteString -&gt; Maybe (SignKeyKES NeverKES)
+</span><a href="#local-6989586621679189542"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseSignKeyKES</span></a></span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyKES NeverKES -&gt; Maybe (SignKeyKES NeverKES)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SignKeyKES NeverKES
+</span><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedSignKeyKES"><span class="hs-identifier hs-var">NeverUsedSignKeyKES</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621679189544"><span class="annot"><span class="annottext">rawDeserialiseSigKES :: ByteString -&gt; Maybe (SigKES NeverKES)
+</span><a href="#local-6989586621679189544"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseSigKES</span></a></span></span><span>     </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SigKES NeverKES -&gt; Maybe (SigKES NeverKES)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SigKES NeverKES
+</span><a href="Cardano.Crypto.KES.NeverUsed.html#NeverUsedSigKES"><span class="hs-identifier hs-var">NeverUsedSigKES</span></a></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span></pre></body></html>

@@ -1,0 +1,941 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE GADTs #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Api.State.Query</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetFilteredDelegationsAndRewardAccounts@</span></span><span>
+</span><span id="line-8"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#filterStakePoolDelegsAndRewards"><span class="hs-identifier">filterStakePoolDelegsAndRewards</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryStakePoolDelegsAndRewards"><span class="hs-identifier">queryStakePoolDelegsAndRewards</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetGovState@</span></span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryGovState"><span class="hs-identifier">queryGovState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetConstitution@</span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryConstitution"><span class="hs-identifier">queryConstitution</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetConstitutionHash@</span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryConstitutionHash"><span class="hs-identifier">queryConstitutionHash</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetDRepState@</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryDRepState"><span class="hs-identifier">queryDRepState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetDRepStakeDistr@</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryDRepStakeDistr"><span class="hs-identifier">queryDRepStakeDistr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetCommitteeState@</span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeState"><span class="hs-identifier">queryCommitteeState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-comment">-- * @GetCommitteeMembersState@</span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeMembersState"><span class="hs-identifier">queryCommitteeMembersState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier">CommitteeMemberState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier">HotCredAuthStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier">MemberStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier">NextEpochChange</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Allegra.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Constitution</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">constitutionAnchor</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html"><span class="hs-identifier">Cardano.Ledger.Api.State.Query.CommitteeMembersState</span></a></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier">CommitteeMemberState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#HotCredAuthStatus"><span class="hs-identifier">HotCredAuthStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier">MemberStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NextEpochChange"><span class="hs-identifier">NextEpochChange</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.CertState</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Coin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coin</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Compactible</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromCompact</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Credential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Credential</span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.DRep</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">drepExpiryL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyHash</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KeyRole</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.SafeHash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">SafeHash</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.Governance</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier">EraGov</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="hs-identifier">GovState</span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="hs-identifier">getCommitteeMembers</span></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-identifier">getConstitution</span></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-identifier">getDRepDistr</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.LedgerState</span></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.UMap</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="hs-identifier">StakeCredentials</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">scRewards</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">scSPools</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier">UMap</span></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><span class="hs-identifier">domRestrictedStakeCredentials</span></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html"><span class="hs-identifier">Control.Monad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#guard"><span class="hs-identifier">guard</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.html"><span class="hs-identifier">Data.Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier">Set</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(%~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Function.html#%26"><span class="hs-operator">(&amp;)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%26%3E"><span class="hs-operator">(&lt;&amp;&gt;)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><span class="hs-comment">-- | Filter out stake pool delegations and rewards for a set of stake credentials</span></span><span>
+</span><span id="line-76"></span><span id="local-6989586621679267155"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#filterStakePoolDelegsAndRewards"><span class="hs-identifier hs-type">filterStakePoolDelegsAndRewards</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">UMap</span></span><span> </span><span class="annot"><a href="#local-6989586621679267155"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="annot"><a href="#local-6989586621679267155"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="annot"><a href="#local-6989586621679267155"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="annot"><a href="#local-6989586621679267155"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="annot"><a href="#local-6989586621679267155"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-80"></span><span id="filterStakePoolDelegsAndRewards"><span class="annot"><span class="annottext">filterStakePoolDelegsAndRewards :: forall c.
+UMap c
+-&gt; Set (Credential 'Staking c)
+-&gt; (Map (Credential 'Staking c) (KeyHash 'StakePool c),
+    Map (Credential 'Staking c) Coin)
+</span><a href="Cardano.Ledger.Api.State.Query.html#filterStakePoolDelegsAndRewards"><span class="hs-identifier hs-var hs-var">filterStakePoolDelegsAndRewards</span></a></span></span><span> </span><span id="local-6989586621679267334"><span class="annot"><span class="annottext">UMap c
+</span><a href="#local-6989586621679267334"><span class="hs-identifier hs-var">umap</span></a></span></span><span> </span><span id="local-6989586621679267335"><span class="annot"><span class="annottext">Set (Credential 'Staking c)
+</span><a href="#local-6989586621679267335"><span class="hs-identifier hs-var">creds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StakeCredentials c
+-&gt; Map (Credential 'Staking c) (KeyHash 'StakePool c)
+forall c.
+StakeCredentials c
+-&gt; Map (Credential 'Staking c) (KeyHash 'StakePool c)
+</span><span class="hs-identifier hs-var">scSPools</span></span><span> </span><span class="annot"><span class="annottext">StakeCredentials c
+</span><a href="#local-6989586621679267336"><span class="hs-identifier hs-var">stakeCredentials</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">StakeCredentials c -&gt; Map (Credential 'Staking c) Coin
+forall c. StakeCredentials c -&gt; Map (Credential 'Staking c) Coin
+</span><span class="hs-identifier hs-var">scRewards</span></span><span> </span><span class="annot"><span class="annottext">StakeCredentials c
+</span><a href="#local-6989586621679267336"><span class="hs-identifier hs-var">stakeCredentials</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621679267336"><span class="annot"><span class="annottext">stakeCredentials :: StakeCredentials c
+</span><a href="#local-6989586621679267336"><span class="hs-identifier hs-var hs-var">stakeCredentials</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'Staking c) -&gt; UMap c -&gt; StakeCredentials c
+forall c.
+Set (Credential 'Staking c) -&gt; UMap c -&gt; StakeCredentials c
+</span><span class="hs-identifier hs-var">domRestrictedStakeCredentials</span></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'Staking c)
+</span><a href="#local-6989586621679267335"><span class="hs-identifier hs-var">creds</span></a></span><span> </span><span class="annot"><span class="annottext">UMap c
+</span><a href="#local-6989586621679267334"><span class="hs-identifier hs-var">umap</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- | Uses `filterStakePoolDelegsAndRewards` to get the same information from the `NewEpochState`</span><span>
+</span><span id="line-86"></span><span class="hs-comment">--</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- Implementation for @GetFilteredDelegationsAndRewardAccounts@ query.</span><span>
+</span><span id="line-88"></span><span id="local-6989586621679267169"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryStakePoolDelegsAndRewards"><span class="hs-identifier hs-type">queryStakePoolDelegsAndRewards</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267169"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267169"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267169"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267169"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">Staking</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267169"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">)</span></span><span>
+</span><span id="line-94"></span><span id="queryStakePoolDelegsAndRewards"><span class="annot"><span class="annottext">queryStakePoolDelegsAndRewards :: forall era.
+NewEpochState era
+-&gt; Set (Credential 'Staking (EraCrypto era))
+-&gt; (Map
+      (Credential 'Staking (EraCrypto era))
+      (KeyHash 'StakePool (EraCrypto era)),
+    Map (Credential 'Staking (EraCrypto era)) Coin)
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryStakePoolDelegsAndRewards"><span class="hs-identifier hs-var hs-var">queryStakePoolDelegsAndRewards</span></a></span></span><span> </span><span id="local-6989586621679267338"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267338"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UMap (EraCrypto era)
+-&gt; Set (Credential 'Staking (EraCrypto era))
+-&gt; (Map
+      (Credential 'Staking (EraCrypto era))
+      (KeyHash 'StakePool (EraCrypto era)),
+    Map (Credential 'Staking (EraCrypto era)) Coin)
+forall c.
+UMap c
+-&gt; Set (Credential 'Staking c)
+-&gt; (Map (Credential 'Staking c) (KeyHash 'StakePool c),
+    Map (Credential 'Staking c) Coin)
+</span><a href="Cardano.Ledger.Api.State.Query.html#filterStakePoolDelegsAndRewards"><span class="hs-identifier hs-var">filterStakePoolDelegsAndRewards</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DState era -&gt; UMap (EraCrypto era)
+forall era. DState era -&gt; UMap (EraCrypto era)
+</span><span class="hs-identifier hs-var">dsUnified</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NewEpochState era -&gt; DState era
+forall era. NewEpochState era -&gt; DState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#getDState"><span class="hs-identifier hs-var">getDState</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267338"><span class="hs-identifier hs-var">nes</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span id="local-6989586621679267175"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#getDState"><span class="hs-identifier hs-type">getDState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267175"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267175"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-97"></span><span id="getDState"><span class="annot"><span class="annottext">getDState :: forall era. NewEpochState era -&gt; DState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#getDState"><span class="hs-identifier hs-var hs-var">getDState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CertState era -&gt; DState era
+forall era. CertState era -&gt; DState era
+</span><span class="hs-identifier hs-var">certDState</span></span><span> </span><span class="annot"><span class="annottext">(CertState era -&gt; DState era)
+-&gt; (NewEpochState era -&gt; CertState era)
+-&gt; NewEpochState era
+-&gt; DState era
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">LedgerState era -&gt; CertState era
+forall era. LedgerState era -&gt; CertState era
+</span><span class="hs-identifier hs-var">lsCertState</span></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; CertState era)
+-&gt; (NewEpochState era -&gt; LedgerState era)
+-&gt; NewEpochState era
+-&gt; CertState era
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">EpochState era -&gt; LedgerState era
+forall era. EpochState era -&gt; LedgerState era
+</span><span class="hs-identifier hs-var">esLState</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; LedgerState era)
+-&gt; (NewEpochState era -&gt; EpochState era)
+-&gt; NewEpochState era
+-&gt; LedgerState era
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; EpochState era
+forall era. NewEpochState era -&gt; EpochState era
+</span><span class="hs-identifier hs-var">nesEs</span></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621679267187"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryConstitution"><span class="hs-identifier hs-type">queryConstitution</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraGov</span></span><span> </span><span class="annot"><a href="#local-6989586621679267187"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267187"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Constitution</span></span><span> </span><span class="annot"><a href="#local-6989586621679267187"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-100"></span><span id="queryConstitution"><span class="annot"><span class="annottext">queryConstitution :: forall era.
+EraGov era =&gt;
+NewEpochState era -&gt; Maybe (Constitution era)
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryConstitution"><span class="hs-identifier hs-var hs-var">queryConstitution</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GovState era -&gt; Maybe (Constitution era)
+forall era. EraGov era =&gt; GovState era -&gt; Maybe (Constitution era)
+</span><span class="hs-identifier hs-var">getConstitution</span></span><span> </span><span class="annot"><span class="annottext">(GovState era -&gt; Maybe (Constitution era))
+-&gt; (NewEpochState era -&gt; GovState era)
+-&gt; NewEpochState era
+-&gt; Maybe (Constitution era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; GovState era
+forall era. NewEpochState era -&gt; GovState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryGovState"><span class="hs-identifier hs-var">queryGovState</span></a></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span id="local-6989586621679267194"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryConstitutionHash"><span class="hs-identifier hs-type">queryConstitutionHash</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraGov</span></span><span> </span><span class="annot"><a href="#local-6989586621679267194"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267194"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SafeHash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267194"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AnchorData</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-106"></span><span id="queryConstitutionHash"><span class="annot"><span class="annottext">queryConstitutionHash :: forall era.
+EraGov era =&gt;
+NewEpochState era -&gt; Maybe (SafeHash (EraCrypto era) AnchorData)
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryConstitutionHash"><span class="hs-identifier hs-var hs-var">queryConstitutionHash</span></a></span></span><span> </span><span id="local-6989586621679267352"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267352"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">Anchor (EraCrypto era) -&gt; SafeHash (EraCrypto era) AnchorData
+forall c. Anchor c -&gt; SafeHash c AnchorData
+</span><span class="hs-identifier hs-var">anchorDataHash</span></span><span> </span><span class="annot"><span class="annottext">(Anchor (EraCrypto era) -&gt; SafeHash (EraCrypto era) AnchorData)
+-&gt; (Constitution era -&gt; Anchor (EraCrypto era))
+-&gt; Constitution era
+-&gt; SafeHash (EraCrypto era) AnchorData
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Constitution era -&gt; Anchor (EraCrypto era)
+forall era. Constitution era -&gt; Anchor (EraCrypto era)
+</span><span class="hs-identifier hs-var">constitutionAnchor</span></span><span> </span><span class="annot"><span class="annottext">(Constitution era -&gt; SafeHash (EraCrypto era) AnchorData)
+-&gt; Maybe (Constitution era)
+-&gt; Maybe (SafeHash (EraCrypto era) AnchorData)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; Maybe (Constitution era)
+forall era.
+EraGov era =&gt;
+NewEpochState era -&gt; Maybe (Constitution era)
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryConstitution"><span class="hs-identifier hs-var">queryConstitution</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267352"><span class="hs-identifier hs-var">nes</span></a></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span class="annot"><span class="hs-comment">-- | This query returns all of the state related to governance</span></span><span>
+</span><span id="line-110"></span><span id="local-6989586621679267193"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryGovState"><span class="hs-identifier hs-type">queryGovState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267193"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GovState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267193"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-111"></span><span id="queryGovState"><span class="annot"><span class="annottext">queryGovState :: forall era. NewEpochState era -&gt; GovState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryGovState"><span class="hs-identifier hs-var hs-var">queryGovState</span></a></span></span><span> </span><span id="local-6989586621679267360"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267360"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267360"><span class="hs-identifier hs-var">nes</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+-&gt; Getting (GovState era) (NewEpochState era) (GovState era)
+-&gt; GovState era
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; Const (GovState era) (EpochState era))
+-&gt; NewEpochState era -&gt; Const (GovState era) (NewEpochState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(EpochState era -&gt; f (EpochState era))
+-&gt; NewEpochState era -&gt; f (NewEpochState era)
+</span><span class="hs-identifier hs-var">nesEpochStateL</span></span><span> </span><span class="annot"><span class="annottext">((EpochState era -&gt; Const (GovState era) (EpochState era))
+ -&gt; NewEpochState era -&gt; Const (GovState era) (NewEpochState era))
+-&gt; ((GovState era -&gt; Const (GovState era) (GovState era))
+    -&gt; EpochState era -&gt; Const (GovState era) (EpochState era))
+-&gt; Getting (GovState era) (NewEpochState era) (GovState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; Const (GovState era) (LedgerState era))
+-&gt; EpochState era -&gt; Const (GovState era) (EpochState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(LedgerState era -&gt; f (LedgerState era))
+-&gt; EpochState era -&gt; f (EpochState era)
+</span><span class="hs-identifier hs-var">esLStateL</span></span><span> </span><span class="annot"><span class="annottext">((LedgerState era -&gt; Const (GovState era) (LedgerState era))
+ -&gt; EpochState era -&gt; Const (GovState era) (EpochState era))
+-&gt; ((GovState era -&gt; Const (GovState era) (GovState era))
+    -&gt; LedgerState era -&gt; Const (GovState era) (LedgerState era))
+-&gt; (GovState era -&gt; Const (GovState era) (GovState era))
+-&gt; EpochState era
+-&gt; Const (GovState era) (EpochState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(UTxOState era -&gt; Const (GovState era) (UTxOState era))
+-&gt; LedgerState era -&gt; Const (GovState era) (LedgerState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(UTxOState era -&gt; f (UTxOState era))
+-&gt; LedgerState era -&gt; f (LedgerState era)
+</span><span class="hs-identifier hs-var">lsUTxOStateL</span></span><span> </span><span class="annot"><span class="annottext">((UTxOState era -&gt; Const (GovState era) (UTxOState era))
+ -&gt; LedgerState era -&gt; Const (GovState era) (LedgerState era))
+-&gt; ((GovState era -&gt; Const (GovState era) (GovState era))
+    -&gt; UTxOState era -&gt; Const (GovState era) (UTxOState era))
+-&gt; (GovState era -&gt; Const (GovState era) (GovState era))
+-&gt; LedgerState era
+-&gt; Const (GovState era) (LedgerState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(GovState era -&gt; Const (GovState era) (GovState era))
+-&gt; UTxOState era -&gt; Const (GovState era) (UTxOState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(GovState era -&gt; f (GovState era))
+-&gt; UTxOState era -&gt; f (UTxOState era)
+</span><span class="hs-identifier hs-var">utxosGovStateL</span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="annot"><span class="hs-comment">-- | Query DRep state.</span></span><span>
+</span><span id="line-114"></span><span id="local-6989586621679267219"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryDRepState"><span class="hs-identifier hs-type">queryDRepState</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267219"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-comment">-- | Specify a set of DRep credentials whose state should be returned. When this set is</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-comment">-- empty, states for all of the DReps will be returned.</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">DRepRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267219"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">DRepRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267219"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DRepState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267219"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-120"></span><span id="queryDRepState"><span class="annot"><span class="annottext">queryDRepState :: forall era.
+NewEpochState era
+-&gt; Set (Credential 'DRepRole (EraCrypto era))
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryDRepState"><span class="hs-identifier hs-var hs-var">queryDRepState</span></a></span></span><span> </span><span id="local-6989586621679267378"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267378"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span id="local-6989586621679267379"><span class="annot"><span class="annottext">Set (Credential 'DRepRole (EraCrypto era))
+</span><a href="#local-6989586621679267379"><span class="hs-identifier hs-var">creds</span></a></span></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'DRepRole (EraCrypto era)) -&gt; Bool
+forall a. Set a -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#null"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'DRepRole (EraCrypto era))
+</span><a href="#local-6989586621679267379"><span class="hs-identifier hs-var">creds</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+</span><a href="#local-6989586621679267381"><span class="hs-identifier hs-var">drepsState</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+</span><a href="#local-6989586621679267381"><span class="hs-identifier hs-var">drepsState</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+-&gt; Set (Credential 'DRepRole (EraCrypto era))
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall k a. Ord k =&gt; Map k a -&gt; Set k -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#restrictKeys"><span class="hs-operator hs-var">`Map.restrictKeys`</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'DRepRole (EraCrypto era))
+</span><a href="#local-6989586621679267379"><span class="hs-identifier hs-var">creds</span></a></span><span>
+</span><span id="line-124"></span><span>        </span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+-&gt; (Map
+      (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+    -&gt; Map
+         (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era)))
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Function.html#%26"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267383"><span class="hs-identifier hs-var">numDormantEpochs</span></a></span><span> </span><span class="annot"><span class="annottext">EpochNo -&gt; EpochNo -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3D%3D"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-125"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall a. a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span>
+</span><span id="line-126"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+-&gt; (DRepState (EraCrypto era) -&gt; DRepState (EraCrypto era))
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%26%3E"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">(EpochNo -&gt; Identity EpochNo)
+-&gt; DRepState (EraCrypto era)
+-&gt; Identity (DRepState (EraCrypto era))
+forall c (f :: * -&gt; *).
+Functor f =&gt;
+(EpochNo -&gt; f EpochNo) -&gt; DRepState c -&gt; f (DRepState c)
+</span><span class="hs-identifier hs-var">drepExpiryL</span></span><span> </span><span class="annot"><span class="annottext">((EpochNo -&gt; Identity EpochNo)
+ -&gt; DRepState (EraCrypto era)
+ -&gt; Identity (DRepState (EraCrypto era)))
+-&gt; (EpochNo -&gt; EpochNo)
+-&gt; DRepState (EraCrypto era)
+-&gt; DRepState (EraCrypto era)
+forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EpochNo -&gt; EpochNo -&gt; EpochNo
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2B"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267383"><span class="hs-identifier hs-var">numDormantEpochs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621679267381"><span class="annot"><span class="annottext">drepsState :: Map
+  (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+</span><a href="#local-6989586621679267381"><span class="hs-identifier hs-var hs-var">drepsState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VState era
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall era.
+VState era
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+</span><span class="hs-identifier hs-var">vsDReps</span></span><span> </span><span class="annot"><span class="annottext">(VState era
+ -&gt; Map
+      (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era)))
+-&gt; VState era
+-&gt; Map
+     (Credential 'DRepRole (EraCrypto era)) (DRepState (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">CertState era -&gt; VState era
+forall era. CertState era -&gt; VState era
+</span><span class="hs-identifier hs-var">certVState</span></span><span> </span><span class="annot"><span class="annottext">(CertState era -&gt; VState era) -&gt; CertState era -&gt; VState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LedgerState era -&gt; CertState era
+forall era. LedgerState era -&gt; CertState era
+</span><span class="hs-identifier hs-var">lsCertState</span></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; CertState era)
+-&gt; LedgerState era -&gt; CertState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">EpochState era -&gt; LedgerState era
+forall era. EpochState era -&gt; LedgerState era
+</span><span class="hs-identifier hs-var">esLState</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; LedgerState era)
+-&gt; EpochState era -&gt; LedgerState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; EpochState era
+forall era. NewEpochState era -&gt; EpochState era
+</span><span class="hs-identifier hs-var">nesEs</span></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267378"><span class="hs-identifier hs-var">nes</span></a></span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621679267383"><span class="annot"><span class="annottext">numDormantEpochs :: EpochNo
+</span><a href="#local-6989586621679267383"><span class="hs-identifier hs-var hs-var">numDormantEpochs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VState era -&gt; EpochNo
+forall era. VState era -&gt; EpochNo
+</span><span class="hs-identifier hs-var">vsNumDormantEpochs</span></span><span> </span><span class="annot"><span class="annottext">(VState era -&gt; EpochNo) -&gt; VState era -&gt; EpochNo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">CertState era -&gt; VState era
+forall era. CertState era -&gt; VState era
+</span><span class="hs-identifier hs-var">certVState</span></span><span> </span><span class="annot"><span class="annottext">(CertState era -&gt; VState era) -&gt; CertState era -&gt; VState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LedgerState era -&gt; CertState era
+forall era. LedgerState era -&gt; CertState era
+</span><span class="hs-identifier hs-var">lsCertState</span></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; CertState era)
+-&gt; LedgerState era -&gt; CertState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">EpochState era -&gt; LedgerState era
+forall era. EpochState era -&gt; LedgerState era
+</span><span class="hs-identifier hs-var">esLState</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; LedgerState era)
+-&gt; EpochState era -&gt; LedgerState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; EpochState era
+forall era. NewEpochState era -&gt; EpochState era
+</span><span class="hs-identifier hs-var">nesEs</span></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267378"><span class="hs-identifier hs-var">nes</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- | Query DRep stake distribution. Note that this can be an expensive query because there</span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- is a chance that current distribution has not been fully computed yet.</span><span>
+</span><span id="line-133"></span><span id="local-6989586621679267255"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryDRepStakeDistr"><span class="hs-identifier hs-type">queryDRepStakeDistr</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraGov</span></span><span> </span><span class="annot"><a href="#local-6989586621679267255"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267255"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-comment">-- | Specify DRep Ids whose stake distribution should be returned. When this set is</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-comment">-- empty, distributions for all of the DReps will be returned.</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DRep</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267255"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DRep</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267255"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span><span>
+</span><span id="line-140"></span><span id="queryDRepStakeDistr"><span class="annot"><span class="annottext">queryDRepStakeDistr :: forall era.
+EraGov era =&gt;
+NewEpochState era
+-&gt; Set (DRep (EraCrypto era)) -&gt; Map (DRep (EraCrypto era)) Coin
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryDRepStakeDistr"><span class="hs-identifier hs-var hs-var">queryDRepStakeDistr</span></a></span></span><span> </span><span id="local-6989586621679267398"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267398"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span id="local-6989586621679267399"><span class="annot"><span class="annottext">Set (DRep (EraCrypto era))
+</span><a href="#local-6989586621679267399"><span class="hs-identifier hs-var">creds</span></a></span></span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set (DRep (EraCrypto era)) -&gt; Bool
+forall a. Set a -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#null"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">Set (DRep (EraCrypto era))
+</span><a href="#local-6989586621679267399"><span class="hs-identifier hs-var">creds</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CompactForm Coin -&gt; Coin)
+-&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+-&gt; Map (DRep (EraCrypto era)) Coin
+forall a b k. (a -&gt; b) -&gt; Map k a -&gt; Map k b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#map"><span class="hs-identifier hs-var">Map.map</span></a></span><span> </span><span class="annot"><span class="annottext">CompactForm Coin -&gt; Coin
+forall a. Compactible a =&gt; CompactForm a -&gt; a
+</span><span class="hs-identifier hs-var">fromCompact</span></span><span> </span><span class="annot"><span class="annottext">Map (DRep (EraCrypto era)) (CompactForm Coin)
+</span><a href="#local-6989586621679267401"><span class="hs-identifier hs-var">distr</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CompactForm Coin -&gt; Coin)
+-&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+-&gt; Map (DRep (EraCrypto era)) Coin
+forall a b k. (a -&gt; b) -&gt; Map k a -&gt; Map k b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#map"><span class="hs-identifier hs-var">Map.map</span></a></span><span> </span><span class="annot"><span class="annottext">CompactForm Coin -&gt; Coin
+forall a. Compactible a =&gt; CompactForm a -&gt; a
+</span><span class="hs-identifier hs-var">fromCompact</span></span><span> </span><span class="annot"><span class="annottext">(Map (DRep (EraCrypto era)) (CompactForm Coin)
+ -&gt; Map (DRep (EraCrypto era)) Coin)
+-&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+-&gt; Map (DRep (EraCrypto era)) Coin
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Map (DRep (EraCrypto era)) (CompactForm Coin)
+</span><a href="#local-6989586621679267401"><span class="hs-identifier hs-var">distr</span></a></span><span> </span><span class="annot"><span class="annottext">Map (DRep (EraCrypto era)) (CompactForm Coin)
+-&gt; Set (DRep (EraCrypto era))
+-&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+forall k a. Ord k =&gt; Map k a -&gt; Set k -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#restrictKeys"><span class="hs-operator hs-var">`Map.restrictKeys`</span></a></span><span> </span><span class="annot"><span class="annottext">Set (DRep (EraCrypto era))
+</span><a href="#local-6989586621679267399"><span class="hs-identifier hs-var">creds</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621679267401"><span class="annot"><span class="annottext">distr :: Map (DRep (EraCrypto era)) (CompactForm Coin)
+</span><a href="#local-6989586621679267401"><span class="hs-identifier hs-var hs-var">distr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GovState era -&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+forall era.
+EraGov era =&gt;
+GovState era -&gt; Map (DRep (EraCrypto era)) (CompactForm Coin)
+</span><span class="hs-identifier hs-var">getDRepDistr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267398"><span class="hs-identifier hs-var">nes</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+-&gt; Getting (GovState era) (NewEpochState era) (GovState era)
+-&gt; GovState era
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting (GovState era) (NewEpochState era) (GovState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(GovState era -&gt; f (GovState era))
+-&gt; NewEpochState era -&gt; f (NewEpochState era)
+</span><span class="hs-identifier hs-var">newEpochStateGovStateL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="annot"><span class="hs-comment">-- | Query committee members</span></span><span>
+</span><span id="line-147"></span><span id="local-6989586621679267267"><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeState"><span class="hs-identifier hs-type">queryCommitteeState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267267"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CommitteeState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267267"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-148"></span><span id="queryCommitteeState"><span class="annot"><span class="annottext">queryCommitteeState :: forall era. NewEpochState era -&gt; CommitteeState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeState"><span class="hs-identifier hs-var hs-var">queryCommitteeState</span></a></span></span><span> </span><span id="local-6989586621679267403"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267403"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><span class="annottext">VState era -&gt; CommitteeState era
+forall era. VState era -&gt; CommitteeState era
+</span><span class="hs-identifier hs-var">vsCommitteeState</span></span><span> </span><span class="annot"><span class="annottext">(VState era -&gt; CommitteeState era)
+-&gt; VState era -&gt; CommitteeState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">CertState era -&gt; VState era
+forall era. CertState era -&gt; VState era
+</span><span class="hs-identifier hs-var">certVState</span></span><span> </span><span class="annot"><span class="annottext">(CertState era -&gt; VState era) -&gt; CertState era -&gt; VState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LedgerState era -&gt; CertState era
+forall era. LedgerState era -&gt; CertState era
+</span><span class="hs-identifier hs-var">lsCertState</span></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; CertState era)
+-&gt; LedgerState era -&gt; CertState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">EpochState era -&gt; LedgerState era
+forall era. EpochState era -&gt; LedgerState era
+</span><span class="hs-identifier hs-var">esLState</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; LedgerState era)
+-&gt; EpochState era -&gt; LedgerState era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era -&gt; EpochState era
+forall era. NewEpochState era -&gt; EpochState era
+</span><span class="hs-identifier hs-var">nesEs</span></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267403"><span class="hs-identifier hs-var">nes</span></a></span><span>
+</span><span id="line-150"></span><span class="hs-pragma">{-# DEPRECATED</span><span> </span><span class="hs-pragma">queryCommitteeState</span><span> </span><span class="hs-pragma">&quot;In favor of `queryCommitteeMembersState`&quot;</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-151"></span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- | Query committee members. Whenever the system is in No Confidence mode this query will</span><span>
+</span><span id="line-153"></span><span class="hs-comment">-- return `Nothing`.</span><span>
+</span><span id="line-154"></span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeMembersState"><span class="hs-identifier hs-type">queryCommitteeMembersState</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679267271"><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraGov</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><span class="hs-comment">-- | filter by cold credentials (don't filter when empty)</span></span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ColdCommitteeRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><span class="hs-comment">-- | filter by hot credentials (don't filter when empty)</span></span><span>
+</span><span id="line-160"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">HotCommitteeRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-comment">-- | filter by status (don't filter when empty)</span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-comment">-- (useful, for discovering, for example, only active members)</span><span>
+</span><span id="line-163"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberStatus"><span class="hs-identifier hs-type">MemberStatus</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-164"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NewEpochState</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-166"></span><span id="queryCommitteeMembersState"><span class="annot"><span class="annottext">queryCommitteeMembersState :: forall era.
+EraGov era =&gt;
+Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'HotCommitteeRole (EraCrypto era))
+-&gt; Set MemberStatus
+-&gt; NewEpochState era
+-&gt; Maybe (CommitteeMembersState (EraCrypto era))
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryCommitteeMembersState"><span class="hs-identifier hs-var hs-var">queryCommitteeMembersState</span></a></span></span><span> </span><span id="local-6989586621679267433"><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267433"><span class="hs-identifier hs-var">coldCredsFilter</span></a></span></span><span> </span><span id="local-6989586621679267434"><span class="annot"><span class="annottext">Set (Credential 'HotCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267434"><span class="hs-identifier hs-var">hotCredsFilter</span></a></span></span><span> </span><span id="local-6989586621679267435"><span class="annot"><span class="annottext">Set MemberStatus
+</span><a href="#local-6989586621679267435"><span class="hs-identifier hs-var">statusFilter</span></a></span></span><span> </span><span id="local-6989586621679267436"><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267436"><span class="hs-identifier hs-var">nes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-167"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621679267437"><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+</span><a href="#local-6989586621679267437"><span class="hs-identifier hs-var">comMembers</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679267438"><span class="annot"><span class="annottext">UnitInterval
+</span><a href="#local-6989586621679267438"><span class="hs-identifier hs-var">comQuorum</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GovState era
+-&gt; Maybe
+     (Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo,
+      UnitInterval)
+forall era.
+EraGov era =&gt;
+GovState era
+-&gt; Maybe
+     (Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo,
+      UnitInterval)
+</span><span class="hs-identifier hs-var">getCommitteeMembers</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NewEpochState era -&gt; GovState era
+forall era. NewEpochState era -&gt; GovState era
+</span><a href="Cardano.Ledger.Api.State.Query.html#queryGovState"><span class="hs-identifier hs-var">queryGovState</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267436"><span class="hs-identifier hs-var">nes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679267439"><span class="annot"><span class="annottext">comStateMembers :: Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><a href="#local-6989586621679267439"><span class="hs-identifier hs-var hs-var">comStateMembers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>        </span><span class="annot"><span class="annottext">CommitteeState era
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+forall era.
+CommitteeState era
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><span class="hs-identifier hs-var">csCommitteeCreds</span></span><span> </span><span class="annot"><span class="annottext">(CommitteeState era
+ -&gt; Map
+      (Credential 'ColdCommitteeRole (EraCrypto era))
+      (Maybe (Credential 'HotCommitteeRole (EraCrypto era))))
+-&gt; CommitteeState era
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-170"></span><span>          </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267436"><span class="hs-identifier hs-var">nes</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+-&gt; Getting
+     (CommitteeState era) (NewEpochState era) (CommitteeState era)
+-&gt; CommitteeState era
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">(EpochState era -&gt; Const (CommitteeState era) (EpochState era))
+-&gt; NewEpochState era
+-&gt; Const (CommitteeState era) (NewEpochState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(EpochState era -&gt; f (EpochState era))
+-&gt; NewEpochState era -&gt; f (NewEpochState era)
+</span><span class="hs-identifier hs-var">nesEpochStateL</span></span><span> </span><span class="annot"><span class="annottext">((EpochState era -&gt; Const (CommitteeState era) (EpochState era))
+ -&gt; NewEpochState era
+ -&gt; Const (CommitteeState era) (NewEpochState era))
+-&gt; ((CommitteeState era
+     -&gt; Const (CommitteeState era) (CommitteeState era))
+    -&gt; EpochState era -&gt; Const (CommitteeState era) (EpochState era))
+-&gt; Getting
+     (CommitteeState era) (NewEpochState era) (CommitteeState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(LedgerState era -&gt; Const (CommitteeState era) (LedgerState era))
+-&gt; EpochState era -&gt; Const (CommitteeState era) (EpochState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(LedgerState era -&gt; f (LedgerState era))
+-&gt; EpochState era -&gt; f (EpochState era)
+</span><span class="hs-identifier hs-var">esLStateL</span></span><span> </span><span class="annot"><span class="annottext">((LedgerState era -&gt; Const (CommitteeState era) (LedgerState era))
+ -&gt; EpochState era -&gt; Const (CommitteeState era) (EpochState era))
+-&gt; ((CommitteeState era
+     -&gt; Const (CommitteeState era) (CommitteeState era))
+    -&gt; LedgerState era -&gt; Const (CommitteeState era) (LedgerState era))
+-&gt; (CommitteeState era
+    -&gt; Const (CommitteeState era) (CommitteeState era))
+-&gt; EpochState era
+-&gt; Const (CommitteeState era) (EpochState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(CertState era -&gt; Const (CommitteeState era) (CertState era))
+-&gt; LedgerState era -&gt; Const (CommitteeState era) (LedgerState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(CertState era -&gt; f (CertState era))
+-&gt; LedgerState era -&gt; f (LedgerState era)
+</span><span class="hs-identifier hs-var">lsCertStateL</span></span><span> </span><span class="annot"><span class="annottext">((CertState era -&gt; Const (CommitteeState era) (CertState era))
+ -&gt; LedgerState era -&gt; Const (CommitteeState era) (LedgerState era))
+-&gt; ((CommitteeState era
+     -&gt; Const (CommitteeState era) (CommitteeState era))
+    -&gt; CertState era -&gt; Const (CommitteeState era) (CertState era))
+-&gt; (CommitteeState era
+    -&gt; Const (CommitteeState era) (CommitteeState era))
+-&gt; LedgerState era
+-&gt; Const (CommitteeState era) (LedgerState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(VState era -&gt; Const (CommitteeState era) (VState era))
+-&gt; CertState era -&gt; Const (CommitteeState era) (CertState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(VState era -&gt; f (VState era))
+-&gt; CertState era -&gt; f (CertState era)
+</span><span class="hs-identifier hs-var">certVStateL</span></span><span> </span><span class="annot"><span class="annottext">((VState era -&gt; Const (CommitteeState era) (VState era))
+ -&gt; CertState era -&gt; Const (CommitteeState era) (CertState era))
+-&gt; ((CommitteeState era
+     -&gt; Const (CommitteeState era) (CommitteeState era))
+    -&gt; VState era -&gt; Const (CommitteeState era) (VState era))
+-&gt; (CommitteeState era
+    -&gt; Const (CommitteeState era) (CommitteeState era))
+-&gt; CertState era
+-&gt; Const (CommitteeState era) (CertState era)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(CommitteeState era
+ -&gt; Const (CommitteeState era) (CommitteeState era))
+-&gt; VState era -&gt; Const (CommitteeState era) (VState era)
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(CommitteeState era -&gt; f (CommitteeState era))
+-&gt; VState era -&gt; f (VState era)
+</span><span class="hs-identifier hs-var">vsCommitteeStateL</span></span><span>
+</span><span id="line-171"></span><span>
+</span><span id="line-172"></span><span>      </span><span id="local-6989586621679267444"><span class="annot"><span class="annottext">withFilteredColdCreds :: Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267444"><span class="hs-identifier hs-var hs-var">withFilteredColdCreds</span></a></span></span><span> </span><span id="local-6989586621679267445"><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267445"><span class="hs-identifier hs-var">s</span></a></span></span><span>
+</span><span id="line-173"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era)) -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#null"><span class="hs-identifier hs-var">Set.null</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267433"><span class="hs-identifier hs-var">coldCredsFilter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267445"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-174"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267445"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#intersection"><span class="hs-operator hs-var">`Set.intersection`</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267433"><span class="hs-identifier hs-var">coldCredsFilter</span></a></span><span>
+</span><span id="line-175"></span><span>
+</span><span id="line-176"></span><span>      </span><span id="local-6989586621679267448"><span class="annot"><span class="annottext">relevantColdKeys :: Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267448"><span class="hs-identifier hs-var hs-var">relevantColdKeys</span></a></span></span><span>
+</span><span id="line-177"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set MemberStatus -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#null"><span class="hs-identifier hs-var">Set.null</span></a></span><span> </span><span class="annot"><span class="annottext">Set MemberStatus
+</span><a href="#local-6989586621679267435"><span class="hs-identifier hs-var">statusFilter</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%7C%7C"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">MemberStatus -&gt; Set MemberStatus -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#member"><span class="hs-identifier hs-var">Set.member</span></a></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Unrecognized"><span class="hs-identifier hs-var">Unrecognized</span></a></span><span> </span><span class="annot"><span class="annottext">Set MemberStatus
+</span><a href="#local-6989586621679267435"><span class="hs-identifier hs-var">statusFilter</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-178"></span><span>            </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267444"><span class="hs-identifier hs-var">withFilteredColdCreds</span></a></span><span> </span><span class="annot"><span class="annottext">(Set (Credential 'ColdCommitteeRole (EraCrypto era))
+ -&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-179"></span><span>              </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+</span><a href="#local-6989586621679267437"><span class="hs-identifier hs-var">comMembers</span></a></span><span>
+</span><span id="line-180"></span><span>                </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#union"><span class="hs-operator hs-var">`Set.union`</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><a href="#local-6989586621679267439"><span class="hs-identifier hs-var">comStateMembers</span></a></span><span>
+</span><span id="line-181"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267444"><span class="hs-identifier hs-var">withFilteredColdCreds</span></a></span><span> </span><span class="annot"><span class="annottext">(Set (Credential 'ColdCommitteeRole (EraCrypto era))
+ -&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+</span><a href="#local-6989586621679267437"><span class="hs-identifier hs-var">comMembers</span></a></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span>      </span><span id="local-6989586621679267454"><span class="annot"><span class="annottext">relevantHotKeys :: Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267454"><span class="hs-identifier hs-var hs-var">relevantHotKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-184"></span><span>        </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">(Map
+   (Credential 'ColdCommitteeRole (EraCrypto era))
+   (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+ -&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-185"></span><span>          </span><span class="annot"><span class="annottext">(Maybe (Credential 'HotCommitteeRole (EraCrypto era)) -&gt; Bool)
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+forall a k. (a -&gt; Bool) -&gt; Map k a -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#filter"><span class="hs-identifier hs-var">Map.filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+-&gt; (Credential 'HotCommitteeRole (EraCrypto era) -&gt; Bool)
+-&gt; Maybe (Credential 'HotCommitteeRole (EraCrypto era))
+-&gt; Bool
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#maybe"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole (EraCrypto era)
+-&gt; Set (Credential 'HotCommitteeRole (EraCrypto era)) -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#member"><span class="hs-operator hs-var">`Set.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'HotCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267434"><span class="hs-identifier hs-var">hotCredsFilter</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><a href="#local-6989586621679267439"><span class="hs-identifier hs-var">comStateMembers</span></a></span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span>      </span><span id="local-6989586621679267457"><span class="annot"><span class="annottext">relevant :: Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267457"><span class="hs-identifier hs-var hs-var">relevant</span></a></span></span><span>
+</span><span id="line-188"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'HotCommitteeRole (EraCrypto era)) -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#null"><span class="hs-identifier hs-var">Set.null</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'HotCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267434"><span class="hs-identifier hs-var">hotCredsFilter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267448"><span class="hs-identifier hs-var">relevantColdKeys</span></a></span><span>
+</span><span id="line-189"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267448"><span class="hs-identifier hs-var">relevantColdKeys</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#intersection"><span class="hs-operator hs-var">`Set.intersection`</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267454"><span class="hs-identifier hs-var">relevantHotKeys</span></a></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span>      </span><span id="local-6989586621679267458"><span class="annot"><span class="annottext">cms :: Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (CommitteeMemberState (EraCrypto era))
+</span><a href="#local-6989586621679267458"><span class="hs-identifier hs-var hs-var">cms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Maybe (CommitteeMemberState (EraCrypto era))
+ -&gt; Maybe (CommitteeMemberState (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (CommitteeMemberState (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (CommitteeMemberState (EraCrypto era))
+forall a b k. (a -&gt; Maybe b) -&gt; Map k a -&gt; Map k b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#mapMaybe"><span class="hs-identifier hs-var">Map.mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (CommitteeMemberState (EraCrypto era))
+-&gt; Maybe (CommitteeMemberState (EraCrypto era))
+forall a. a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span> </span><span class="annot"><span class="annottext">(Map
+   (Credential 'ColdCommitteeRole (EraCrypto era))
+   (Maybe (CommitteeMemberState (EraCrypto era)))
+ -&gt; Map
+      (Credential 'ColdCommitteeRole (EraCrypto era))
+      (CommitteeMemberState (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (CommitteeMemberState (EraCrypto era)))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (CommitteeMemberState (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(Credential 'ColdCommitteeRole (EraCrypto era)
+ -&gt; Maybe (CommitteeMemberState (EraCrypto era)))
+-&gt; Set (Credential 'ColdCommitteeRole (EraCrypto era))
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (CommitteeMemberState (EraCrypto era)))
+forall k a. (k -&gt; a) -&gt; Set k -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#fromSet"><span class="hs-identifier hs-var">Map.fromSet</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+-&gt; Maybe (CommitteeMemberState (EraCrypto era))
+</span><a href="#local-6989586621679267461"><span class="hs-identifier hs-var">mkMaybeMemberState</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'ColdCommitteeRole (EraCrypto era))
+</span><a href="#local-6989586621679267457"><span class="hs-identifier hs-var">relevant</span></a></span><span>
+</span><span id="line-192"></span><span>      </span><span id="local-6989586621679267462"><span class="annot"><span class="annottext">currentEpoch :: EpochNo
+</span><a href="#local-6989586621679267462"><span class="hs-identifier hs-var hs-var">currentEpoch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+</span><a href="#local-6989586621679267436"><span class="hs-identifier hs-var">nes</span></a></span><span> </span><span class="annot"><span class="annottext">NewEpochState era
+-&gt; Getting EpochNo (NewEpochState era) EpochNo -&gt; EpochNo
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting EpochNo (NewEpochState era) EpochNo
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(EpochNo -&gt; f EpochNo)
+-&gt; NewEpochState era -&gt; f (NewEpochState era)
+</span><span class="hs-identifier hs-var">nesELL</span></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span>      </span><span class="annot"><a href="#local-6989586621679267461"><span class="hs-identifier hs-type">mkMaybeMemberState</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-195"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Credential</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">ColdCommitteeRole</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-type">CommitteeMemberState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679267271"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>      </span><span id="local-6989586621679267461"><span class="annot"><span class="annottext">mkMaybeMemberState :: Credential 'ColdCommitteeRole (EraCrypto era)
+-&gt; Maybe (CommitteeMemberState (EraCrypto era))
+</span><a href="#local-6989586621679267461"><span class="hs-identifier hs-var hs-var">mkMaybeMemberState</span></a></span></span><span> </span><span id="local-6989586621679267464"><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+</span><a href="#local-6989586621679267464"><span class="hs-identifier hs-var">coldCred</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-198"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679267465"><span class="annot"><span class="annottext">mbExpiry :: Maybe EpochNo
+</span><a href="#local-6989586621679267465"><span class="hs-identifier hs-var hs-var">mbExpiry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+-&gt; Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+-&gt; Maybe EpochNo
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+</span><a href="#local-6989586621679267464"><span class="hs-identifier hs-var">coldCred</span></a></span><span> </span><span class="annot"><span class="annottext">Map (Credential 'ColdCommitteeRole (EraCrypto era)) EpochNo
+</span><a href="#local-6989586621679267437"><span class="hs-identifier hs-var">comMembers</span></a></span><span>
+</span><span id="line-199"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679267467"><span class="annot"><span class="annottext">status :: MemberStatus
+</span><a href="#local-6989586621679267467"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="#local-6989586621679267465"><span class="hs-identifier hs-var">mbExpiry</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-200"></span><span>              </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Unrecognized"><span class="hs-identifier hs-var">Unrecognized</span></a></span><span>
+</span><span id="line-201"></span><span>              </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679267468"><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267468"><span class="hs-identifier hs-var">expiry</span></a></span></span><span>
+</span><span id="line-202"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267462"><span class="hs-identifier hs-var">currentEpoch</span></a></span><span> </span><span class="annot"><span class="annottext">EpochNo -&gt; EpochNo -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3E"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267468"><span class="hs-identifier hs-var">expiry</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Expired"><span class="hs-identifier hs-var">Expired</span></a></span><span>
+</span><span id="line-203"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#Active"><span class="hs-identifier hs-var">Active</span></a></span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Maybe ()
+forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#guard"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set MemberStatus -&gt; Bool
+forall a. Set a -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#null"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">Set MemberStatus
+</span><a href="#local-6989586621679267435"><span class="hs-identifier hs-var">statusFilter</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%7C%7C"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="#local-6989586621679267467"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">MemberStatus -&gt; Set MemberStatus -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#member"><span class="hs-operator hs-var">`Set.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Set MemberStatus
+</span><a href="#local-6989586621679267435"><span class="hs-identifier hs-var">statusFilter</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-205"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679267472"><span class="annot"><span class="annottext">hkStatus :: HotCredAuthStatus (EraCrypto era)
+</span><a href="#local-6989586621679267472"><span class="hs-identifier hs-var hs-var">hkStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-206"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+-&gt; Map
+     (Credential 'ColdCommitteeRole (EraCrypto era))
+     (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+-&gt; Maybe (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'ColdCommitteeRole (EraCrypto era)
+</span><a href="#local-6989586621679267464"><span class="hs-identifier hs-var">coldCred</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><a href="#local-6989586621679267439"><span class="hs-identifier hs-var">comStateMembers</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-207"></span><span>                </span><span class="annot"><span class="annottext">Maybe (Maybe (Credential 'HotCommitteeRole (EraCrypto era)))
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus (EraCrypto era)
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberNotAuthorized"><span class="hs-identifier hs-var">MemberNotAuthorized</span></a></span><span>
+</span><span id="line-208"></span><span>                </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Credential 'HotCommitteeRole (EraCrypto era))
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus (EraCrypto era)
+forall c. HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberResigned"><span class="hs-identifier hs-var">MemberResigned</span></a></span><span>
+</span><span id="line-209"></span><span>                </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679267475"><span class="annot"><span class="annottext">Credential 'HotCommitteeRole (EraCrypto era)
+</span><a href="#local-6989586621679267475"><span class="hs-identifier hs-var">hk</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole (EraCrypto era)
+-&gt; HotCredAuthStatus (EraCrypto era)
+forall c. Credential 'HotCommitteeRole c -&gt; HotCredAuthStatus c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#MemberAuthorized"><span class="hs-identifier hs-var">MemberAuthorized</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'HotCommitteeRole (EraCrypto era)
+</span><a href="#local-6989586621679267475"><span class="hs-identifier hs-var">hk</span></a></span><span>
+</span><span id="line-210"></span><span>        </span><span class="hs-comment">-- TODO: implement after pulsing and snapshots are done</span><span>
+</span><span id="line-211"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679267477"><span class="annot"><span class="annottext">nextEpochChange :: NextEpochChange
+</span><a href="#local-6989586621679267477"><span class="hs-identifier hs-var hs-var">nextEpochChange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NextEpochChange
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#NoChangeExpected"><span class="hs-identifier hs-var">NoChangeExpected</span></a></span><span>
+</span><span id="line-212"></span><span>        </span><span class="annot"><span class="annottext">CommitteeMemberState (EraCrypto era)
+-&gt; Maybe (CommitteeMemberState (EraCrypto era))
+forall a. a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(CommitteeMemberState (EraCrypto era)
+ -&gt; Maybe (CommitteeMemberState (EraCrypto era)))
+-&gt; CommitteeMemberState (EraCrypto era)
+-&gt; Maybe (CommitteeMemberState (EraCrypto era))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus (EraCrypto era)
+-&gt; MemberStatus
+-&gt; Maybe EpochNo
+-&gt; NextEpochChange
+-&gt; CommitteeMemberState (EraCrypto era)
+forall c.
+HotCredAuthStatus c
+-&gt; MemberStatus
+-&gt; Maybe EpochNo
+-&gt; NextEpochChange
+-&gt; CommitteeMemberState c
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMemberState"><span class="hs-identifier hs-var">CommitteeMemberState</span></a></span><span> </span><span class="annot"><span class="annottext">HotCredAuthStatus (EraCrypto era)
+</span><a href="#local-6989586621679267472"><span class="hs-identifier hs-var">hkStatus</span></a></span><span> </span><span class="annot"><span class="annottext">MemberStatus
+</span><a href="#local-6989586621679267467"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe EpochNo
+</span><a href="#local-6989586621679267465"><span class="hs-identifier hs-var">mbExpiry</span></a></span><span> </span><span class="annot"><span class="annottext">NextEpochChange
+</span><a href="#local-6989586621679267477"><span class="hs-identifier hs-var">nextEpochChange</span></a></span><span>
+</span><span id="line-213"></span><span>  </span><span class="annot"><span class="annottext">CommitteeMembersState (EraCrypto era)
+-&gt; Maybe (CommitteeMembersState (EraCrypto era))
+forall a. a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#CommitteeMembersState"><span class="hs-identifier hs-type">CommitteeMembersState</span></a></span><span>
+</span><span id="line-215"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">csCommittee :: Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (CommitteeMemberState (EraCrypto era))
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csCommittee"><span class="hs-identifier hs-var">csCommittee</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map
+  (Credential 'ColdCommitteeRole (EraCrypto era))
+  (CommitteeMemberState (EraCrypto era))
+</span><a href="#local-6989586621679267458"><span class="hs-identifier hs-var">cms</span></a></span><span>
+</span><span id="line-216"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">csQuorum :: UnitInterval
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csQuorum"><span class="hs-identifier hs-var">csQuorum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnitInterval
+</span><a href="#local-6989586621679267438"><span class="hs-identifier hs-var">comQuorum</span></a></span><span>
+</span><span id="line-217"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">csEpochNo :: EpochNo
+</span><a href="Cardano.Ledger.Api.State.Query.CommitteeMembersState.html#csEpochNo"><span class="hs-identifier hs-var">csEpochNo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EpochNo
+</span><a href="#local-6989586621679267462"><span class="hs-identifier hs-var">currentEpoch</span></a></span><span>
+</span><span id="line-218"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-219"></span></pre></body></html>

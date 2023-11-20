@@ -1,0 +1,1011 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns      #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards     #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Network.PeerSelection.State.KnownPeers</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier">KnownPeers</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier">invariant</span></a></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Basic container operations</span></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#empty"><span class="hs-identifier">empty</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#size"><span class="hs-identifier">size</span></a></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#insert"><span class="hs-identifier">insert</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#delete"><span class="hs-identifier">delete</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#toSet"><span class="hs-identifier">toSet</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#member"><span class="hs-identifier">member</span></a></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Special operations</span></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setCurrentTime"><span class="hs-identifier">setCurrentTime</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#incrementFailCount"><span class="hs-identifier">incrementFailCount</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#resetFailCount"><span class="hs-identifier">resetFailCount</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupFailCount"><span class="hs-identifier">lookupFailCount</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupTepidFlag"><span class="hs-identifier">lookupTepidFlag</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag"><span class="hs-identifier">setTepidFlag</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#clearTepidFlag"><span class="hs-identifier">clearTepidFlag</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Tracking when we can (re)connect</span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#minConnectTime"><span class="hs-identifier">minConnectTime</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setConnectTimes"><span class="hs-identifier">setConnectTimes</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier">availableToConnect</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Selecting peers to ask</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#canPeerShareRequest"><span class="hs-identifier">canPeerShareRequest</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#getAvailablePeerSharingPeers"><span class="hs-identifier">getAvailablePeerSharingPeers</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Filtering ledger peers</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#isKnownLedgerPeer"><span class="hs-identifier">isKnownLedgerPeer</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.List.html"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">List</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.OrdPSQ</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">OrdPSQ</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.OrdPSQ</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PSQ</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier">Set</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-42"></span><span class="hs-comment">--import           System.Random (RandomGen(..))</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.html"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier">assert</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Monad.Class.MonadTime.SI</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html"><span class="hs-identifier">Data.Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#fromMaybe"><span class="hs-identifier">fromMaybe</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html"><span class="hs-identifier">Ouroboros.Network.PeerSelection.LedgerPeers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier">IsLedgerPeer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.PeerSelection.PeerAdvertise</span></span><span>
+</span><span id="line-50"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PeerAdvertise</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.PeerSelection.PeerSharing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PeerSharing</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>                     </span><span class="annot"><span class="hs-identifier">combinePeerInformation</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-------------------------------</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- Known peer set representation</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | The set of known peers. To a first approximation it can be thought of as</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- a 'Set' of @peeraddr@.</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- It has one special feature:</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--  * It tracks the subset of peers that we are happy to publish in reply to</span><span>
+</span><span id="line-65"></span><span class="hs-comment">--    peer share requests to our node. It supports random sampling from this set.</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">data</span><span> </span><span id="KnownPeers"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-var">KnownPeers</span></a></span></span><span> </span><span id="local-6989586621679210735"><span class="annot"><a href="#local-6989586621679210735"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="KnownPeers"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-var">KnownPeers</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span>       </span><span class="hs-comment">-- | All the known peers.</span><span>
+</span><span id="line-70"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-71"></span><span>       </span><span id="allPeers"><span class="annot"><span class="annottext">forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span>           </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210735"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span>       </span><span class="hs-comment">-- | The subset of known peers that we would be allowed to try to</span><span>
+</span><span id="line-74"></span><span>       </span><span class="hs-comment">-- establish a connection to now. This is because we have not connected</span><span>
+</span><span id="line-75"></span><span>       </span><span class="hs-comment">-- with them before or because any failure backoff time has expired.</span><span>
+</span><span id="line-76"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-77"></span><span>       </span><span id="availableToConnect"><span class="annot"><span class="annottext">forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var hs-var">availableToConnect</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210735"><span class="hs-identifier hs-type">peeraddr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span>       </span><span class="hs-comment">-- | The subset of known peers that we cannot connect to for the moment.</span><span>
+</span><span id="line-80"></span><span>       </span><span class="hs-comment">-- It keeps track of the next time we are allowed to make the next</span><span>
+</span><span id="line-81"></span><span>       </span><span class="hs-comment">-- connection attempt.</span><span>
+</span><span id="line-82"></span><span>       </span><span id="nextConnectTimes"><span class="annot"><span class="annottext">forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var hs-var">nextConnectTimes</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">OrdPSQ</span></span><span> </span><span class="annot"><a href="#local-6989586621679210735"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>     </span><span class="hs-special">}</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679210902"><span id="local-6989586621679210914"><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+(KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool)
+-&gt; (KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool)
+-&gt; Eq (KnownPeers peeraddr)
+forall peeraddr.
+Ord peeraddr =&gt;
+KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall peeraddr.
+Ord peeraddr =&gt;
+KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+== :: KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+$c/= :: forall peeraddr.
+Ord peeraddr =&gt;
+KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+/= :: KnownPeers peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679210924"><span id="local-6989586621679210937"><span id="local-6989586621679210941"><span class="annot"><span class="annottext">Int -&gt; KnownPeers peeraddr -&gt; ShowS
+[KnownPeers peeraddr] -&gt; ShowS
+KnownPeers peeraddr -&gt; String
+(Int -&gt; KnownPeers peeraddr -&gt; ShowS)
+-&gt; (KnownPeers peeraddr -&gt; String)
+-&gt; ([KnownPeers peeraddr] -&gt; ShowS)
+-&gt; Show (KnownPeers peeraddr)
+forall peeraddr.
+Show peeraddr =&gt;
+Int -&gt; KnownPeers peeraddr -&gt; ShowS
+forall peeraddr. Show peeraddr =&gt; [KnownPeers peeraddr] -&gt; ShowS
+forall peeraddr. Show peeraddr =&gt; KnownPeers peeraddr -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall peeraddr.
+Show peeraddr =&gt;
+Int -&gt; KnownPeers peeraddr -&gt; ShowS
+showsPrec :: Int -&gt; KnownPeers peeraddr -&gt; ShowS
+$cshow :: forall peeraddr. Show peeraddr =&gt; KnownPeers peeraddr -&gt; String
+show :: KnownPeers peeraddr -&gt; String
+$cshowList :: forall peeraddr. Show peeraddr =&gt; [KnownPeers peeraddr] -&gt; ShowS
+showList :: [KnownPeers peeraddr] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">data</span><span> </span><span id="KnownPeerInfo"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-var">KnownPeerInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="KnownPeerInfo"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-var">KnownPeerInfo</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-87"></span><span>       </span><span class="hs-comment">-- | The current number of consecutive connection attempt failures. This</span><span>
+</span><span id="line-88"></span><span>       </span><span class="hs-comment">-- is reset as soon as there is a successful connection.</span><span>
+</span><span id="line-89"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-90"></span><span>       </span><span class="hs-comment">-- It is used to implement the exponential backoff strategy and may also</span><span>
+</span><span id="line-91"></span><span>       </span><span class="hs-comment">-- be used by policies to select peers to forget.</span><span>
+</span><span id="line-92"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-93"></span><span>       </span><span id="knownPeerFailCount"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var hs-var">knownPeerFailCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span>       </span><span class="hs-comment">-- | Indicates if the peer was hot but then got demoted.</span><span>
+</span><span id="line-96"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-97"></span><span>       </span><span class="hs-comment">-- It is set on the hot to warm promotion and reset on cold to warm,</span><span>
+</span><span id="line-98"></span><span>       </span><span class="hs-comment">-- thus it can be present for warm or cold peers.  It's purpose is to</span><span>
+</span><span id="line-99"></span><span>       </span><span class="hs-comment">-- provide information to demotion policies.</span><span>
+</span><span id="line-100"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-101"></span><span>       </span><span class="hs-comment">-- It is also used as useful information for the Peer Selection Governor</span><span>
+</span><span id="line-102"></span><span>       </span><span class="hs-comment">-- when deciding which peers to share when Peer Sharing.</span><span>
+</span><span id="line-103"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-104"></span><span>       </span><span id="knownPeerTepid"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var hs-var">knownPeerTepid</span></a></span></span><span>     </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span>       </span><span class="hs-comment">-- | Indicates current remote Peer Willingness information.</span><span>
+</span><span id="line-107"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-108"></span><span>       </span><span class="hs-comment">-- If a connection with this address hasn't been established we won't</span><span>
+</span><span id="line-109"></span><span>       </span><span class="hs-comment">-- have any information about this particular flag</span><span>
+</span><span id="line-110"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-111"></span><span>       </span><span class="hs-comment">-- It is used by the Peer Sharing logic to decide if we should share/ask</span><span>
+</span><span id="line-112"></span><span>       </span><span class="hs-comment">-- about/to this peer's address to others.</span><span>
+</span><span id="line-113"></span><span>       </span><span id="knownPeerSharing"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; PeerSharing
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerSharing"><span class="hs-identifier hs-var hs-var">knownPeerSharing</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">PeerSharing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span>       </span><span class="hs-comment">-- | Indicates current local Peer Willingness information.</span><span>
+</span><span id="line-116"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-117"></span><span>       </span><span class="hs-comment">-- If this address didn't come from a local configuration then this</span><span>
+</span><span id="line-118"></span><span>       </span><span class="hs-comment">-- value is set to 'DoAdvertise' by default.</span><span>
+</span><span id="line-119"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-120"></span><span>       </span><span class="hs-comment">-- It is used by the Peer Sharing logic to decide if we should share</span><span>
+</span><span id="line-121"></span><span>       </span><span class="hs-comment">-- about this peer's address to others.</span><span>
+</span><span id="line-122"></span><span>       </span><span id="knownPeerAdvertise"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerAdvertise"><span class="hs-identifier hs-var hs-var">knownPeerAdvertise</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">PeerAdvertise</span></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span>       </span><span class="hs-comment">-- | Indicates if peer came from ledger.</span><span>
+</span><span id="line-125"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-126"></span><span>       </span><span class="hs-comment">-- It is used so we can filter out the ledger Peers from a Peer Sharing</span><span>
+</span><span id="line-127"></span><span>       </span><span class="hs-comment">-- reply, since ledger peers are not particularly what one is looking for</span><span>
+</span><span id="line-128"></span><span>       </span><span class="hs-comment">-- in a Peer Sharing reply.</span><span>
+</span><span id="line-129"></span><span>       </span><span class="hs-comment">--</span><span>
+</span><span id="line-130"></span><span>       </span><span id="knownLedgerPeer"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var hs-var">knownLedgerPeer</span></a></span></span><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier hs-type">IsLedgerPeer</span></a></span><span>
+</span><span id="line-131"></span><span>     </span><span class="hs-special">}</span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679210954"><span id="local-6989586621679210966"><span class="annot"><span class="annottext">KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool
+(KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool)
+-&gt; (KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool) -&gt; Eq KnownPeerInfo
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool
+== :: KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool
+$c/= :: KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool
+/= :: KnownPeerInfo -&gt; KnownPeerInfo -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679210969"><span id="local-6989586621679210982"><span id="local-6989586621679210985"><span class="annot"><span class="annottext">Int -&gt; KnownPeerInfo -&gt; ShowS
+[KnownPeerInfo] -&gt; ShowS
+KnownPeerInfo -&gt; String
+(Int -&gt; KnownPeerInfo -&gt; ShowS)
+-&gt; (KnownPeerInfo -&gt; String)
+-&gt; ([KnownPeerInfo] -&gt; ShowS)
+-&gt; Show KnownPeerInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; KnownPeerInfo -&gt; ShowS
+showsPrec :: Int -&gt; KnownPeerInfo -&gt; ShowS
+$cshow :: KnownPeerInfo -&gt; String
+show :: KnownPeerInfo -&gt; String
+$cshowList :: [KnownPeerInfo] -&gt; ShowS
+showList :: [KnownPeerInfo] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span id="local-6989586621679210768"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier hs-type">invariant</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210768"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210768"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-136"></span><span id="invariant"><span class="annot"><span class="annottext">invariant :: forall peeraddr. Ord peeraddr =&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier hs-var hs-var">invariant</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679210995"><span id="local-6989586621679210996"><span id="local-6989586621679210997"><span class="annot"><span class="annottext">Set peeraddr
+Map peeraddr KnownPeerInfo
+OrdPSQ peeraddr Time ()
+availableToConnect :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+nextConnectTimes :: forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+allPeers :: Map peeraddr KnownPeerInfo
+availableToConnect :: Set peeraddr
+nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span>       </span><span class="hs-comment">-- The combo of the connect set + psq = the whole set of peers</span><span>
+</span><span id="line-138"></span><span>       </span><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679210996"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">Set peeraddr -&gt; Set peeraddr -&gt; Set peeraddr
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[peeraddr] -&gt; Set peeraddr
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#fromList"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time () -&gt; [peeraddr]
+forall k p v. OrdPSQ k p v -&gt; [k]
+</span><span class="hs-identifier hs-var">PSQ.keys</span></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679210997"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">Set peeraddr -&gt; Set peeraddr -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3D%3D"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo -&gt; Set peeraddr
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679210995"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span>       </span><span class="hs-comment">-- The connect set and psq do not overlap</span><span>
+</span><span id="line-143"></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%26%26"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Set peeraddr -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#null"><span class="hs-identifier hs-var">Set.null</span></a></span><span>
+</span><span id="line-144"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set peeraddr -&gt; Set peeraddr -&gt; Set peeraddr
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#intersection"><span class="hs-identifier hs-var">Set.intersection</span></a></span><span>
+</span><span id="line-145"></span><span>         </span><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679210996"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span>
+</span><span id="line-146"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[peeraddr] -&gt; Set peeraddr
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#fromList"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time () -&gt; [peeraddr]
+forall k p v. OrdPSQ k p v -&gt; [k]
+</span><span class="hs-identifier hs-var">PSQ.keys</span></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679210997"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span class="hs-comment">-------------------------------</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- Basic container operations</span><span>
+</span><span id="line-151"></span><span class="hs-comment">--</span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span id="local-6989586621679210780"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#empty"><span class="hs-identifier hs-type">empty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210780"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-154"></span><span id="empty"><span class="annot"><span class="annottext">empty :: forall peeraddr. KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#empty"><span class="hs-identifier hs-var hs-var">empty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span>           </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+forall k a. Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#empty"><span class="hs-identifier hs-var">Map.empty</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">availableToConnect :: Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set peeraddr
+forall a. Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#empty"><span class="hs-identifier hs-var">Set.empty</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>      </span><span class="annot"><span class="annottext">nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+forall k p v. OrdPSQ k p v
+</span><span class="hs-identifier hs-var">PSQ.empty</span></span><span>
+</span><span id="line-159"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span id="local-6989586621679210788"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#size"><span class="hs-identifier hs-type">size</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210788"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span></span><span>
+</span><span id="line-162"></span><span id="size"><span class="annot"><span class="annottext">size :: forall peeraddr. KnownPeers peeraddr -&gt; Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#size"><span class="hs-identifier hs-var hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo -&gt; Int
+forall k a. Map k a -&gt; Int
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#size"><span class="hs-identifier hs-var">Map.size</span></a></span><span> </span><span class="annot"><span class="annottext">(Map peeraddr KnownPeerInfo -&gt; Int)
+-&gt; (KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo)
+-&gt; KnownPeers peeraddr
+-&gt; Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-163"></span><span>
+</span><span id="line-164"></span><span class="annot"><span class="hs-comment">-- | /O(n)/</span></span><span>
+</span><span id="line-165"></span><span id="local-6989586621679211009"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#toSet"><span class="hs-identifier hs-type">toSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211009"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211009"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-166"></span><span id="toSet"><span class="annot"><span class="annottext">toSet :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#toSet"><span class="hs-identifier hs-var hs-var">toSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo -&gt; Set peeraddr
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">(Map peeraddr KnownPeerInfo -&gt; Set peeraddr)
+-&gt; (KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo)
+-&gt; KnownPeers peeraddr
+-&gt; Set peeraddr
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-167"></span><span>
+</span><span id="line-168"></span><span id="local-6989586621679210796"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#member"><span class="hs-identifier hs-type">member</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210796"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-169"></span><span>       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210796"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-170"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210796"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-171"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-172"></span><span id="member"><span class="annot"><span class="annottext">member :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#member"><span class="hs-identifier hs-var hs-var">member</span></a></span></span><span> </span><span id="local-6989586621679211012"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211012"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679211013"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211012"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211013"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="hs-comment">-- TODO: `insert` ought to be idempotent, see issue #4616.</span><span>
+</span><span id="line-176"></span><span id="local-6989586621679210800"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#insert"><span class="hs-identifier hs-type">insert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210800"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-177"></span><span>       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210800"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">PeerSharing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">PeerAdvertise</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier hs-type">IsLedgerPeer</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-178"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210800"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-179"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210800"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-180"></span><span id="insert"><span class="annot"><span class="annottext">insert :: forall peeraddr.
+Ord peeraddr =&gt;
+Map
+  peeraddr
+  (Maybe PeerSharing, Maybe PeerAdvertise, Maybe IsLedgerPeer)
+-&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#insert"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621679211020"><span class="annot"><span class="annottext">Map
+  peeraddr
+  (Maybe PeerSharing, Maybe PeerAdvertise, Maybe IsLedgerPeer)
+</span><a href="#local-6989586621679211020"><span class="hs-identifier hs-var">peeraddrs</span></a></span></span><span>
+</span><span id="line-181"></span><span>       </span><span id="local-6989586621679211021"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211021"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-182"></span><span>         </span><span id="local-6989586621679211022"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-183"></span><span>         </span><span id="local-6989586621679211023"><span class="annot"><span class="annottext">Set peeraddr
+availableToConnect :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+availableToConnect :: Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var hs-var">availableToConnect</span></a></span></span><span>
+</span><span id="line-184"></span><span>       </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-185"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211024"><span class="annot"><span class="annottext">allPeersAddrs :: Set peeraddr
+</span><a href="#local-6989586621679211024"><span class="hs-identifier hs-var hs-var">allPeersAddrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map
+  peeraddr
+  (Maybe PeerSharing, Maybe PeerAdvertise, Maybe IsLedgerPeer)
+-&gt; Set peeraddr
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map
+  peeraddr
+  (Maybe PeerSharing, Maybe PeerAdvertise, Maybe IsLedgerPeer)
+</span><a href="#local-6989586621679211020"><span class="hs-identifier hs-var">peeraddrs</span></a></span><span>
+</span><span id="line-186"></span><span>        </span><span id="local-6989586621679211029"><span class="annot"><span class="annottext">knownPeers' :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211029"><span class="hs-identifier hs-var hs-var">knownPeers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211021"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-187"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211032"><span class="annot"><a href="#local-6989586621679211032"><span class="hs-operator hs-var hs-var">(&lt;+&gt;)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KnownPeerInfo -&gt; KnownPeerInfo -&gt; KnownPeerInfo)
+-&gt; Map peeraddr KnownPeerInfo
+-&gt; Map peeraddr KnownPeerInfo
+-&gt; Map peeraddr KnownPeerInfo
+forall k a. Ord k =&gt; (a -&gt; a -&gt; a) -&gt; Map k a -&gt; Map k a -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#unionWith"><span class="hs-identifier hs-var">Map.unionWith</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; KnownPeerInfo -&gt; KnownPeerInfo
+</span><a href="#local-6989586621679211034"><span class="hs-identifier hs-var">mergePeerInfo</span></a></span><span> </span><span class="hs-keyword">in</span><span>
+</span><span id="line-189"></span><span>              </span><span class="annot"><a href="#local-6989586621679211022"><span class="hs-identifier hs-type">allPeers</span></a></span><span>
+</span><span id="line-190"></span><span>          </span><span class="annot"><a href="#local-6989586621679211032"><span class="hs-operator hs-type">&lt;+&gt;</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#map"><span class="hs-identifier hs-type">Map.map</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211036"><span class="hs-identifier hs-type">newPeerInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211020"><span class="hs-identifier hs-type">peeraddrs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-191"></span><span>
+</span><span id="line-192"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-193"></span><span>              </span><span class="annot"><a href="#local-6989586621679211023"><span class="hs-identifier hs-type">availableToConnect</span></a></span><span>
+</span><span id="line-194"></span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-type">&lt;&gt;</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#filter"><span class="hs-identifier hs-type">Set.filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">`Map.notMember`</span></span><span> </span><span class="annot"><span class="hs-identifier">allPeers</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679211024"><span class="hs-identifier hs-type">allPeersAddrs</span></a></span><span>
+</span><span id="line-195"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-196"></span><span>    </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; Bool
+forall peeraddr. Ord peeraddr =&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier hs-var">invariant</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211029"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211029"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-198"></span><span>    </span><span id="local-6989586621679211036"><span class="annot"><span class="annottext">newPeerInfo :: (Maybe PeerSharing, Maybe PeerAdvertise, Maybe IsLedgerPeer)
+-&gt; KnownPeerInfo
+</span><a href="#local-6989586621679211036"><span class="hs-identifier hs-var hs-var">newPeerInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679211039"><span class="annot"><span class="annottext">Maybe PeerSharing
+</span><a href="#local-6989586621679211039"><span class="hs-identifier hs-var">peerSharing</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679211040"><span class="annot"><span class="annottext">Maybe PeerAdvertise
+</span><a href="#local-6989586621679211040"><span class="hs-identifier hs-var">peerAdvertise</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679211041"><span class="annot"><span class="annottext">Maybe IsLedgerPeer
+</span><a href="#local-6989586621679211041"><span class="hs-identifier hs-var">ledgerPeers</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-199"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211042"><span class="annot"><span class="annottext">peerAdvertise' :: PeerAdvertise
+</span><a href="#local-6989586621679211042"><span class="hs-identifier hs-var hs-var">peerAdvertise'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PeerAdvertise -&gt; Maybe PeerAdvertise -&gt; PeerAdvertise
+forall a. a -&gt; Maybe a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#fromMaybe"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><span class="hs-identifier hs-var">DoNotAdvertisePeer</span></span><span> </span><span class="annot"><span class="annottext">Maybe PeerAdvertise
+</span><a href="#local-6989586621679211040"><span class="hs-identifier hs-var">peerAdvertise</span></a></span><span>
+</span><span id="line-200"></span><span>          </span><span id="local-6989586621679211044"><span class="annot"><span class="annottext">peerSharing' :: PeerSharing
+</span><a href="#local-6989586621679211044"><span class="hs-identifier hs-var hs-var">peerSharing'</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PeerSharing -&gt; Maybe PeerSharing -&gt; PeerSharing
+forall a. a -&gt; Maybe a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#fromMaybe"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharing
+</span><span class="hs-identifier hs-var">NoPeerSharing</span></span><span> </span><span class="annot"><span class="annottext">Maybe PeerSharing
+</span><a href="#local-6989586621679211039"><span class="hs-identifier hs-var">peerSharing</span></a></span><span>
+</span><span id="line-201"></span><span>                           </span><span class="annot"><span class="annottext">PeerSharing -&gt; PeerAdvertise -&gt; PeerSharing
+</span><span class="hs-operator hs-var">`combinePeerInformation`</span></span><span>
+</span><span id="line-202"></span><span>                           </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="#local-6989586621679211042"><span class="hs-identifier hs-var">peerAdvertise'</span></a></span><span>
+</span><span id="line-203"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><span class="annottext">knownPeerFailCount :: Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-205"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerTepid :: Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var">knownPeerTepid</span></a></span><span>     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-206"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerSharing :: PeerSharing
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerSharing"><span class="hs-identifier hs-var">knownPeerSharing</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PeerSharing
+</span><a href="#local-6989586621679211044"><span class="hs-identifier hs-var">peerSharing'</span></a></span><span>
+</span><span id="line-207"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerAdvertise :: PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerAdvertise"><span class="hs-identifier hs-var">knownPeerAdvertise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="#local-6989586621679211042"><span class="hs-identifier hs-var">peerAdvertise'</span></a></span><span>
+</span><span id="line-208"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownLedgerPeer :: IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var">knownLedgerPeer</span></a></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer -&gt; Maybe IsLedgerPeer -&gt; IsLedgerPeer
+forall a. a -&gt; Maybe a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#fromMaybe"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsNotLedgerPeer"><span class="hs-identifier hs-var">IsNotLedgerPeer</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe IsLedgerPeer
+</span><a href="#local-6989586621679211041"><span class="hs-identifier hs-var">ledgerPeers</span></a></span><span>
+</span><span id="line-209"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-210"></span><span>    </span><span id="local-6989586621679211034"><span class="annot"><span class="annottext">mergePeerInfo :: KnownPeerInfo -&gt; KnownPeerInfo -&gt; KnownPeerInfo
+</span><a href="#local-6989586621679211034"><span class="hs-identifier hs-var hs-var">mergePeerInfo</span></a></span></span><span> </span><span id="local-6989586621679211047"><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211047"><span class="hs-identifier hs-var">old</span></a></span></span><span> </span><span id="local-6989586621679211048"><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211048"><span class="hs-identifier hs-var">new</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-211"></span><span>      </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-212"></span><span>        </span><span class="annot"><span class="annottext">knownPeerFailCount :: Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211047"><span class="hs-identifier hs-var">old</span></a></span><span>
+</span><span id="line-213"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerTepid :: Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var">knownPeerTepid</span></a></span><span>     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var">knownPeerTepid</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211047"><span class="hs-identifier hs-var">old</span></a></span><span>
+</span><span id="line-214"></span><span>      </span><span class="hs-comment">-- It might be the case we are updating a peer's particular willingness</span><span>
+</span><span id="line-215"></span><span>      </span><span class="hs-comment">-- flags or we just learned this peer comes from ledger.</span><span>
+</span><span id="line-216"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerSharing :: PeerSharing
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerSharing"><span class="hs-identifier hs-var">knownPeerSharing</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PeerSharing -&gt; PeerAdvertise -&gt; PeerSharing
+</span><span class="hs-identifier hs-var">combinePeerInformation</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; PeerSharing
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerSharing"><span class="hs-identifier hs-var">knownPeerSharing</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211048"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-217"></span><span>                                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerAdvertise"><span class="hs-identifier hs-var">knownPeerAdvertise</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211048"><span class="hs-identifier hs-var">new</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownPeerAdvertise :: PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerAdvertise"><span class="hs-identifier hs-var">knownPeerAdvertise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerAdvertise"><span class="hs-identifier hs-var">knownPeerAdvertise</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211048"><span class="hs-identifier hs-var">new</span></a></span><span>
+</span><span id="line-219"></span><span>      </span><span class="hs-comment">-- Preserve Ledger Peer information if the peer is ledger.</span><span>
+</span><span id="line-220"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">knownLedgerPeer :: IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var">knownLedgerPeer</span></a></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var">knownLedgerPeer</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211047"><span class="hs-identifier hs-var">old</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-221"></span><span>                               </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier hs-var">IsLedgerPeer</span></a></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier hs-var">IsLedgerPeer</span></a></span><span>
+</span><span id="line-222"></span><span>                               </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsNotLedgerPeer"><span class="hs-identifier hs-var">IsNotLedgerPeer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var">knownLedgerPeer</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211048"><span class="hs-identifier hs-var">new</span></a></span><span>
+</span><span id="line-223"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-224"></span><span>
+</span><span id="line-225"></span><span id="local-6989586621679210810"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#delete"><span class="hs-identifier hs-type">delete</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210810"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-226"></span><span>       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210810"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-227"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210810"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-228"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210810"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-229"></span><span id="delete"><span class="annot"><span class="annottext">delete :: forall peeraddr.
+Ord peeraddr =&gt;
+Set peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#delete"><span class="hs-identifier hs-var hs-var">delete</span></a></span></span><span> </span><span id="local-6989586621679211057"><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679211057"><span class="hs-identifier hs-var">peeraddrs</span></a></span></span><span>
+</span><span id="line-230"></span><span>       </span><span id="local-6989586621679211058"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211058"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-231"></span><span>         </span><span id="local-6989586621679211059"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-232"></span><span>         </span><span id="local-6989586621679211060"><span class="annot"><span class="annottext">Set peeraddr
+availableToConnect :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+availableToConnect :: Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var hs-var">availableToConnect</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-233"></span><span>         </span><span id="local-6989586621679211061"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+nextConnectTimes :: forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var hs-var">nextConnectTimes</span></a></span></span><span>
+</span><span id="line-234"></span><span>       </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-235"></span><span>    </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211058"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-236"></span><span>      </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-237"></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#withoutKeys"><span class="hs-identifier hs-type">Map.withoutKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211059"><span class="hs-identifier hs-type">allPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211057"><span class="hs-identifier hs-type">peeraddrs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-238"></span><span>
+</span><span id="line-239"></span><span>      </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-240"></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#difference"><span class="hs-identifier hs-type">Set.difference</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211060"><span class="hs-identifier hs-type">availableToConnect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211057"><span class="hs-identifier hs-type">peeraddrs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-241"></span><span>
+</span><span id="line-242"></span><span>      </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-243"></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier hs-type">List.foldl'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#flip"><span class="hs-identifier hs-type">flip</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">PSQ.delete</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679211061"><span class="hs-identifier hs-type">nextConnectTimes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211057"><span class="hs-identifier hs-type">peeraddrs</span></a></span><span>
+</span><span id="line-244"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-245"></span><span>
+</span><span id="line-246"></span><span>
+</span><span id="line-247"></span><span class="hs-comment">-------------------------------</span><span>
+</span><span id="line-248"></span><span class="hs-comment">-- Special operations</span><span>
+</span><span id="line-249"></span><span class="hs-comment">--</span><span>
+</span><span id="line-250"></span><span>
+</span><span id="line-251"></span><span id="local-6989586621679210823"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setCurrentTime"><span class="hs-identifier hs-type">setCurrentTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210823"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-252"></span><span>               </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time</span></span><span>
+</span><span id="line-253"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210823"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-254"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210823"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-255"></span><span id="setCurrentTime"><span class="annot"><span class="annottext">setCurrentTime :: forall peeraddr.
+Ord peeraddr =&gt;
+Time -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setCurrentTime"><span class="hs-identifier hs-var hs-var">setCurrentTime</span></a></span></span><span> </span><span id="local-6989586621679211072"><span class="annot"><span class="annottext">Time
+</span><a href="#local-6989586621679211072"><span class="hs-identifier hs-var">now</span></a></span></span><span> </span><span id="local-6989586621679211073"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211073"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-256"></span><span>                     </span><span id="local-6989586621679211074"><span class="annot"><span class="annottext">Set peeraddr
+availableToConnect :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+availableToConnect :: Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var hs-var">availableToConnect</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-257"></span><span>                     </span><span id="local-6989586621679211075"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+nextConnectTimes :: forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var hs-var">nextConnectTimes</span></a></span></span><span>
+</span><span id="line-258"></span><span>                   </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-259"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211076"><span class="annot"><span class="annottext">knownPeers' :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211076"><span class="hs-identifier hs-var hs-var">knownPeers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-260"></span><span>        </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211073"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-261"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679211077"><span class="hs-identifier hs-type">availableToConnect'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-262"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679211078"><span class="hs-identifier hs-type">nextConnectTimes'</span></a></span><span>
+</span><span id="line-263"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-264"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; Bool
+forall peeraddr. Ord peeraddr =&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier hs-var">invariant</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211076"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211076"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span>
+</span><span id="line-265"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-266"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679211082"><span class="annot"><span class="annottext">[(peeraddr, Time, ())]
+</span><a href="#local-6989586621679211082"><span class="hs-identifier hs-var">nowAvailableToConnect</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679211078"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679211078"><span class="hs-identifier hs-var">nextConnectTimes'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-267"></span><span>      </span><span class="annot"><span class="annottext">Time
+-&gt; OrdPSQ peeraddr Time ()
+-&gt; ([(peeraddr, Time, ())], OrdPSQ peeraddr Time ())
+forall k p v.
+(Ord k, Ord p) =&gt;
+p -&gt; OrdPSQ k p v -&gt; ([(k, p, v)], OrdPSQ k p v)
+</span><span class="hs-identifier hs-var">PSQ.atMostView</span></span><span> </span><span class="annot"><span class="annottext">Time
+</span><a href="#local-6989586621679211072"><span class="hs-identifier hs-var">now</span></a></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679211075"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span>
+</span><span id="line-268"></span><span>
+</span><span id="line-269"></span><span>    </span><span id="local-6989586621679211077"><span class="annot"><span class="annottext">availableToConnect' :: Set peeraddr
+</span><a href="#local-6989586621679211077"><span class="hs-identifier hs-var hs-var">availableToConnect'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-270"></span><span>         </span><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679211074"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span>
+</span><span id="line-271"></span><span>      </span><span class="annot"><span class="annottext">Set peeraddr -&gt; Set peeraddr -&gt; Set peeraddr
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[peeraddr] -&gt; Set peeraddr
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#fromList"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211088"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679211088"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211088"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Time
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[(peeraddr, Time, ())]
+</span><a href="#local-6989586621679211082"><span class="hs-identifier hs-var">nowAvailableToConnect</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-272"></span><span>
+</span><span id="line-273"></span><span>
+</span><span id="line-274"></span><span id="local-6989586621679210828"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#incrementFailCount"><span class="hs-identifier hs-type">incrementFailCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210828"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-275"></span><span>                   </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210828"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-276"></span><span>                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210828"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-277"></span><span>                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210828"><span class="hs-identifier hs-type">peeraddr</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-278"></span><span id="incrementFailCount"><span class="annot"><span class="annottext">incrementFailCount :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; (Int, KnownPeers peeraddr)
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#incrementFailCount"><span class="hs-identifier hs-var hs-var">incrementFailCount</span></a></span></span><span> </span><span id="local-6989586621679211095"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211095"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span id="local-6989586621679211096"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211096"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679211097"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-279"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; (Int, KnownPeers peeraddr) -&gt; (Int, KnownPeers peeraddr)
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211095"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211097"><span class="hs-identifier hs-var">allPeers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((Int, KnownPeers peeraddr) -&gt; (Int, KnownPeers peeraddr))
+-&gt; (Int, KnownPeers peeraddr) -&gt; (Int, KnownPeers peeraddr)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-280"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211100"><span class="annot"><span class="annottext">allPeers' :: Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211100"><span class="hs-identifier hs-var hs-var">allPeers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KnownPeerInfo -&gt; Maybe KnownPeerInfo)
+-&gt; peeraddr
+-&gt; Map peeraddr KnownPeerInfo
+-&gt; Map peeraddr KnownPeerInfo
+forall k a. Ord k =&gt; (a -&gt; Maybe a) -&gt; k -&gt; Map k a -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#update"><span class="hs-identifier hs-var">Map.update</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(KnownPeerInfo -&gt; Maybe KnownPeerInfo)
+-&gt; (KnownPeerInfo -&gt; KnownPeerInfo)
+-&gt; KnownPeerInfo
+-&gt; Maybe KnownPeerInfo
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; KnownPeerInfo
+</span><a href="#local-6989586621679211102"><span class="hs-identifier hs-var">incr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211095"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211097"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-281"></span><span>    </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- since the `peeraddr` is assumed to be part of `allPeers` the `Map.!`</span><span>
+</span><span id="line-282"></span><span>         </span><span class="hs-comment">-- is safe</span><span>
+</span><span id="line-283"></span><span>         </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211100"><span class="hs-identifier hs-var">allPeers'</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo -&gt; peeraddr -&gt; KnownPeerInfo
+forall k a. Ord k =&gt; Map k a -&gt; k -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#%21"><span class="hs-operator hs-var">Map.!</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211095"><span class="hs-identifier hs-var">peeraddr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-284"></span><span>       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211096"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679211100"><span class="hs-identifier hs-type">allPeers'</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-285"></span><span>       </span><span class="hs-special">)</span><span>
+</span><span id="line-286"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-287"></span><span>    </span><span id="local-6989586621679211102"><span class="annot"><span class="annottext">incr :: KnownPeerInfo -&gt; KnownPeerInfo
+</span><a href="#local-6989586621679211102"><span class="hs-identifier hs-var hs-var">incr</span></a></span></span><span> </span><span id="local-6989586621679211107"><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211107"><span class="hs-identifier hs-var">kpi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211107"><span class="hs-identifier hs-var">kpi</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211107"><span class="hs-identifier hs-type">kpi</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2B"><span class="hs-operator hs-type">+</span></a></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-288"></span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span id="local-6989586621679210839"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#resetFailCount"><span class="hs-identifier hs-type">resetFailCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210839"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-291"></span><span>               </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210839"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-292"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210839"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-293"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210839"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-294"></span><span id="resetFailCount"><span class="annot"><span class="annottext">resetFailCount :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#resetFailCount"><span class="hs-identifier hs-var hs-var">resetFailCount</span></a></span></span><span> </span><span id="local-6989586621679211114"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211114"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span id="local-6989586621679211115"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211115"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679211116"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-295"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211114"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211116"><span class="hs-identifier hs-var">allPeers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(KnownPeers peeraddr -&gt; KnownPeers peeraddr)
+-&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-296"></span><span>    </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211115"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#update"><span class="hs-identifier hs-type">Map.update</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679211117"><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211117"><span class="hs-identifier hs-var">kpi</span></a></span></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211117"><span class="hs-identifier hs-var">kpi</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-297"></span><span>                              </span><span class="annot"><a href="#local-6989586621679211114"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211116"><span class="hs-identifier hs-type">allPeers</span></a></span><span>
+</span><span id="line-298"></span><span>               </span><span class="hs-special">}</span><span>
+</span><span id="line-299"></span><span>
+</span><span id="line-300"></span><span id="local-6989586621679210841"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupFailCount"><span class="hs-identifier hs-type">lookupFailCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210841"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-301"></span><span>                </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210841"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-302"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210841"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-303"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span></span><span>
+</span><span id="line-304"></span><span id="lookupFailCount"><span class="annot"><span class="annottext">lookupFailCount :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Maybe Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupFailCount"><span class="hs-identifier hs-var hs-var">lookupFailCount</span></a></span></span><span> </span><span id="local-6989586621679211122"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211122"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679211123"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-305"></span><span>    </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Int
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerFailCount"><span class="hs-identifier hs-var">knownPeerFailCount</span></a></span><span> </span><span class="annot"><span class="annottext">(KnownPeerInfo -&gt; Int) -&gt; Maybe KnownPeerInfo -&gt; Maybe Int
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211122"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211123"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-306"></span><span>
+</span><span id="line-307"></span><span>
+</span><span id="line-308"></span><span id="local-6989586621679210848"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupTepidFlag"><span class="hs-identifier hs-type">lookupTepidFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210848"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-309"></span><span>                </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210848"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-310"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210848"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-311"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-312"></span><span id="lookupTepidFlag"><span class="annot"><span class="annottext">lookupTepidFlag :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Maybe Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#lookupTepidFlag"><span class="hs-identifier hs-var hs-var">lookupTepidFlag</span></a></span></span><span> </span><span id="local-6989586621679211129"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211129"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679211130"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-313"></span><span>    </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var">knownPeerTepid</span></a></span><span> </span><span class="annot"><span class="annottext">(KnownPeerInfo -&gt; Bool) -&gt; Maybe KnownPeerInfo -&gt; Maybe Bool
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211129"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211130"><span class="hs-identifier hs-var">allPeers</span></a></span><span>
+</span><span id="line-314"></span><span>
+</span><span id="line-315"></span><span id="local-6989586621679210850"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag%27"><span class="hs-identifier hs-type">setTepidFlag'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210850"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-316"></span><span>             </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-317"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679210850"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-318"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210850"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-319"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210850"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-320"></span><span id="setTepidFlag%27"><span class="annot"><span class="annottext">setTepidFlag' :: forall peeraddr.
+Ord peeraddr =&gt;
+Bool -&gt; peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag%27"><span class="hs-identifier hs-var hs-var">setTepidFlag'</span></a></span></span><span> </span><span id="local-6989586621679211137"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679211137"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span id="local-6989586621679211138"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211138"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span id="local-6989586621679211139"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211139"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span class="hs-special">{</span><span id="local-6989586621679211140"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-321"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211138"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211140"><span class="hs-identifier hs-var">allPeers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(KnownPeers peeraddr -&gt; KnownPeers peeraddr)
+-&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-322"></span><span>    </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211139"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#update"><span class="hs-identifier hs-type">Map.update</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679211141"><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211141"><span class="hs-identifier hs-var">kpi</span></a></span></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeerInfo
+</span><a href="#local-6989586621679211141"><span class="hs-identifier hs-var">kpi</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownPeerTepid"><span class="hs-identifier hs-var">knownPeerTepid</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679211137"><span class="hs-identifier hs-type">val</span></a></span><span> </span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-323"></span><span>                              </span><span class="annot"><a href="#local-6989586621679211138"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211140"><span class="hs-identifier hs-type">allPeers</span></a></span><span>
+</span><span id="line-324"></span><span>               </span><span class="hs-special">}</span><span>
+</span><span id="line-325"></span><span>
+</span><span id="line-326"></span><span id="local-6989586621679211142"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#clearTepidFlag"><span class="hs-identifier hs-type">clearTepidFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211142"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-327"></span><span>             </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679211142"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-328"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211142"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-329"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211142"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-330"></span><span id="clearTepidFlag"><span class="annot"><span class="annottext">clearTepidFlag :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#clearTepidFlag"><span class="hs-identifier hs-var hs-var">clearTepidFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall peeraddr.
+Ord peeraddr =&gt;
+Bool -&gt; peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag%27"><span class="hs-identifier hs-var">setTepidFlag'</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-331"></span><span>
+</span><span id="line-332"></span><span id="local-6989586621679211145"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag"><span class="hs-identifier hs-type">setTepidFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211145"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-333"></span><span>             </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679211145"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-334"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211145"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-335"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211145"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-336"></span><span id="setTepidFlag"><span class="annot"><span class="annottext">setTepidFlag :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag"><span class="hs-identifier hs-var hs-var">setTepidFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall peeraddr.
+Ord peeraddr =&gt;
+Bool -&gt; peeraddr -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setTepidFlag%27"><span class="hs-identifier hs-var">setTepidFlag'</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-337"></span><span>
+</span><span id="line-338"></span><span class="hs-comment">-----------------------------------</span><span>
+</span><span id="line-339"></span><span class="hs-comment">-- Tracking when we can (re)connect</span><span>
+</span><span id="line-340"></span><span class="hs-comment">--</span><span>
+</span><span id="line-341"></span><span>
+</span><span id="line-342"></span><span id="local-6989586621679210854"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#minConnectTime"><span class="hs-identifier hs-type">minConnectTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210854"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-343"></span><span>               </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210854"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-344"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679210854"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-345"></span><span>               </span><span class="annot"><span class="hs-comment">-- ^ a predicate which describes the peers to take into account</span></span><span>
+</span><span id="line-346"></span><span>               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time</span></span></span><span>
+</span><span id="line-347"></span><span id="minConnectTime"><span class="annot"><span class="annottext">minConnectTime :: forall peeraddr.
+Ord peeraddr =&gt;
+KnownPeers peeraddr -&gt; (peeraddr -&gt; Bool) -&gt; Maybe Time
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#minConnectTime"><span class="hs-identifier hs-var hs-var">minConnectTime</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679211151"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+nextConnectTimes :: forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var hs-var">nextConnectTimes</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span id="local-6989586621679211152"><span class="annot"><span class="annottext">peeraddr -&gt; Bool
+</span><a href="#local-6989586621679211152"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-348"></span><span>    </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time () -&gt; Maybe Time
+forall {a} {v}. Ord a =&gt; OrdPSQ peeraddr a v -&gt; Maybe a
+</span><a href="#local-6989586621679211153"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679211151"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span>
+</span><span id="line-349"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-350"></span><span>    </span><span id="local-6989586621679211153"><span class="annot"><span class="annottext">go :: OrdPSQ peeraddr a v -&gt; Maybe a
+</span><a href="#local-6989586621679211153"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621679211160"><span class="annot"><span class="annottext">OrdPSQ peeraddr a v
+</span><a href="#local-6989586621679211160"><span class="hs-identifier hs-var">psq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr a v -&gt; Maybe (peeraddr, a, v, OrdPSQ peeraddr a v)
+forall k p v.
+(Ord k, Ord p) =&gt;
+OrdPSQ k p v -&gt; Maybe (k, p, v, OrdPSQ k p v)
+</span><span class="hs-identifier hs-var">PSQ.minView</span></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr a v
+</span><a href="#local-6989586621679211160"><span class="hs-identifier hs-var">psq</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-351"></span><span>      </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679211162"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211162"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679211163"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679211163"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">v
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679211164"><span class="annot"><span class="annottext">OrdPSQ peeraddr a v
+</span><a href="#local-6989586621679211164"><span class="hs-identifier hs-var">psq'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Bool
+</span><a href="#local-6989586621679211152"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211162"><span class="hs-identifier hs-var">k</span></a></span><span>      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679211163"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-352"></span><span>                           </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr a v -&gt; Maybe a
+</span><a href="#local-6989586621679211153"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr a v
+</span><a href="#local-6989586621679211164"><span class="hs-identifier hs-var">psq'</span></a></span><span>
+</span><span id="line-353"></span><span>      </span><span class="annot"><span class="annottext">Maybe (peeraddr, a, v, OrdPSQ peeraddr a v)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-354"></span><span>
+</span><span id="line-355"></span><span>
+</span><span id="line-356"></span><span id="local-6989586621679210861"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setConnectTimes"><span class="hs-identifier hs-type">setConnectTimes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210861"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-357"></span><span>                </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210861"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time</span></span><span> </span><span class="hs-comment">--TODO: make this a single entry</span><span>
+</span><span id="line-358"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210861"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-359"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210861"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-360"></span><span id="setConnectTimes"><span class="annot"><span class="annottext">setConnectTimes :: forall peeraddr.
+Ord peeraddr =&gt;
+Map peeraddr Time -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#setConnectTimes"><span class="hs-identifier hs-var hs-var">setConnectTimes</span></a></span></span><span> </span><span id="local-6989586621679211174"><span class="annot"><span class="annottext">Map peeraddr Time
+</span><a href="#local-6989586621679211174"><span class="hs-identifier hs-var">times</span></a></span></span><span>
+</span><span id="line-361"></span><span>                </span><span id="local-6989586621679211175"><span class="annot"><span class="annottext">knownPeers :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211175"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-362"></span><span>                  </span><span id="local-6989586621679211176"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-363"></span><span>                  </span><span id="local-6989586621679211177"><span class="annot"><span class="annottext">Set peeraddr
+availableToConnect :: forall peeraddr. KnownPeers peeraddr -&gt; Set peeraddr
+availableToConnect :: Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var hs-var">availableToConnect</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-364"></span><span>                  </span><span id="local-6989586621679211178"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+nextConnectTimes :: forall peeraddr. KnownPeers peeraddr -&gt; OrdPSQ peeraddr Time ()
+nextConnectTimes :: OrdPSQ peeraddr Time ()
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var hs-var">nextConnectTimes</span></a></span></span><span>
+</span><span id="line-365"></span><span>                </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-366"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(peeraddr -&gt; Bool) -&gt; Set peeraddr -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#all"><span class="hs-identifier hs-var">all</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211176"><span class="hs-identifier hs-var">allPeers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map peeraddr Time -&gt; Set peeraddr
+forall k a. Map k a -&gt; Set k
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-var">Map.keysSet</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr Time
+</span><a href="#local-6989586621679211174"><span class="hs-identifier hs-var">times</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(KnownPeers peeraddr -&gt; KnownPeers peeraddr)
+-&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-367"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679211184"><span class="annot"><span class="annottext">knownPeers' :: KnownPeers peeraddr
+</span><a href="#local-6989586621679211184"><span class="hs-identifier hs-var hs-var">knownPeers'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211175"><span class="hs-identifier hs-var">knownPeers</span></a></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-368"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#availableToConnect"><span class="hs-identifier hs-var">availableToConnect</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-369"></span><span>                   </span><span class="annot"><a href="#local-6989586621679211177"><span class="hs-identifier hs-type">availableToConnect</span></a></span><span>
+</span><span id="line-370"></span><span>            </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#%5C%5C"><span class="hs-operator hs-type">Set.\\</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#keysSet"><span class="hs-identifier hs-type">Map.keysSet</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211174"><span class="hs-identifier hs-type">times</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-371"></span><span>
+</span><span id="line-372"></span><span>          </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#nextConnectTimes"><span class="hs-identifier hs-var">nextConnectTimes</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-373"></span><span>            </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#foldlWithKey%27"><span class="hs-identifier hs-type">Map.foldlWithKey'</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679211187"><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679211187"><span class="hs-identifier hs-var">psq</span></a></span></span><span> </span><span id="local-6989586621679211188"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211188"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span id="local-6989586621679211189"><span class="annot"><span class="annottext">Time
+</span><a href="#local-6989586621679211189"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">peeraddr
+-&gt; Time -&gt; () -&gt; OrdPSQ peeraddr Time () -&gt; OrdPSQ peeraddr Time ()
+forall k p v.
+(Ord k, Ord p) =&gt;
+k -&gt; p -&gt; v -&gt; OrdPSQ k p v -&gt; OrdPSQ k p v
+</span><span class="hs-identifier hs-var">PSQ.insert</span></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211188"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">Time
+</span><a href="#local-6989586621679211189"><span class="hs-identifier hs-var">time</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OrdPSQ peeraddr Time ()
+</span><a href="#local-6989586621679211187"><span class="hs-identifier hs-var">psq</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-374"></span><span>                              </span><span class="annot"><a href="#local-6989586621679211178"><span class="hs-identifier hs-type">nextConnectTimes</span></a></span><span>
+</span><span id="line-375"></span><span>                              </span><span class="annot"><a href="#local-6989586621679211174"><span class="hs-identifier hs-type">times</span></a></span><span>
+</span><span id="line-376"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-377"></span><span>    </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; KnownPeers peeraddr -&gt; KnownPeers peeraddr
+forall a. (?callStack::CallStack) =&gt; Bool -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#assert"><span class="hs-identifier hs-var hs-var">assert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KnownPeers peeraddr -&gt; Bool
+forall peeraddr. Ord peeraddr =&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#invariant"><span class="hs-identifier hs-var">invariant</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211184"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211184"><span class="hs-identifier hs-var">knownPeers'</span></a></span><span>
+</span><span id="line-378"></span><span>
+</span><span id="line-379"></span><span>
+</span><span id="line-380"></span><span class="hs-comment">---------------------------------</span><span>
+</span><span id="line-381"></span><span class="hs-comment">-- Selecting peers to ask</span><span>
+</span><span id="line-382"></span><span class="hs-comment">--</span><span>
+</span><span id="line-383"></span><span>
+</span><span id="line-384"></span><span class="hs-comment">-- Only make Peer Share requests to peers which wish to participate in</span><span>
+</span><span id="line-385"></span><span class="hs-comment">-- PeerSharing, i.e. have non-'NoPeerSharing' PeerSharing values.</span><span>
+</span><span id="line-386"></span><span class="hs-comment">--</span><span>
+</span><span id="line-387"></span><span id="local-6989586621679211191"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#canPeerShareRequest"><span class="hs-identifier hs-type">canPeerShareRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211191"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679211191"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211191"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-388"></span><span id="canPeerShareRequest"><span class="annot"><span class="annottext">canPeerShareRequest :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#canPeerShareRequest"><span class="hs-identifier hs-var hs-var">canPeerShareRequest</span></a></span></span><span> </span><span id="local-6989586621679211194"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211194"><span class="hs-identifier hs-var">pa</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679211195"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-389"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211194"><span class="hs-identifier hs-var">pa</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211195"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-390"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">PeerSharing
+</span><span class="hs-identifier hs-var">PeerSharingPublic</span></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-391"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">PeerSharing
+</span><span class="hs-identifier hs-var">PeerSharingPrivate</span></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-392"></span><span>    </span><span class="annot"><span class="annottext">Maybe KnownPeerInfo
+</span><span class="hs-identifier">_</span></span><span>                                               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-393"></span><span>
+</span><span id="line-394"></span><span class="hs-comment">-- Filter available for Peer Sharing peers according to their PeerSharing</span><span>
+</span><span id="line-395"></span><span class="hs-comment">-- information</span><span>
+</span><span id="line-396"></span><span class="hs-comment">--</span><span>
+</span><span id="line-397"></span><span id="local-6989586621679210872"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#getAvailablePeerSharingPeers"><span class="hs-identifier hs-type">getAvailablePeerSharingPeers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210872"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-398"></span><span>                             </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210872"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-399"></span><span>                             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210872"><span class="hs-identifier hs-type">peeraddr</span></a></span><span>
+</span><span id="line-400"></span><span>                             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#Set"><span class="hs-identifier hs-type">Set</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679210872"><span class="hs-identifier hs-type">peeraddr</span></a></span></span><span>
+</span><span id="line-401"></span><span id="getAvailablePeerSharingPeers"><span class="annot"><span class="annottext">getAvailablePeerSharingPeers :: forall peeraddr.
+Ord peeraddr =&gt;
+Set peeraddr -&gt; KnownPeers peeraddr -&gt; Set peeraddr
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#getAvailablePeerSharingPeers"><span class="hs-identifier hs-var hs-var">getAvailablePeerSharingPeers</span></a></span></span><span> </span><span id="local-6989586621679211200"><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679211200"><span class="hs-identifier hs-var">availableForPeerShare</span></a></span></span><span> </span><span id="local-6989586621679211201"><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211201"><span class="hs-identifier hs-var">knownPeers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-402"></span><span>  </span><span class="annot"><span class="annottext">(peeraddr -&gt; Bool) -&gt; Set peeraddr -&gt; Set peeraddr
+forall a. (a -&gt; Bool) -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#filter"><span class="hs-identifier hs-var">Set.filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#canPeerShareRequest"><span class="hs-operator hs-var">`canPeerShareRequest`</span></a></span><span> </span><span class="annot"><span class="annottext">KnownPeers peeraddr
+</span><a href="#local-6989586621679211201"><span class="hs-identifier hs-var">knownPeers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Set peeraddr
+</span><a href="#local-6989586621679211200"><span class="hs-identifier hs-var">availableForPeerShare</span></a></span><span>
+</span><span id="line-403"></span><span>
+</span><span id="line-404"></span><span>
+</span><span id="line-405"></span><span class="hs-comment">---------------------------------</span><span>
+</span><span id="line-406"></span><span class="hs-comment">-- Selecting peers to advertise</span><span>
+</span><span id="line-407"></span><span class="hs-comment">--</span><span>
+</span><span id="line-408"></span><span>
+</span><span id="line-409"></span><span class="hs-comment">-- | Select a random subset of the known peers that are available to publish.</span><span>
+</span><span id="line-410"></span><span class="hs-comment">--</span><span>
+</span><span id="line-411"></span><span class="hs-comment">-- The selection is done in such a way that when the same initial PRNG state is</span><span>
+</span><span id="line-412"></span><span class="hs-comment">-- used, the selected set does not significantly vary with small perturbations</span><span>
+</span><span id="line-413"></span><span class="hs-comment">-- in the set of published peers.</span><span>
+</span><span id="line-414"></span><span class="hs-comment">--</span><span>
+</span><span id="line-415"></span><span class="hs-comment">-- The intention of this selection method is that the selection should give</span><span>
+</span><span id="line-416"></span><span class="hs-comment">-- approximately the same replies to the same peers over the course of multiple</span><span>
+</span><span id="line-417"></span><span class="hs-comment">-- requests from the same peer. This is to deliberately slow the rate at which</span><span>
+</span><span id="line-418"></span><span class="hs-comment">-- peers can discover and map out the entire network.</span><span>
+</span><span id="line-419"></span><span class="hs-comment">--</span><span>
+</span><span id="line-420"></span><span class="hs-comment">{-
+sampleAdvertisedPeers :: RandomGen prng
+                      =&gt; KnownPeers peeraddr
+                      -&gt; prng
+                      -&gt; Int
+                      -&gt; [peeraddr]
+sampleAdvertisedPeers _ _ _ = []
+-- idea is to generate a sequence of random numbers and map them to locations
+-- in a relatively stable way, that's mostly insensitive to additions or
+-- deletions
+-}</span><span>
+</span><span id="line-431"></span><span>
+</span><span id="line-432"></span><span class="hs-comment">---------------------------------</span><span>
+</span><span id="line-433"></span><span class="hs-comment">-- Filter ledger peers</span><span>
+</span><span id="line-434"></span><span class="hs-comment">--</span><span>
+</span><span id="line-435"></span><span>
+</span><span id="line-436"></span><span class="hs-comment">-- | Checks the KnownPeers Set for known ledger peers.</span><span>
+</span><span id="line-437"></span><span class="hs-comment">--</span><span>
+</span><span id="line-438"></span><span class="hs-comment">-- This is used in Peer Selection Governor to filter out the known-to-te ledger</span><span>
+</span><span id="line-439"></span><span class="hs-comment">-- peers from the share result set.</span><span>
+</span><span id="line-440"></span><span class="hs-comment">--</span><span>
+</span><span id="line-441"></span><span id="local-6989586621679211202"><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#isKnownLedgerPeer"><span class="hs-identifier hs-type">isKnownLedgerPeer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211202"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679211202"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679211202"><span class="hs-identifier hs-type">peeraddr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-442"></span><span id="isKnownLedgerPeer"><span class="annot"><span class="annottext">isKnownLedgerPeer :: forall peeraddr.
+Ord peeraddr =&gt;
+peeraddr -&gt; KnownPeers peeraddr -&gt; Bool
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#isKnownLedgerPeer"><span class="hs-identifier hs-var hs-var">isKnownLedgerPeer</span></a></span></span><span> </span><span id="local-6989586621679211205"><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211205"><span class="hs-identifier hs-var">peeraddr</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeers"><span class="hs-identifier hs-type">KnownPeers</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679211206"><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+allPeers :: forall peeraddr. KnownPeers peeraddr -&gt; Map peeraddr KnownPeerInfo
+allPeers :: Map peeraddr KnownPeerInfo
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#allPeers"><span class="hs-identifier hs-var hs-var">allPeers</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-443"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">peeraddr -&gt; Map peeraddr KnownPeerInfo -&gt; Maybe KnownPeerInfo
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">peeraddr
+</span><a href="#local-6989586621679211205"><span class="hs-identifier hs-var">peeraddr</span></a></span><span> </span><span class="annot"><span class="annottext">Map peeraddr KnownPeerInfo
+</span><a href="#local-6989586621679211206"><span class="hs-identifier hs-var">allPeers</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-444"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#KnownPeerInfo"><span class="hs-identifier hs-type">KnownPeerInfo</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679211207"><span class="annot"><span class="annottext">IsLedgerPeer
+knownLedgerPeer :: KnownPeerInfo -&gt; IsLedgerPeer
+knownLedgerPeer :: IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.State.KnownPeers.html#knownLedgerPeer"><span class="hs-identifier hs-var hs-var">knownLedgerPeer</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-445"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="#local-6989586621679211207"><span class="hs-identifier hs-var">knownLedgerPeer</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-446"></span><span>        </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsLedgerPeer"><span class="hs-identifier hs-var">IsLedgerPeer</span></a></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-447"></span><span>        </span><span class="annot"><span class="annottext">IsLedgerPeer
+</span><a href="Ouroboros.Network.PeerSelection.LedgerPeers.html#IsNotLedgerPeer"><span class="hs-identifier hs-var">IsNotLedgerPeer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-448"></span><span>    </span><span class="annot"><span class="annottext">Maybe KnownPeerInfo
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-449"></span></pre></body></html>

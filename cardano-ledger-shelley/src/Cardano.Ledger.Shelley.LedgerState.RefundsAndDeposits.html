@@ -1,0 +1,456 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE BangPatterns #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE PatternSynonyms #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-11"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDeposits"><span class="hs-identifier">totalCertsDeposits</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDepositsCertState"><span class="hs-identifier">totalCertsDepositsCertState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyTxRefunds"><span class="hs-identifier">keyTxRefunds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefunds"><span class="hs-identifier">keyCertsRefunds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefundsCertState"><span class="hs-identifier">keyCertsRefundsCertState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDeposits"><span class="hs-identifier">totalTxDeposits</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDepositsShelley"><span class="hs-identifier">totalTxDepositsShelley</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.CertState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">CertState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">PState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lookupDepositDState</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Coin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coin</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Credential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">StakeCredential</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KeyHash</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KeyRole</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.PoolParams</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PoolParams</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.Core.html"><span class="hs-identifier">Cardano.Ledger.Shelley.Core</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Shelley.Core.html#ShelleyEraTxBody"><span class="hs-identifier">ShelleyEraTxBody</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.TxCert.html#ShelleyEraTxCert"><span class="hs-identifier">ShelleyEraTxCert</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Val</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;+&gt;)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;&#215;&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html"><span class="hs-identifier">Data.Foldable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier">Foldable</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldMap%27"><span class="hs-identifier">foldMap'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier">foldl'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Monoid.html"><span class="hs-identifier">Data.Monoid</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Semigroup.Internal.html#Sum"><span class="hs-identifier">Sum</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | Determine the total deposit amount needed from a TxBody.</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- The block may (legitimately) contain multiple registration certificates</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- for the same pool, where the first will be treated as a registration and</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- any subsequent ones as re-registration. As such, we must only take a</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- deposit for the first such registration. It is even possible for a single</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- transaction to have multiple pool registration for the same pool, so as</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- we process pool registrations, we must keep track of those that are already</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- registered, so we do not add a Deposit for the same pool twice.</span><span>
+</span><span id="line-43"></span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- Note that this is not an issue for key registrations since subsequent</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- registration certificates would be invalid.</span><span>
+</span><span id="line-46"></span><span id="local-6989586621679590871"><span id="local-6989586621679590873"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDeposits"><span class="hs-identifier hs-type">totalCertsDeposits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590871"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590873"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.TxCert.html#ShelleyEraTxCert"><span class="hs-identifier hs-type">ShelleyEraTxCert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590871"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590871"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Check whether a pool with a supplied PoolStakeId is already registered.</span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KeyHash</span></span><span> </span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">StakePool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679590871"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="#local-6989586621679590873"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TxCert</span></span><span> </span><span class="annot"><a href="#local-6989586621679590871"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span></span><span>
+</span><span id="line-53"></span><span id="totalCertsDeposits"><span class="annot"><span class="annottext">totalCertsDeposits :: forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; f (TxCert era)
+-&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDeposits"><span class="hs-identifier hs-var hs-var">totalCertsDeposits</span></a></span></span><span> </span><span id="local-6989586621679591186"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591186"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591187"><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era) -&gt; Bool
+</span><a href="#local-6989586621679591187"><span class="hs-identifier hs-var">isRegPool</span></a></span></span><span> </span><span id="local-6989586621679591188"><span class="annot"><span class="annottext">f (TxCert era)
+</span><a href="#local-6989586621679591188"><span class="hs-identifier hs-var">certs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679591189"><span class="hs-identifier hs-var">numKeys</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Coin -&gt; Coin
+forall i. Integral i =&gt; i -&gt; Coin -&gt; Coin
+forall t i. (Val t, Integral i) =&gt; i -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;&#215;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591186"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Coin (PParams era) Coin -&gt; Coin
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Coin (PParams era) Coin
+forall era. EraPParams era =&gt; Lens' (PParams era) Coin
+Lens' (PParams era) Coin
+</span><span class="hs-identifier hs-var">ppKeyDepositL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Coin -&gt; Coin -&gt; Coin
+forall t. Val t =&gt; t -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;+&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679591191"><span class="hs-identifier hs-var">numNewRegPoolCerts</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Coin -&gt; Coin
+forall i. Integral i =&gt; i -&gt; Coin -&gt; Coin
+forall t i. (Val t, Integral i) =&gt; i -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;&#215;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591186"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Coin (PParams era) Coin -&gt; Coin
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Coin (PParams era) Coin
+forall era. EraPParams era =&gt; Lens' (PParams era) Coin
+Lens' (PParams era) Coin
+</span><span class="hs-identifier hs-var">ppPoolDepositL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679591189"><span class="annot"><span class="annottext">numKeys :: Int
+</span><a href="#local-6989586621679591189"><span class="hs-identifier hs-var hs-var">numKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Sum a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Semigroup.Internal.html#getSum"><span class="hs-identifier hs-var">getSum</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="annot"><span class="annottext">(Sum Int -&gt; Int) -&gt; Sum Int -&gt; Int
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(TxCert era -&gt; Sum Int) -&gt; f (TxCert era) -&gt; Sum Int
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; f a -&gt; m
+forall (t :: * -&gt; *) m a.
+(Foldable t, Monoid m) =&gt;
+(a -&gt; m) -&gt; t a -&gt; m
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldMap%27"><span class="hs-identifier hs-var">foldMap'</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679591277"><span class="annot"><span class="annottext">TxCert era
+</span><a href="#local-6989586621679591277"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">TxCert era -&gt; Bool
+forall era. EraTxCert era =&gt; TxCert era -&gt; Bool
+</span><span class="hs-identifier hs-var">isRegStakeTxCert</span></span><span> </span><span class="annot"><span class="annottext">TxCert era
+</span><a href="#local-6989586621679591277"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Sum Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Sum Int
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">f (TxCert era)
+</span><a href="#local-6989586621679591188"><span class="hs-identifier hs-var">certs</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621679591191"><span class="annot"><span class="annottext">numNewRegPoolCerts :: Int
+</span><a href="#local-6989586621679591191"><span class="hs-identifier hs-var hs-var">numNewRegPoolCerts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era)) -&gt; Int
+forall a. Set a -&gt; Int
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#size"><span class="hs-identifier hs-var">Set.size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Set (KeyHash 'StakePool (EraCrypto era))
+ -&gt; TxCert era -&gt; Set (KeyHash 'StakePool (EraCrypto era)))
+-&gt; Set (KeyHash 'StakePool (EraCrypto era))
+-&gt; f (TxCert era)
+-&gt; Set (KeyHash 'StakePool (EraCrypto era))
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; f a -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier hs-var">foldl'</span></a></span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+-&gt; TxCert era -&gt; Set (KeyHash 'StakePool (EraCrypto era))
+forall {era}.
+(EraCrypto era ~ EraCrypto era,
+ Assert
+   (OrdCond
+      (CmpNat (ProtVerLow era) (ProtVerHigh era)) 'True 'True 'False)
+   (TypeError ...),
+ Assert
+   (OrdCond (CmpNat MinVersion (ProtVerLow era)) 'True 'True 'False)
+   (TypeError ...),
+ Assert
+   (OrdCond (CmpNat MinVersion (ProtVerHigh era)) 'True 'True 'False)
+   (TypeError ...),
+ EraTxCert era) =&gt;
+Set (KeyHash 'StakePool (EraCrypto era))
+-&gt; TxCert era -&gt; Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591360"><span class="hs-identifier hs-var">addNewPoolIds</span></a></span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+forall a. Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#empty"><span class="hs-identifier hs-var">Set.empty</span></a></span><span> </span><span class="annot"><span class="annottext">f (TxCert era)
+</span><a href="#local-6989586621679591188"><span class="hs-identifier hs-var">certs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>    </span><span id="local-6989586621679591360"><span class="annot"><span class="annottext">addNewPoolIds :: Set (KeyHash 'StakePool (EraCrypto era))
+-&gt; TxCert era -&gt; Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591360"><span class="hs-identifier hs-var hs-var">addNewPoolIds</span></a></span></span><span> </span><span id="local-6989586621679591511"><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591511"><span class="hs-identifier hs-var">regPoolIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">RegPoolTxCert</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PoolParams</span></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679591514"><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+ppId :: KeyHash 'StakePool (EraCrypto era)
+ppId :: forall c. PoolParams c -&gt; KeyHash 'StakePool c
+</span><a href="#local-6989586621679591514"><span class="hs-identifier hs-var hs-var">ppId</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>        </span><span class="hs-comment">-- We don't pay a deposit on a pool that is already registered or duplicated in the certs</span><span>
+</span><span id="line-64"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#not"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era) -&gt; Bool
+</span><a href="#local-6989586621679591187"><span class="hs-identifier hs-var">isRegPool</span></a></span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+KeyHash 'StakePool (EraCrypto era)
+</span><a href="#local-6989586621679591514"><span class="hs-identifier hs-var">ppId</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%7C%7C"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+-&gt; Set (KeyHash 'StakePool (EraCrypto era)) -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#member"><span class="hs-identifier hs-var">Set.member</span></a></span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+KeyHash 'StakePool (EraCrypto era)
+</span><a href="#local-6989586621679591514"><span class="hs-identifier hs-var">ppId</span></a></span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591511"><span class="hs-identifier hs-var">regPoolIds</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+-&gt; Set (KeyHash 'StakePool (EraCrypto era))
+-&gt; Set (KeyHash 'StakePool (EraCrypto era))
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#insert"><span class="hs-identifier hs-var">Set.insert</span></a></span><span> </span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+KeyHash 'StakePool (EraCrypto era)
+</span><a href="#local-6989586621679591514"><span class="hs-identifier hs-var">ppId</span></a></span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591511"><span class="hs-identifier hs-var">regPoolIds</span></a></span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">TxCert era
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Set (KeyHash 'StakePool (EraCrypto era))
+</span><a href="#local-6989586621679591511"><span class="hs-identifier hs-var">regPoolIds</span></a></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span id="local-6989586621679590975"><span id="local-6989586621679590976"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDepositsCertState"><span class="hs-identifier hs-type">totalCertsDepositsCertState</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590975"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590976"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.TxCert.html#ShelleyEraTxCert"><span class="hs-identifier hs-type">ShelleyEraTxCert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590975"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590975"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><a href="#local-6989586621679590975"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621679590976"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TxCert</span></span><span> </span><span class="annot"><a href="#local-6989586621679590975"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span></span><span>
+</span><span id="line-73"></span><span id="totalCertsDepositsCertState"><span class="annot"><span class="annottext">totalCertsDepositsCertState :: forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era -&gt; CertState era -&gt; f (TxCert era) -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDepositsCertState"><span class="hs-identifier hs-var hs-var">totalCertsDepositsCertState</span></a></span></span><span> </span><span id="local-6989586621679591527"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591527"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591528"><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591528"><span class="hs-identifier hs-var">dpstate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; f (TxCert era)
+-&gt; Coin
+forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era
+-&gt; (KeyHash 'StakePool (EraCrypto era) -&gt; Bool)
+-&gt; f (TxCert era)
+-&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDeposits"><span class="hs-identifier hs-var">totalCertsDeposits</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591527"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">KeyHash 'StakePool (EraCrypto era)
+-&gt; Map
+     (KeyHash 'StakePool (EraCrypto era)) (PoolParams (EraCrypto era))
+-&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#member"><span class="hs-operator hs-var">`Map.member`</span></a></span><span> </span><span class="annot"><span class="annottext">PState era
+-&gt; Map
+     (KeyHash 'StakePool (EraCrypto era)) (PoolParams (EraCrypto era))
+forall era.
+PState era
+-&gt; Map
+     (KeyHash 'StakePool (EraCrypto era)) (PoolParams (EraCrypto era))
+</span><span class="hs-identifier hs-var">psStakePoolParams</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CertState era -&gt; PState era
+forall era. CertState era -&gt; PState era
+</span><span class="hs-identifier hs-var">certPState</span></span><span> </span><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591528"><span class="hs-identifier hs-var">dpstate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- | Calculates the total amount of deposits needed for all pool registration and</span><span>
+</span><span id="line-77"></span><span class="hs-comment">-- stake delegation certificates to be valid.</span><span>
+</span><span id="line-78"></span><span id="local-6989586621679590986"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDepositsShelley"><span class="hs-identifier hs-type">totalTxDepositsShelley</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Core.html#ShelleyEraTxBody"><span class="hs-identifier hs-type">ShelleyEraTxBody</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590986"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590986"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><a href="#local-6989586621679590986"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TxBody</span></span><span> </span><span class="annot"><a href="#local-6989586621679590986"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span><span>
+</span><span id="line-84"></span><span id="totalTxDepositsShelley"><span class="annot"><span class="annottext">totalTxDepositsShelley :: forall era.
+ShelleyEraTxBody era =&gt;
+PParams era -&gt; CertState era -&gt; TxBody era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDepositsShelley"><span class="hs-identifier hs-var hs-var">totalTxDepositsShelley</span></a></span></span><span> </span><span id="local-6989586621679591545"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591545"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591546"><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591546"><span class="hs-identifier hs-var">dpstate</span></a></span></span><span> </span><span id="local-6989586621679591547"><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679591547"><span class="hs-identifier hs-var">txb</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">PParams era -&gt; CertState era -&gt; StrictSeq (TxCert era) -&gt; Coin
+forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era -&gt; CertState era -&gt; f (TxCert era) -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalCertsDepositsCertState"><span class="hs-identifier hs-var">totalCertsDepositsCertState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591545"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591546"><span class="hs-identifier hs-var">dpstate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679591547"><span class="hs-identifier hs-var">txb</span></a></span><span> </span><span class="annot"><span class="annottext">TxBody era
+-&gt; Getting
+     (StrictSeq (TxCert era)) (TxBody era) (StrictSeq (TxCert era))
+-&gt; StrictSeq (TxCert era)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting
+  (StrictSeq (TxCert era)) (TxBody era) (StrictSeq (TxCert era))
+forall era.
+EraTxBody era =&gt;
+Lens' (TxBody era) (StrictSeq (TxCert era))
+Lens' (TxBody era) (StrictSeq (TxCert era))
+</span><span class="hs-identifier hs-var">certsTxBodyL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-pragma">{-# DEPRECATED</span><span> </span><span class="hs-pragma">totalTxDeposits</span><span> </span><span class="hs-pragma">&quot;Use totalTxDepositsShelley or getTotalDepositsTxBody instead&quot;</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-88"></span><span id="local-6989586621679591549"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDeposits"><span class="hs-identifier hs-type">totalTxDeposits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Core.html#ShelleyEraTxBody"><span class="hs-identifier hs-type">ShelleyEraTxBody</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679591549"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679591549"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><a href="#local-6989586621679591549"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TxBody</span></span><span> </span><span class="annot"><a href="#local-6989586621679591549"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span><span>
+</span><span id="line-94"></span><span id="totalTxDeposits"><span class="annot"><span class="annottext">totalTxDeposits :: forall era.
+ShelleyEraTxBody era =&gt;
+PParams era -&gt; CertState era -&gt; TxBody era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDeposits"><span class="hs-identifier hs-var hs-var">totalTxDeposits</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; CertState era -&gt; TxBody era -&gt; Coin
+forall era.
+ShelleyEraTxBody era =&gt;
+PParams era -&gt; CertState era -&gt; TxBody era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#totalTxDepositsShelley"><span class="hs-identifier hs-var">totalTxDepositsShelley</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="annot"><span class="hs-comment">-- | Compute the key deregistration refunds in a transaction</span></span><span>
+</span><span id="line-97"></span><span id="local-6989586621679591552"><span id="local-6989586621679591553"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefundsCertState"><span class="hs-identifier hs-type">keyCertsRefundsCertState</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679591552"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679591553"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.TxCert.html#ShelleyEraTxCert"><span class="hs-identifier hs-type">ShelleyEraTxCert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679591552"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679591552"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><a href="#local-6989586621679591552"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="#local-6989586621679591553"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TxCert</span></span><span> </span><span class="annot"><a href="#local-6989586621679591552"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span></span><span>
+</span><span id="line-103"></span><span id="keyCertsRefundsCertState"><span class="annot"><span class="annottext">keyCertsRefundsCertState :: forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era -&gt; CertState era -&gt; f (TxCert era) -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefundsCertState"><span class="hs-identifier hs-var hs-var">keyCertsRefundsCertState</span></a></span></span><span> </span><span id="local-6989586621679591560"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591560"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591561"><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591561"><span class="hs-identifier hs-var">dpstate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+-&gt; (StakeCredential (EraCrypto era) -&gt; Maybe Coin)
+-&gt; f (TxCert era)
+-&gt; Coin
+forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era
+-&gt; (StakeCredential (EraCrypto era) -&gt; Maybe Coin)
+-&gt; f (TxCert era)
+-&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefunds"><span class="hs-identifier hs-var">keyCertsRefunds</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591560"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DState era -&gt; StakeCredential (EraCrypto era) -&gt; Maybe Coin
+forall era.
+DState era -&gt; StakeCredential (EraCrypto era) -&gt; Maybe Coin
+</span><span class="hs-identifier hs-var">lookupDepositDState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CertState era -&gt; DState era
+forall era. CertState era -&gt; DState era
+</span><span class="hs-identifier hs-var">certDState</span></span><span> </span><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591561"><span class="hs-identifier hs-var">dpstate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="annot"><span class="hs-comment">-- | Compute the key deregistration refunds in a transaction</span></span><span>
+</span><span id="line-106"></span><span id="local-6989586621679590998"><span id="local-6989586621679590999"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefunds"><span class="hs-identifier hs-type">keyCertsRefunds</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590998"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590999"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Ledger.Shelley.TxCert.html#ShelleyEraTxCert"><span class="hs-identifier hs-type">ShelleyEraTxCert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679590998"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679590998"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Function that can lookup current deposit, in case when the stake key is registered.</span></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StakeCredential</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679590998"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="#local-6989586621679590999"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TxCert</span></span><span> </span><span class="annot"><a href="#local-6989586621679590998"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span></span><span>
+</span><span id="line-113"></span><span id="keyCertsRefunds"><span class="annot"><span class="annottext">keyCertsRefunds :: forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era
+-&gt; (StakeCredential (EraCrypto era) -&gt; Maybe Coin)
+-&gt; f (TxCert era)
+-&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefunds"><span class="hs-identifier hs-var hs-var">keyCertsRefunds</span></a></span></span><span> </span><span id="local-6989586621679591687"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591687"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591688"><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679591688"><span class="hs-identifier hs-var">lookupDeposit</span></a></span></span><span> </span><span id="local-6989586621679591689"><span class="annot"><span class="annottext">f (TxCert era)
+</span><a href="#local-6989586621679591689"><span class="hs-identifier hs-var">certs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Set (Credential 'Staking (EraCrypto era)), Coin) -&gt; Coin
+forall a b. (a, b) -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Tuple.html#snd"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Set (Credential 'Staking (EraCrypto era)), Coin)
+ -&gt; TxCert era -&gt; (Set (Credential 'Staking (EraCrypto era)), Coin))
+-&gt; (Set (Credential 'Staking (EraCrypto era)), Coin)
+-&gt; f (TxCert era)
+-&gt; (Set (Credential 'Staking (EraCrypto era)), Coin)
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; f a -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier hs-var">foldl'</span></a></span><span> </span><span class="annot"><span class="annottext">(Set (Credential 'Staking (EraCrypto era)), Coin)
+-&gt; TxCert era -&gt; (Set (Credential 'Staking (EraCrypto era)), Coin)
+forall {era}.
+(EraCrypto era ~ EraCrypto era,
+ Assert
+   (OrdCond
+      (CmpNat (ProtVerLow era) (ProtVerHigh era)) 'True 'True 'False)
+   (TypeError ...),
+ Assert
+   (OrdCond (CmpNat MinVersion (ProtVerLow era)) 'True 'True 'False)
+   (TypeError ...),
+ Assert
+   (OrdCond (CmpNat MinVersion (ProtVerHigh era)) 'True 'True 'False)
+   (TypeError ...),
+ EraTxCert era) =&gt;
+(Set (Credential 'Staking (EraCrypto era)), Coin)
+-&gt; TxCert era -&gt; (Set (Credential 'Staking (EraCrypto era)), Coin)
+</span><a href="#local-6989586621679591691"><span class="hs-identifier hs-var">accum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Coin
+</span><span class="hs-identifier hs-var">Coin</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">f (TxCert era)
+</span><a href="#local-6989586621679591689"><span class="hs-identifier hs-var">certs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>    </span><span id="local-6989586621679591788"><span class="annot"><span class="annottext">keyDeposit :: Coin
+</span><a href="#local-6989586621679591788"><span class="hs-identifier hs-var hs-var">keyDeposit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591687"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Coin (PParams era) Coin -&gt; Coin
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Coin (PParams era) Coin
+forall era. EraPParams era =&gt; Lens' (PParams era) Coin
+Lens' (PParams era) Coin
+</span><span class="hs-identifier hs-var">ppKeyDepositL</span></span><span>
+</span><span id="line-116"></span><span>    </span><span id="local-6989586621679591691"><span class="annot"><span class="annottext">accum :: (Set (Credential 'Staking (EraCrypto era)), Coin)
+-&gt; TxCert era -&gt; (Set (Credential 'Staking (EraCrypto era)), Coin)
+</span><a href="#local-6989586621679591691"><span class="hs-identifier hs-var hs-var">accum</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621679591941"><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679591942"><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591942"><span class="hs-identifier hs-var">totalRefunds</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679591943"><span class="annot"><span class="annottext">TxCert era
+</span><a href="#local-6989586621679591943"><span class="hs-identifier hs-var">cert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TxCert era -&gt; Maybe (Credential 'Staking (EraCrypto era))
+forall era.
+EraTxCert era =&gt;
+TxCert era -&gt; Maybe (Credential 'Staking (EraCrypto era))
+</span><span class="hs-identifier hs-var">lookupRegStakeTxCert</span></span><span> </span><span class="annot"><span class="annottext">TxCert era
+</span><a href="#local-6989586621679591943"><span class="hs-identifier hs-var">cert</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679591945"><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591945"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>          </span><span class="hs-comment">-- Need to track new delegations in case that the same key is later deregistered in</span><span>
+</span><span id="line-120"></span><span>          </span><span class="hs-comment">-- the same transaction.</span><span>
+</span><span id="line-121"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+-&gt; Set (Credential 'Staking (EraCrypto era))
+-&gt; Set (Credential 'Staking (EraCrypto era))
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#insert"><span class="hs-identifier hs-var">Set.insert</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591945"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591942"><span class="hs-identifier hs-var">totalRefunds</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">Maybe (Credential 'Staking (EraCrypto era))
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-123"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TxCert era -&gt; Maybe (Credential 'Staking (EraCrypto era))
+forall era.
+EraTxCert era =&gt;
+TxCert era -&gt; Maybe (Credential 'Staking (EraCrypto era))
+</span><span class="hs-identifier hs-var">lookupUnRegStakeTxCert</span></span><span> </span><span class="annot"><span class="annottext">TxCert era
+</span><a href="#local-6989586621679591943"><span class="hs-identifier hs-var">cert</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-124"></span><span>            </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679591947"><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591947"><span class="hs-identifier hs-var">k</span></a></span></span><span>
+</span><span id="line-125"></span><span>              </span><span class="hs-comment">-- We first check if there was already a registration certificate in this</span><span>
+</span><span id="line-126"></span><span>              </span><span class="hs-comment">-- transaction.</span><span>
+</span><span id="line-127"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+-&gt; Set (Credential 'Staking (EraCrypto era)) -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#member"><span class="hs-identifier hs-var">Set.member</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591947"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+-&gt; Set (Credential 'Staking (EraCrypto era))
+-&gt; Set (Credential 'Staking (EraCrypto era))
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#delete"><span class="hs-identifier hs-var">Set.delete</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591947"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591942"><span class="hs-identifier hs-var">totalRefunds</span></a></span><span> </span><span class="annot"><span class="annottext">Coin -&gt; Coin -&gt; Coin
+forall t. Val t =&gt; t -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;+&gt;</span></span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591788"><span class="hs-identifier hs-var">keyDeposit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>              </span><span class="hs-comment">-- Check for the deposit left during registration in some previous</span><span>
+</span><span id="line-129"></span><span>              </span><span class="hs-comment">-- transaction. This de-registration check will be matched first, despite being</span><span>
+</span><span id="line-130"></span><span>              </span><span class="hs-comment">-- the last case to match, because registration is not possible without</span><span>
+</span><span id="line-131"></span><span>              </span><span class="hs-comment">-- de-registration.</span><span>
+</span><span id="line-132"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679591949"><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591949"><span class="hs-identifier hs-var">deposit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era) -&gt; Maybe Coin
+</span><a href="#local-6989586621679591688"><span class="hs-identifier hs-var">lookupDeposit</span></a></span><span> </span><span class="annot"><span class="annottext">Credential 'Staking (EraCrypto era)
+Credential 'Staking (EraCrypto era)
+</span><a href="#local-6989586621679591947"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591942"><span class="hs-identifier hs-var">totalRefunds</span></a></span><span> </span><span class="annot"><span class="annottext">Coin -&gt; Coin -&gt; Coin
+forall t. Val t =&gt; t -&gt; t -&gt; t
+</span><span class="hs-operator hs-var">&lt;+&gt;</span></span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591949"><span class="hs-identifier hs-var">deposit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>            </span><span class="annot"><span class="annottext">Maybe (Credential 'Staking (EraCrypto era))
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set (Credential 'Staking (EraCrypto era))
+</span><a href="#local-6989586621679591941"><span class="hs-identifier hs-var">regKeys</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Coin
+</span><a href="#local-6989586621679591942"><span class="hs-identifier hs-var">totalRefunds</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span id="local-6989586621679591950"><span class="annot"><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyTxRefunds"><span class="hs-identifier hs-type">keyTxRefunds</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Shelley.Core.html#ShelleyEraTxBody"><span class="hs-identifier hs-type">ShelleyEraTxBody</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679591950"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679591950"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">CertState</span></span><span> </span><span class="annot"><a href="#local-6989586621679591950"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TxBody</span></span><span> </span><span class="annot"><a href="#local-6989586621679591950"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Coin</span></span></span><span>
+</span><span id="line-141"></span><span id="keyTxRefunds"><span class="annot"><span class="annottext">keyTxRefunds :: forall era.
+ShelleyEraTxBody era =&gt;
+PParams era -&gt; CertState era -&gt; TxBody era -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyTxRefunds"><span class="hs-identifier hs-var hs-var">keyTxRefunds</span></a></span></span><span> </span><span id="local-6989586621679591960"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591960"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679591961"><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591961"><span class="hs-identifier hs-var">dpstate</span></a></span></span><span> </span><span id="local-6989586621679591962"><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679591962"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; CertState era -&gt; StrictSeq (TxCert era) -&gt; Coin
+forall era (f :: * -&gt; *).
+(EraPParams era, Foldable f, ShelleyEraTxCert era) =&gt;
+PParams era -&gt; CertState era -&gt; f (TxCert era) -&gt; Coin
+</span><a href="Cardano.Ledger.Shelley.LedgerState.RefundsAndDeposits.html#keyCertsRefundsCertState"><span class="hs-identifier hs-var">keyCertsRefundsCertState</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679591960"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">CertState era
+</span><a href="#local-6989586621679591961"><span class="hs-identifier hs-var">dpstate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxBody era
+</span><a href="#local-6989586621679591962"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">TxBody era
+-&gt; Getting
+     (StrictSeq (TxCert era)) (TxBody era) (StrictSeq (TxCert era))
+-&gt; StrictSeq (TxCert era)
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting
+  (StrictSeq (TxCert era)) (TxBody era) (StrictSeq (TxCert era))
+forall era.
+EraTxBody era =&gt;
+Lens' (TxBody era) (StrictSeq (TxCert era))
+Lens' (TxBody era) (StrictSeq (TxCert era))
+</span><span class="hs-identifier hs-var">certsTxBodyL</span></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span></pre></body></html>

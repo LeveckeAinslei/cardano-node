@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Chain</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Chain Checks</span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier">ChainChecksPParams</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainPredicateFailure"><span class="hs-identifier">ChainPredicateFailure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#pparamsToChainChecksPParams"><span class="hs-identifier">pparamsToChainChecksPParams</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#chainChecks"><span class="hs-identifier">chainChecks</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BHeaderView</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">BHeaderView</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.BaseTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ProtVer</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Version</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html"><span class="hs-identifier">Control.Monad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#unless"><span class="hs-identifier">unless</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Except.html"><span class="hs-identifier">Control.Monad.Except</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#MonadError"><span class="hs-identifier">MonadError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#throwError"><span class="hs-identifier">throwError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Numeric.Natural.html"><span class="hs-identifier">Numeric.Natural</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier">Natural</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="ChainChecksPParams"><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier hs-var">ChainChecksPParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ChainChecksPParams"><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier hs-var">ChainChecksPParams</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ccMaxBHSize"><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBHSize"><span class="hs-identifier hs-var hs-var">ccMaxBHSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ccMaxBBSize"><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBBSize"><span class="hs-identifier hs-var hs-var">ccMaxBBSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ccProtocolVersion"><span class="annot"><span class="annottext">ChainChecksPParams -&gt; ProtVer
+</span><a href="Cardano.Ledger.Chain.html#ccProtocolVersion"><span class="hs-identifier hs-var hs-var">ccProtocolVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProtVer</span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679579970"><span id="local-6989586621679579979"><span id="local-6989586621679579983"><span class="annot"><span class="annottext">Int -&gt; ChainChecksPParams -&gt; ShowS
+[ChainChecksPParams] -&gt; ShowS
+ChainChecksPParams -&gt; String
+(Int -&gt; ChainChecksPParams -&gt; ShowS)
+-&gt; (ChainChecksPParams -&gt; String)
+-&gt; ([ChainChecksPParams] -&gt; ShowS)
+-&gt; Show ChainChecksPParams
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChainChecksPParams -&gt; ShowS
+showsPrec :: Int -&gt; ChainChecksPParams -&gt; ShowS
+$cshow :: ChainChecksPParams -&gt; String
+show :: ChainChecksPParams -&gt; String
+$cshowList :: [ChainChecksPParams] -&gt; ShowS
+showList :: [ChainChecksPParams] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679579987"><span id="local-6989586621679579994"><span class="annot"><span class="annottext">ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool
+(ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool)
+-&gt; (ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool)
+-&gt; Eq ChainChecksPParams
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool
+== :: ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool
+$c/= :: ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool
+/= :: ChainChecksPParams -&gt; ChainChecksPParams -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679579999"><span id="local-6989586621679580001"><span class="annot"><span class="annottext">(forall x. ChainChecksPParams -&gt; Rep ChainChecksPParams x)
+-&gt; (forall x. Rep ChainChecksPParams x -&gt; ChainChecksPParams)
+-&gt; Generic ChainChecksPParams
+forall x. Rep ChainChecksPParams x -&gt; ChainChecksPParams
+forall x. ChainChecksPParams -&gt; Rep ChainChecksPParams x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ChainChecksPParams -&gt; Rep ChainChecksPParams x
+from :: forall x. ChainChecksPParams -&gt; Rep ChainChecksPParams x
+$cto :: forall x. Rep ChainChecksPParams x -&gt; ChainChecksPParams
+to :: forall x. Rep ChainChecksPParams x -&gt; ChainChecksPParams
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679580005"><span id="local-6989586621679580009"><span id="local-6989586621679580015"><span class="annot"><span class="annottext">Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo)
+Proxy ChainChecksPParams -&gt; String
+(Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy ChainChecksPParams -&gt; String)
+-&gt; NoThunks ChainChecksPParams
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; ChainChecksPParams -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy ChainChecksPParams -&gt; String
+showTypeOf :: Proxy ChainChecksPParams -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span id="local-6989586621679579919"><span class="annot"><a href="Cardano.Ledger.Chain.html#pparamsToChainChecksPParams"><span class="hs-identifier hs-type">pparamsToChainChecksPParams</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679579919"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679579919"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier hs-type">ChainChecksPParams</span></a></span></span><span>
+</span><span id="line-42"></span><span id="pparamsToChainChecksPParams"><span class="annot"><span class="annottext">pparamsToChainChecksPParams :: forall era. EraPParams era =&gt; PParams era -&gt; ChainChecksPParams
+</span><a href="Cardano.Ledger.Chain.html#pparamsToChainChecksPParams"><span class="hs-identifier hs-var hs-var">pparamsToChainChecksPParams</span></a></span></span><span> </span><span id="local-6989586621679580061"><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679580061"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier hs-type">ChainChecksPParams</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ccMaxBHSize :: Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBHSize"><span class="hs-identifier hs-var">ccMaxBHSize</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679580061"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Natural (PParams era) Natural -&gt; Natural
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Natural (PParams era) Natural
+forall era. EraPParams era =&gt; Lens' (PParams era) Natural
+Lens' (PParams era) Natural
+</span><span class="hs-identifier hs-var">ppMaxBHSizeL</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ccMaxBBSize :: Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBBSize"><span class="hs-identifier hs-var">ccMaxBBSize</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679580061"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting Natural (PParams era) Natural -&gt; Natural
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Natural (PParams era) Natural
+forall era. EraPParams era =&gt; Lens' (PParams era) Natural
+Lens' (PParams era) Natural
+</span><span class="hs-identifier hs-var">ppMaxBBSizeL</span></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ccProtocolVersion :: ProtVer
+</span><a href="Cardano.Ledger.Chain.html#ccProtocolVersion"><span class="hs-identifier hs-var">ccProtocolVersion</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParams era
+</span><a href="#local-6989586621679580061"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="annot"><span class="annottext">PParams era -&gt; Getting ProtVer (PParams era) ProtVer -&gt; ProtVer
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting ProtVer (PParams era) ProtVer
+forall era.
+(EraPParams era, EraPParams era) =&gt;
+Lens' (PParams era) ProtVer
+Lens' (PParams era) ProtVer
+</span><span class="hs-identifier hs-var">ppProtocolVersionL</span></span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="ChainPredicateFailure"><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainPredicateFailure"><span class="hs-identifier hs-var">ChainPredicateFailure</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="HeaderSizeTooLargeCHAIN"><span class="annot"><a href="Cardano.Ledger.Chain.html#HeaderSizeTooLargeCHAIN"><span class="hs-identifier hs-var">HeaderSizeTooLargeCHAIN</span></a></span></span><span>
+</span><span id="line-51"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-comment">-- Header Size</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-comment">-- Max Header Size</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BlockSizeTooLargeCHAIN"><span class="annot"><a href="Cardano.Ledger.Chain.html#BlockSizeTooLargeCHAIN"><span class="hs-identifier hs-var">BlockSizeTooLargeCHAIN</span></a></span></span><span>
+</span><span id="line-54"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-comment">-- Block Size</span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-comment">-- Max Block Size</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ObsoleteNodeCHAIN"><span class="annot"><a href="Cardano.Ledger.Chain.html#ObsoleteNodeCHAIN"><span class="hs-identifier hs-var">ObsoleteNodeCHAIN</span></a></span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Version</span></span><span> </span><span class="hs-comment">-- protocol version used</span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Version</span></span><span> </span><span class="hs-comment">-- max protocol version</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679580069"><span id="local-6989586621679580071"><span class="annot"><span class="annottext">(forall x. ChainPredicateFailure -&gt; Rep ChainPredicateFailure x)
+-&gt; (forall x. Rep ChainPredicateFailure x -&gt; ChainPredicateFailure)
+-&gt; Generic ChainPredicateFailure
+forall x. Rep ChainPredicateFailure x -&gt; ChainPredicateFailure
+forall x. ChainPredicateFailure -&gt; Rep ChainPredicateFailure x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ChainPredicateFailure -&gt; Rep ChainPredicateFailure x
+from :: forall x. ChainPredicateFailure -&gt; Rep ChainPredicateFailure x
+$cto :: forall x. Rep ChainPredicateFailure x -&gt; ChainPredicateFailure
+to :: forall x. Rep ChainPredicateFailure x -&gt; ChainPredicateFailure
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679580074"><span id="local-6989586621679580086"><span id="local-6989586621679580090"><span class="annot"><span class="annottext">Int -&gt; ChainPredicateFailure -&gt; ShowS
+[ChainPredicateFailure] -&gt; ShowS
+ChainPredicateFailure -&gt; String
+(Int -&gt; ChainPredicateFailure -&gt; ShowS)
+-&gt; (ChainPredicateFailure -&gt; String)
+-&gt; ([ChainPredicateFailure] -&gt; ShowS)
+-&gt; Show ChainPredicateFailure
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ChainPredicateFailure -&gt; ShowS
+showsPrec :: Int -&gt; ChainPredicateFailure -&gt; ShowS
+$cshow :: ChainPredicateFailure -&gt; String
+show :: ChainPredicateFailure -&gt; String
+$cshowList :: [ChainPredicateFailure] -&gt; ShowS
+showList :: [ChainPredicateFailure] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679580093"><span id="local-6989586621679580102"><span class="annot"><span class="annottext">ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+(ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; (ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; Eq ChainPredicateFailure
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+== :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+$c/= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+/= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679580108"><span id="local-6989586621679580118"><span id="local-6989586621679580126"><span id="local-6989586621679580130"><span id="local-6989586621679580133"><span id="local-6989586621679580136"><span id="local-6989586621679580139"><span class="annot"><span class="annottext">Eq ChainPredicateFailure
+Eq ChainPredicateFailure =&gt;
+(ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Ordering)
+-&gt; (ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; (ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; (ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; (ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool)
+-&gt; (ChainPredicateFailure
+    -&gt; ChainPredicateFailure -&gt; ChainPredicateFailure)
+-&gt; (ChainPredicateFailure
+    -&gt; ChainPredicateFailure -&gt; ChainPredicateFailure)
+-&gt; Ord ChainPredicateFailure
+ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Ordering
+ChainPredicateFailure
+-&gt; ChainPredicateFailure -&gt; ChainPredicateFailure
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Ordering
+compare :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Ordering
+$c&lt; :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+&lt; :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+$c&lt;= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+&lt;= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+$c&gt; :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+&gt; :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+$c&gt;= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+&gt;= :: ChainPredicateFailure -&gt; ChainPredicateFailure -&gt; Bool
+$cmax :: ChainPredicateFailure
+-&gt; ChainPredicateFailure -&gt; ChainPredicateFailure
+max :: ChainPredicateFailure
+-&gt; ChainPredicateFailure -&gt; ChainPredicateFailure
+$cmin :: ChainPredicateFailure
+-&gt; ChainPredicateFailure -&gt; ChainPredicateFailure
+min :: ChainPredicateFailure
+-&gt; ChainPredicateFailure -&gt; ChainPredicateFailure
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679580143"><span id="local-6989586621679580147"><span id="local-6989586621679580153"><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainPredicateFailure"><span class="hs-identifier hs-type">ChainPredicateFailure</span></a></span></span></span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span id="local-6989586621679579942"><span id="local-6989586621679579944"><span class="annot"><a href="Cardano.Ledger.Chain.html#chainChecks"><span class="hs-identifier hs-type">chainChecks</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#MonadError"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainPredicateFailure"><span class="hs-identifier hs-type">ChainPredicateFailure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679579942"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Version</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Chain.html#ChainChecksPParams"><span class="hs-identifier hs-type">ChainChecksPParams</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BHeaderView</span></span><span> </span><span class="annot"><a href="#local-6989586621679579944"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="#local-6989586621679579942"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-69"></span><span id="chainChecks"><span class="annot"><span class="annottext">chainChecks :: forall (m :: * -&gt; *) c.
+MonadError ChainPredicateFailure m =&gt;
+Version -&gt; ChainChecksPParams -&gt; BHeaderView c -&gt; m ()
+</span><a href="Cardano.Ledger.Chain.html#chainChecks"><span class="hs-identifier hs-var hs-var">chainChecks</span></a></span></span><span> </span><span id="local-6989586621679580203"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580203"><span class="hs-identifier hs-var">maxpv</span></a></span></span><span> </span><span id="local-6989586621679580204"><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span></span><span> </span><span id="local-6989586621679580205"><span class="annot"><span class="annottext">BHeaderView c
+</span><a href="#local-6989586621679580205"><span class="hs-identifier hs-var">bhv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#unless"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580206"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Version -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3C%3D"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580203"><span class="hs-identifier hs-var">maxpv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ChainPredicateFailure -&gt; m ()
+forall a. ChainPredicateFailure -&gt; m a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#throwError"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Version -&gt; Version -&gt; ChainPredicateFailure
+</span><a href="Cardano.Ledger.Chain.html#ObsoleteNodeCHAIN"><span class="hs-identifier hs-var">ObsoleteNodeCHAIN</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580206"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580203"><span class="hs-identifier hs-var">maxpv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#unless"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BHeaderView c -&gt; Int
+forall c. BHeaderView c -&gt; Int
+</span><span class="hs-identifier hs-var">bhviewHSize</span></span><span> </span><span class="annot"><span class="annottext">BHeaderView c
+</span><a href="#local-6989586621679580205"><span class="hs-identifier hs-var">bhv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3C%3D"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBHSize"><span class="hs-identifier hs-var">ccMaxBHSize</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">ChainPredicateFailure -&gt; m ()
+forall a. ChainPredicateFailure -&gt; m a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#throwError"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">(ChainPredicateFailure -&gt; m ()) -&gt; ChainPredicateFailure -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; ChainPredicateFailure
+</span><a href="Cardano.Ledger.Chain.html#HeaderSizeTooLargeCHAIN"><span class="hs-identifier hs-var">HeaderSizeTooLargeCHAIN</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Natural) -&gt; Int -&gt; Natural
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BHeaderView c -&gt; Int
+forall c. BHeaderView c -&gt; Int
+</span><span class="hs-identifier hs-var">bhviewHSize</span></span><span> </span><span class="annot"><span class="annottext">BHeaderView c
+</span><a href="#local-6989586621679580205"><span class="hs-identifier hs-var">bhv</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBHSize"><span class="hs-identifier hs-var">ccMaxBHSize</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html#unless"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BHeaderView c -&gt; Natural
+forall c. BHeaderView c -&gt; Natural
+</span><span class="hs-identifier hs-var">bhviewBSize</span></span><span> </span><span class="annot"><span class="annottext">BHeaderView c
+</span><a href="#local-6989586621679580205"><span class="hs-identifier hs-var">bhv</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3C%3D"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBBSize"><span class="hs-identifier hs-var">ccMaxBBSize</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">ChainPredicateFailure -&gt; m ()
+forall a. ChainPredicateFailure -&gt; m a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Error.Class.html#throwError"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">(ChainPredicateFailure -&gt; m ()) -&gt; ChainPredicateFailure -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; ChainPredicateFailure
+</span><a href="Cardano.Ledger.Chain.html#BlockSizeTooLargeCHAIN"><span class="hs-identifier hs-var">BlockSizeTooLargeCHAIN</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BHeaderView c -&gt; Natural
+forall c. BHeaderView c -&gt; Natural
+</span><span class="hs-identifier hs-var">bhviewBSize</span></span><span> </span><span class="annot"><span class="annottext">BHeaderView c
+</span><a href="#local-6989586621679580205"><span class="hs-identifier hs-var">bhv</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ChainChecksPParams -&gt; Natural
+</span><a href="Cardano.Ledger.Chain.html#ccMaxBBSize"><span class="hs-identifier hs-var">ccMaxBBSize</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ProtVer</span></span><span> </span><span id="local-6989586621679580206"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621679580206"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams -&gt; ProtVer
+</span><a href="Cardano.Ledger.Chain.html#ccProtocolVersion"><span class="hs-identifier hs-var">ccProtocolVersion</span></a></span><span> </span><span class="annot"><span class="annottext">ChainChecksPParams
+</span><a href="#local-6989586621679580204"><span class="hs-identifier hs-var">ccd</span></a></span><span>
+</span><span id="line-79"></span></pre></body></html>

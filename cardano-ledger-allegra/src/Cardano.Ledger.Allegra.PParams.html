@@ -1,0 +1,670 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Allegra.PParams</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier">AllegraEra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.Governance</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.PParams</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Val</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Val</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Coerce.html"><span class="hs-identifier">Data.Coerce</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Micro</span></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679278697"><span id="local-6989586621679278904"><span id="local-6989586621679278931"><span id="local-6989586621679278938"><span id="local-6989586621679278946"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraPParams</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="PParamsHKD"><span class="annot"><span class="hs-identifier hs-var">PParamsHKD</span></span></span><span> </span><span id="local-6989586621679279051"><span class="annot"><a href="#local-6989586621679279051"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyPParams</span></span><span> </span><span class="annot"><a href="#local-6989586621679279051"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="UpgradePParams"><span class="annot"><span class="hs-identifier hs-var">UpgradePParams</span></span></span><span> </span><span id="local-6989586621679279052"><span class="annot"><a href="#local-6989586621679279052"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="DowngradePParams"><span class="annot"><span class="hs-identifier hs-var">DowngradePParams</span></span></span><span> </span><span id="local-6989586621679279053"><span class="annot"><a href="#local-6989586621679279053"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278697"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621679279055"><span class="annot"><span class="annottext">emptyPParamsIdentity :: PParamsHKD Identity (AllegraEra c)
+</span><a href="#local-6989586621679279055"><span class="hs-identifier hs-var hs-var hs-var hs-var">emptyPParamsIdentity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParamsHKD Identity (AllegraEra c)
+ShelleyPParams Identity (AllegraEra c)
+forall era. Era era =&gt; ShelleyPParams Identity era
+</span><span class="hs-identifier hs-var">emptyShelleyPParams</span></span><span>
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621679279058"><span class="annot"><span class="annottext">emptyPParamsStrictMaybe :: PParamsHKD StrictMaybe (AllegraEra c)
+</span><a href="#local-6989586621679279058"><span class="hs-identifier hs-var hs-var hs-var hs-var">emptyPParamsStrictMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParamsHKD StrictMaybe (AllegraEra c)
+ShelleyPParams StrictMaybe (AllegraEra c)
+forall era. ShelleyPParams StrictMaybe era
+</span><span class="hs-identifier hs-var">emptyShelleyPParamsUpdate</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621679279064"><span class="annot"><span class="annottext">upgradePParamsHKD :: forall (f :: * -&gt; *).
+(HKDFunctor f, EraPParams (PreviousEra (AllegraEra c))) =&gt;
+UpgradePParams f (AllegraEra c)
+-&gt; PParamsHKD f (PreviousEra (AllegraEra c))
+-&gt; PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279064"><span class="hs-identifier hs-var hs-var hs-var hs-var">upgradePParamsHKD</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (PreviousEra (AllegraEra c))
+-&gt; PParamsHKD f (AllegraEra c)
+ShelleyPParams f (ShelleyEra c) -&gt; ShelleyPParams f (AllegraEra c)
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621679279069"><span class="annot"><span class="annottext">downgradePParamsHKD :: forall (f :: * -&gt; *).
+(HKDFunctor f, EraPParams (PreviousEra (AllegraEra c))) =&gt;
+DowngradePParams f (AllegraEra c)
+-&gt; PParamsHKD f (AllegraEra c)
+-&gt; PParamsHKD f (PreviousEra (AllegraEra c))
+</span><a href="#local-6989586621679279069"><span class="hs-identifier hs-var hs-var hs-var hs-var">downgradePParamsHKD</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+-&gt; PParamsHKD f (PreviousEra (AllegraEra c))
+ShelleyPParams f (AllegraEra c) -&gt; ShelleyPParams f (ShelleyEra c)
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679279074"><span class="annot"><span class="annottext">hkdMinFeeAL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279074"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMinFeeAL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppMinFeeA</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279078"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279078"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279079"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279079"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279078"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMinFeeA</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279079"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679279083"><span class="annot"><span class="annottext">hkdMinFeeBL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279083"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMinFeeBL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppMinFeeB</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279086"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279086"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279087"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279087"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279086"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMinFeeB</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279087"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679279091"><span class="annot"><span class="annottext">hkdMaxBBSizeL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Natural)
+</span><a href="#local-6989586621679279091"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMaxBBSizeL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Natural)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Natural
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Natural
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Natural
+</span><span class="hs-identifier hs-var">sppMaxBBSize</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Natural -&gt; f (HKD f Natural))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279094"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279094"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279095"><span class="annot"><span class="annottext">HKD f Natural
+</span><a href="#local-6989586621679279095"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279094"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMaxBBSize</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279095"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621679279099"><span class="annot"><span class="annottext">hkdMaxTxSizeL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Natural)
+</span><a href="#local-6989586621679279099"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMaxTxSizeL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Natural)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Natural
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Natural
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Natural
+</span><span class="hs-identifier hs-var">sppMaxTxSize</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Natural -&gt; f (HKD f Natural))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279102"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279102"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279103"><span class="annot"><span class="annottext">HKD f Natural
+</span><a href="#local-6989586621679279103"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279102"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMaxTxSize</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279103"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679279107"><span class="annot"><span class="annottext">hkdMaxBHSizeL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Natural)
+</span><a href="#local-6989586621679279107"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMaxBHSizeL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Natural)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Natural
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Natural
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Natural
+</span><span class="hs-identifier hs-var">sppMaxBHSize</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Natural -&gt; f (HKD f Natural))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279110"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279110"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279111"><span class="annot"><span class="annottext">HKD f Natural
+</span><a href="#local-6989586621679279111"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279110"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMaxBHSize</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279111"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621679279115"><span class="annot"><span class="annottext">hkdKeyDepositL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279115"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdKeyDepositL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppKeyDeposit</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279118"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279118"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279119"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279119"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279118"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppKeyDeposit</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279119"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621679279123"><span class="annot"><span class="annottext">hkdPoolDepositL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279123"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdPoolDepositL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppPoolDeposit</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279126"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279126"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279127"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279127"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279126"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppPoolDeposit</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279127"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621679279131"><span class="annot"><span class="annottext">hkdEMaxL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f EpochNo)
+</span><a href="#local-6989586621679279131"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdEMaxL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f EpochNo)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f EpochNo -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f EpochNo -&gt; f (HKD f EpochNo))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f EpochNo
+ShelleyPParams f (AllegraEra c) -&gt; HKD f EpochNo
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f EpochNo
+</span><span class="hs-identifier hs-var">sppEMax</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f EpochNo -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f EpochNo -&gt; f (HKD f EpochNo))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f EpochNo -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f EpochNo -&gt; f (HKD f EpochNo))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279134"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279134"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279135"><span class="annot"><span class="annottext">HKD f EpochNo
+</span><a href="#local-6989586621679279135"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279134"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppEMax</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279135"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621679279139"><span class="annot"><span class="annottext">hkdNOptL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Natural)
+</span><a href="#local-6989586621679279139"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdNOptL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Natural)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Natural
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Natural
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Natural
+</span><span class="hs-identifier hs-var">sppNOpt</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Natural -&gt; f (HKD f Natural))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Natural -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Natural -&gt; f (HKD f Natural))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279142"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279142"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279143"><span class="annot"><span class="annottext">HKD f Natural
+</span><a href="#local-6989586621679279143"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279142"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppNOpt</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279143"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621679279147"><span class="annot"><span class="annottext">hkdA0L :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f NonNegativeInterval)
+</span><a href="#local-6989586621679279147"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdA0L</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f NonNegativeInterval)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f NonNegativeInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f NonNegativeInterval -&gt; f (HKD f NonNegativeInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f NonNegativeInterval
+ShelleyPParams f (AllegraEra c) -&gt; HKD f NonNegativeInterval
+forall (f :: * -&gt; *) era.
+ShelleyPParams f era -&gt; HKD f NonNegativeInterval
+</span><span class="hs-identifier hs-var">sppA0</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f NonNegativeInterval -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f NonNegativeInterval -&gt; f (HKD f NonNegativeInterval))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f NonNegativeInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f NonNegativeInterval -&gt; f (HKD f NonNegativeInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279150"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279150"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279151"><span class="annot"><span class="annottext">HKD f NonNegativeInterval
+</span><a href="#local-6989586621679279151"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279150"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppA0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279151"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621679279155"><span class="annot"><span class="annottext">hkdRhoL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f UnitInterval)
+</span><a href="#local-6989586621679279155"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdRhoL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval
+ShelleyPParams f (AllegraEra c) -&gt; HKD f UnitInterval
+forall (f :: * -&gt; *) era.
+ShelleyPParams f era -&gt; HKD f UnitInterval
+</span><span class="hs-identifier hs-var">sppRho</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279158"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279158"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279159"><span class="annot"><span class="annottext">HKD f UnitInterval
+</span><a href="#local-6989586621679279159"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279158"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppRho</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279159"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621679279163"><span class="annot"><span class="annottext">hkdTauL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f UnitInterval)
+</span><a href="#local-6989586621679279163"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdTauL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval
+ShelleyPParams f (AllegraEra c) -&gt; HKD f UnitInterval
+forall (f :: * -&gt; *) era.
+ShelleyPParams f era -&gt; HKD f UnitInterval
+</span><span class="hs-identifier hs-var">sppTau</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279166"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279166"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279167"><span class="annot"><span class="annottext">HKD f UnitInterval
+</span><a href="#local-6989586621679279167"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279166"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppTau</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279167"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621679279172"><span class="annot"><span class="annottext">hkdDL :: forall (f :: * -&gt; *).
+(HKDFunctor f, ProtVerAtMost (AllegraEra c) 6) =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f UnitInterval)
+</span><a href="#local-6989586621679279172"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdDL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f UnitInterval
+ShelleyPParams f (AllegraEra c) -&gt; HKD f UnitInterval
+forall (f :: * -&gt; *) era.
+ShelleyPParams f era -&gt; HKD f UnitInterval
+</span><span class="hs-identifier hs-var">sppD</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f UnitInterval -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f UnitInterval -&gt; f (HKD f UnitInterval))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279175"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279175"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279176"><span class="annot"><span class="annottext">HKD f UnitInterval
+</span><a href="#local-6989586621679279176"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279175"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppD</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279176"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621679279181"><span class="annot"><span class="annottext">hkdExtraEntropyL :: forall (f :: * -&gt; *).
+(HKDFunctor f, ProtVerAtMost (AllegraEra c) 6) =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Nonce)
+</span><a href="#local-6989586621679279181"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdExtraEntropyL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Nonce)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Nonce -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Nonce -&gt; f (HKD f Nonce))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Nonce
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Nonce
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Nonce
+</span><span class="hs-identifier hs-var">sppExtraEntropy</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Nonce -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Nonce -&gt; f (HKD f Nonce))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Nonce -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Nonce -&gt; f (HKD f Nonce))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279184"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279184"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279185"><span class="annot"><span class="annottext">HKD f Nonce
+</span><a href="#local-6989586621679279185"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279184"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppExtraEntropy</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279185"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679279190"><span class="annot"><span class="annottext">hkdProtocolVersionL :: forall (f :: * -&gt; *).
+(HKDFunctor f, ProtVerAtMost (AllegraEra c) 8) =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f ProtVer)
+</span><a href="#local-6989586621679279190"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdProtocolVersionL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f ProtVer)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f ProtVer -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f ProtVer -&gt; f (HKD f ProtVer))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f ProtVer
+ShelleyPParams f (AllegraEra c) -&gt; HKD f ProtVer
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f ProtVer
+</span><span class="hs-identifier hs-var">sppProtocolVersion</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f ProtVer -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f ProtVer -&gt; f (HKD f ProtVer))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f ProtVer -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f ProtVer -&gt; f (HKD f ProtVer))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279193"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279193"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279194"><span class="annot"><span class="annottext">HKD f ProtVer
+</span><a href="#local-6989586621679279194"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279193"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppProtocolVersion</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279194"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621679279199"><span class="annot"><span class="annottext">hkdMinUTxOValueL :: forall (f :: * -&gt; *).
+(HKDFunctor f, ProtVerAtMost (AllegraEra c) 4) =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279199"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMinUTxOValueL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppMinUTxOValue</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279202"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279202"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279203"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279203"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279202"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMinUTxOValue</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279203"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679279207"><span class="annot"><span class="annottext">hkdMinPoolCostL :: forall (f :: * -&gt; *).
+HKDFunctor f =&gt;
+Lens' (PParamsHKD f (AllegraEra c)) (HKD f Coin)
+</span><a href="#local-6989586621679279207"><span class="hs-identifier hs-var hs-var hs-var hs-var">hkdMinPoolCostL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParamsHKD f (AllegraEra c) -&gt; HKD f Coin)
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c) -&gt; HKD f Coin
+ShelleyPParams f (AllegraEra c) -&gt; HKD f Coin
+forall (f :: * -&gt; *) era. ShelleyPParams f era -&gt; HKD f Coin
+</span><span class="hs-identifier hs-var">sppMinPoolCost</span></span><span> </span><span class="annot"><span class="annottext">((PParamsHKD f (AllegraEra c)
+  -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+ -&gt; forall {f :: * -&gt; *}.
+    Functor f =&gt;
+    (HKD f Coin -&gt; f (HKD f Coin))
+    -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c)))
+-&gt; (PParamsHKD f (AllegraEra c)
+    -&gt; HKD f Coin -&gt; PParamsHKD f (AllegraEra c))
+-&gt; forall {f :: * -&gt; *}.
+   Functor f =&gt;
+   (HKD f Coin -&gt; f (HKD f Coin))
+   -&gt; PParamsHKD f (AllegraEra c) -&gt; f (PParamsHKD f (AllegraEra c))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679279210"><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279210"><span class="hs-identifier hs-var">pp</span></a></span></span><span> </span><span id="local-6989586621679279211"><span class="annot"><span class="annottext">HKD f Coin
+</span><a href="#local-6989586621679279211"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PParamsHKD f (AllegraEra c)
+</span><a href="#local-6989586621679279210"><span class="hs-identifier hs-var">pp</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="hs-identifier hs-var">sppMinPoolCost</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="#local-6989586621679279211"><span class="hs-identifier hs-type">x</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679278815"><span id="local-6989586621679279251"><span id="local-6989586621679279255"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679278815"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraGov</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278815"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="GovState"><span class="annot"><span class="hs-identifier hs-var">GovState</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278815"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShelleyGovState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679278815"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679279360"><span class="annot"><span class="annottext">emptyGovState :: GovState (AllegraEra c)
+</span><a href="#local-6989586621679279360"><span class="hs-identifier hs-var hs-var hs-var hs-var">emptyGovState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">ProposedPPUpdates (AllegraEra c)
+-&gt; ProposedPPUpdates (AllegraEra c)
+-&gt; PParams (AllegraEra c)
+-&gt; PParams (AllegraEra c)
+-&gt; ShelleyGovState (AllegraEra c)
+forall era.
+ProposedPPUpdates era
+-&gt; ProposedPPUpdates era
+-&gt; PParams era
+-&gt; PParams era
+-&gt; ShelleyGovState era
+</span><span class="hs-identifier hs-var">ShelleyGovState</span></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">ProposedPPUpdates (AllegraEra c)
+forall era. ProposedPPUpdates era
+</span><span class="hs-identifier hs-var">emptyPPPUpdates</span></span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">ProposedPPUpdates (AllegraEra c)
+forall era. ProposedPPUpdates era
+</span><span class="hs-identifier hs-var">emptyPPPUpdates</span></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">PParams (AllegraEra c)
+forall era. EraPParams era =&gt; PParams era
+</span><span class="hs-identifier hs-var">emptyPParams</span></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">PParams (AllegraEra c)
+forall era. EraPParams era =&gt; PParams era
+</span><span class="hs-identifier hs-var">emptyPParams</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679279365"><span class="annot"><span class="annottext">getProposedPPUpdates :: GovState (AllegraEra c) -&gt; Maybe (ProposedPPUpdates (AllegraEra c))
+</span><a href="#local-6989586621679279365"><span class="hs-identifier hs-var hs-var hs-var hs-var">getProposedPPUpdates</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ProposedPPUpdates (AllegraEra c)
+-&gt; Maybe (ProposedPPUpdates (AllegraEra c))
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(ProposedPPUpdates (AllegraEra c)
+ -&gt; Maybe (ProposedPPUpdates (AllegraEra c)))
+-&gt; (ShelleyGovState (AllegraEra c)
+    -&gt; ProposedPPUpdates (AllegraEra c))
+-&gt; ShelleyGovState (AllegraEra c)
+-&gt; Maybe (ProposedPPUpdates (AllegraEra c))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ShelleyGovState (AllegraEra c) -&gt; ProposedPPUpdates (AllegraEra c)
+forall era. ShelleyGovState era -&gt; ProposedPPUpdates era
+</span><span class="hs-identifier hs-var">proposals</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679279371"><span class="annot"><span class="annottext">curPParamsGovStateL :: Lens' (GovState (AllegraEra c)) (PParams (AllegraEra c))
+</span><a href="#local-6989586621679279371"><span class="hs-identifier hs-var hs-var hs-var hs-var">curPParamsGovStateL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParams (AllegraEra c) -&gt; f (PParams (AllegraEra c)))
+-&gt; GovState (AllegraEra c) -&gt; f (GovState (AllegraEra c))
+(PParams (AllegraEra c) -&gt; f (PParams (AllegraEra c)))
+-&gt; ShelleyGovState (AllegraEra c)
+-&gt; f (ShelleyGovState (AllegraEra c))
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(PParams era -&gt; f (PParams era))
+-&gt; ShelleyGovState era -&gt; f (ShelleyGovState era)
+</span><span class="hs-identifier hs-var">curPParamsShelleyGovStateL</span></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621679279376"><span class="annot"><span class="annottext">prevPParamsGovStateL :: Lens' (GovState (AllegraEra c)) (PParams (AllegraEra c))
+</span><a href="#local-6989586621679279376"><span class="hs-identifier hs-var hs-var hs-var hs-var">prevPParamsGovStateL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PParams (AllegraEra c) -&gt; f (PParams (AllegraEra c)))
+-&gt; GovState (AllegraEra c) -&gt; f (GovState (AllegraEra c))
+(PParams (AllegraEra c) -&gt; f (PParams (AllegraEra c)))
+-&gt; ShelleyGovState (AllegraEra c)
+-&gt; f (ShelleyGovState (AllegraEra c))
+forall era (f :: * -&gt; *).
+Functor f =&gt;
+(PParams era -&gt; f (PParams era))
+-&gt; ShelleyGovState era -&gt; f (ShelleyGovState era)
+</span><span class="hs-identifier hs-var">prevPParamsShelleyGovStateL</span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679279381"><span class="annot"><span class="annottext">obligationGovState :: GovState (AllegraEra c) -&gt; Coin
+</span><a href="#local-6989586621679279381"><span class="hs-identifier hs-var hs-var hs-var hs-var">obligationGovState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Coin -&gt; ShelleyGovState (AllegraEra c) -&gt; Coin
+forall a b. a -&gt; b -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#const"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Coin
+forall t. Val t =&gt; t
+</span><span class="hs-identifier hs-var">zero</span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679279385"><span class="annot"><span class="annottext">getDRepDistr :: GovState (AllegraEra c)
+-&gt; Map (DRep (EraCrypto (AllegraEra c))) (CompactForm Coin)
+</span><a href="#local-6989586621679279385"><span class="hs-identifier hs-var hs-var hs-var hs-var">getDRepDistr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map (DRep c) (CompactForm Coin)
+-&gt; ShelleyGovState (AllegraEra c)
+-&gt; Map (DRep c) (CompactForm Coin)
+forall a b. a -&gt; b -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#const"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Map (DRep c) (CompactForm Coin)
+forall k a. Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#empty"><span class="hs-identifier hs-var">Map.empty</span></a></span><span>
+</span><span id="line-64"></span></pre></body></html>

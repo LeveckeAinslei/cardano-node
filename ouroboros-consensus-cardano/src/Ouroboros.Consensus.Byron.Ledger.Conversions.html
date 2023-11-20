@@ -1,0 +1,161 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.Byron.Ledger.Conversions</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-2"></span><span>    </span><span class="annot"><span class="hs-comment">-- * From @cardano-ledger-byron@ to @ouroboros-consensus@</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockCount"><span class="hs-identifier">fromByronBlockCount</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockNo"><span class="hs-identifier">fromByronBlockNo</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronEpochSlots"><span class="hs-identifier">fromByronEpochSlots</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotLength"><span class="hs-identifier">fromByronSlotLength</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotNo"><span class="hs-identifier">fromByronSlotNo</span></a></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * From @ouroboros-consensus@ to @cardano-ledger-byron@</span></span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronBlockCount"><span class="hs-identifier">toByronBlockCount</span></a></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotLength"><span class="hs-identifier">toByronSlotLength</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotNo"><span class="hs-identifier">toByronSlotNo</span></a></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Extract info from the genesis config</span></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisNumCoreNodes"><span class="hs-identifier">genesisNumCoreNodes</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSecurityParam"><span class="hs-identifier">genesisSecurityParam</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSlotLength"><span class="hs-identifier">genesisSlotLength</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Chain.Common</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CC</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Chain.Genesis</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Genesis</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Chain.Slotting</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CC</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Chain.Update</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CC</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Coerce.html"><span class="hs-identifier">Data.Coerce</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.html"><span class="hs-identifier">Data.Set</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Numeric.Natural.html"><span class="hs-identifier">Numeric.Natural</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier">Natural</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Block</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.BlockchainTime</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Orphans.html"><span class="hs-identifier">Ouroboros.Consensus.Byron.Ledger.Orphans</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Config.SecurityParam</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Node.ProtocolInfo</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  From @cardano-ledger-byron@ to @ouroboros-consensus@
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotNo"><span class="hs-identifier hs-type">fromByronSlotNo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.SlotNumber</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span>
+</span><span id="line-36"></span><span id="fromByronSlotNo"><span class="annot"><span class="annottext">fromByronSlotNo :: SlotNumber -&gt; SlotNo
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotNo"><span class="hs-identifier hs-var hs-var">fromByronSlotNo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SlotNumber -&gt; SlotNo
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockNo"><span class="hs-identifier hs-type">fromByronBlockNo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.ChainDifficulty</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BlockNo</span></span><span>
+</span><span id="line-39"></span><span id="fromByronBlockNo"><span class="annot"><span class="annottext">fromByronBlockNo :: ChainDifficulty -&gt; BlockNo
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockNo"><span class="hs-identifier hs-var hs-var">fromByronBlockNo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ChainDifficulty -&gt; BlockNo
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockCount"><span class="hs-identifier hs-type">fromByronBlockCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.BlockCount</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SecurityParam</span></span><span>
+</span><span id="line-42"></span><span id="fromByronBlockCount"><span class="annot"><span class="annottext">fromByronBlockCount :: BlockCount -&gt; SecurityParam
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockCount"><span class="hs-identifier hs-var hs-var">fromByronBlockCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CC.BlockCount</span></span><span> </span><span id="local-6989586621680235024"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235024"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; SecurityParam
+</span><span class="hs-identifier hs-var">SecurityParam</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235024"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronEpochSlots"><span class="hs-identifier hs-type">fromByronEpochSlots</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.EpochSlots</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EpochSize</span></span><span>
+</span><span id="line-45"></span><span id="fromByronEpochSlots"><span class="annot"><span class="annottext">fromByronEpochSlots :: EpochSlots -&gt; EpochSize
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronEpochSlots"><span class="hs-identifier hs-var hs-var">fromByronEpochSlots</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CC.EpochSlots</span></span><span> </span><span id="local-6989586621680235027"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235027"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; EpochSize
+</span><span class="hs-identifier hs-var">EpochSize</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235027"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotLength"><span class="hs-identifier hs-type">fromByronSlotLength</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotLength</span></span><span>
+</span><span id="line-48"></span><span id="fromByronSlotLength"><span class="annot"><span class="annottext">fromByronSlotLength :: Natural -&gt; SlotLength
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronSlotLength"><span class="hs-identifier hs-var hs-var">fromByronSlotLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; SlotLength
+</span><span class="hs-identifier hs-var">slotLengthFromMillisec</span></span><span>
+</span><span id="line-49"></span><span>                    </span><span class="annot"><span class="annottext">(Integer -&gt; SlotLength)
+-&gt; (Natural -&gt; Integer) -&gt; Natural -&gt; SlotLength
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural -&gt; Integer
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Integer.html#Integer"><span class="hs-identifier hs-type">Integer</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  From @ouroboros-consensus@ to @cardano-ledger-byron@
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotNo"><span class="hs-identifier hs-type">toByronSlotNo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.SlotNumber</span></span><span>
+</span><span id="line-56"></span><span id="toByronSlotNo"><span class="annot"><span class="annottext">toByronSlotNo :: SlotNo -&gt; SlotNumber
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotNo"><span class="hs-identifier hs-var hs-var">toByronSlotNo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SlotNo -&gt; SlotNumber
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronBlockCount"><span class="hs-identifier hs-type">toByronBlockCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SecurityParam</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">CC.BlockCount</span></span><span>
+</span><span id="line-59"></span><span id="toByronBlockCount"><span class="annot"><span class="annottext">toByronBlockCount :: SecurityParam -&gt; BlockCount
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronBlockCount"><span class="hs-identifier hs-var hs-var">toByronBlockCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">SecurityParam</span></span><span> </span><span id="local-6989586621680235031"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235031"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; BlockCount
+</span><span class="hs-identifier hs-var">CC.BlockCount</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621680235031"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotLength"><span class="hs-identifier hs-type">toByronSlotLength</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotLength</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span>
+</span><span id="line-62"></span><span id="toByronSlotLength"><span class="annot"><span class="annottext">toByronSlotLength :: SlotLength -&gt; Natural
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#toByronSlotLength"><span class="hs-identifier hs-var hs-var">toByronSlotLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Integer.html#Integer"><span class="hs-identifier hs-type">Integer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>                  </span><span class="annot"><span class="annottext">(Integer -&gt; Natural)
+-&gt; (SlotLength -&gt; Integer) -&gt; SlotLength -&gt; Natural
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SlotLength -&gt; Integer
+</span><span class="hs-identifier hs-var">slotLengthToMillisec</span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Extract info from genesis
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSecurityParam"><span class="hs-identifier hs-type">genesisSecurityParam</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Genesis.Config</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SecurityParam</span></span><span>
+</span><span id="line-70"></span><span id="genesisSecurityParam"><span class="annot"><span class="annottext">genesisSecurityParam :: Config -&gt; SecurityParam
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSecurityParam"><span class="hs-identifier hs-var hs-var">genesisSecurityParam</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">BlockCount -&gt; SecurityParam
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#fromByronBlockCount"><span class="hs-identifier hs-var">fromByronBlockCount</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">(BlockCount -&gt; SecurityParam)
+-&gt; (Config -&gt; BlockCount) -&gt; Config -&gt; SecurityParam
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">GenesisData -&gt; BlockCount
+</span><span class="hs-identifier hs-var">Genesis.gdK</span></span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">(GenesisData -&gt; BlockCount)
+-&gt; (Config -&gt; GenesisData) -&gt; Config -&gt; BlockCount
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; GenesisData
+</span><span class="hs-identifier hs-var">Genesis.configGenesisData</span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisNumCoreNodes"><span class="hs-identifier hs-type">genesisNumCoreNodes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Genesis.Config</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NumCoreNodes</span></span><span>
+</span><span id="line-76"></span><span id="genesisNumCoreNodes"><span class="annot"><span class="annottext">genesisNumCoreNodes :: Config -&gt; NumCoreNodes
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisNumCoreNodes"><span class="hs-identifier hs-var hs-var">genesisNumCoreNodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">Word64 -&gt; NumCoreNodes
+</span><span class="hs-identifier hs-var">NumCoreNodes</span></span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">(Word64 -&gt; NumCoreNodes)
+-&gt; (Config -&gt; Word64) -&gt; Config -&gt; NumCoreNodes
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#fromIntegral"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">(Int -&gt; Word64) -&gt; (Config -&gt; Int) -&gt; Config -&gt; Word64
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Set KeyHash -&gt; Int
+forall a. Set a -&gt; Int
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Set.Internal.html#size"><span class="hs-identifier hs-var">Set.size</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">(Set KeyHash -&gt; Int) -&gt; (Config -&gt; Set KeyHash) -&gt; Config -&gt; Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">GenesisKeyHashes -&gt; Set KeyHash
+</span><span class="hs-identifier hs-var">Genesis.unGenesisKeyHashes</span></span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">(GenesisKeyHashes -&gt; Set KeyHash)
+-&gt; (Config -&gt; GenesisKeyHashes) -&gt; Config -&gt; Set KeyHash
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">GenesisData -&gt; GenesisKeyHashes
+</span><span class="hs-identifier hs-var">Genesis.gdGenesisKeyHashes</span></span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">(GenesisData -&gt; GenesisKeyHashes)
+-&gt; (Config -&gt; GenesisData) -&gt; Config -&gt; GenesisKeyHashes
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; GenesisData
+</span><span class="hs-identifier hs-var">Genesis.configGenesisData</span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSlotLength"><span class="hs-identifier hs-type">genesisSlotLength</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Genesis.Config</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-bignum-1.3/src/GHC.Num.Natural.html#Natural"><span class="hs-identifier hs-type">Natural</span></a></span><span>
+</span><span id="line-85"></span><span id="genesisSlotLength"><span class="annot"><span class="annottext">genesisSlotLength :: Config -&gt; Natural
+</span><a href="Ouroboros.Consensus.Byron.Ledger.Conversions.html#genesisSlotLength"><span class="hs-identifier hs-var hs-var">genesisSlotLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">ProtocolParameters -&gt; Natural
+</span><span class="hs-identifier hs-var">CC.ppSlotDuration</span></span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">(ProtocolParameters -&gt; Natural)
+-&gt; (Config -&gt; ProtocolParameters) -&gt; Config -&gt; Natural
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Config -&gt; ProtocolParameters
+</span><span class="hs-identifier hs-var">Genesis.configProtocolParameters</span></span><span>
+</span><span id="line-88"></span></pre></body></html>

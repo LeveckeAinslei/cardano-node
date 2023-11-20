@@ -1,0 +1,623 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveTraversable #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="annot"><span class="hs-comment">-- | Strict version of the 'Maybe' type.</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Maybe.Strict</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier">StrictMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier">SNothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier">SJust</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Conversion: StrictMaybe &lt;--&gt; Maybe</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier">strictMaybeToMaybe</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#maybeToStrictMaybe"><span class="hs-identifier">maybeToStrictMaybe</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Accessing the underlying value</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#fromSMaybe"><span class="hs-identifier">fromSMaybe</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#isSNothing"><span class="hs-identifier">isSNothing</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#isSJust"><span class="hs-identifier">isSJust</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybe"><span class="hs-identifier">strictMaybe</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Binary</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromCBOR</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="hs-identifier">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toCBOR</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-identifier">decodeBreakOr</span></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-identifier">decodeListLenOrIndef</span></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-identifier">encodeListLen</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Applicative.html"><span class="hs-identifier">Control.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Alternative"><span class="hs-identifier">Alternative</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Default.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Default</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">data</span><span> </span><span id="StrictMaybe"><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-var">StrictMaybe</span></a></span></span><span> </span><span id="local-6989586621679102012"><span class="annot"><a href="#local-6989586621679102012"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SNothing"><span class="annot"><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SJust"><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621679102012"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621679102119"><span id="local-6989586621679102122"><span class="annot"><span class="annottext">StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+(StrictMaybe a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; Bool) -&gt; Eq (StrictMaybe a)
+forall a. Eq a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. Eq a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+== :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+/= :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621679102131"><span id="local-6989586621679102134"><span id="local-6989586621679102137"><span id="local-6989586621679102141"><span id="local-6989586621679102144"><span id="local-6989586621679102147"><span id="local-6989586621679102150"><span class="annot"><span class="annottext">Eq (StrictMaybe a)
+Eq (StrictMaybe a) =&gt;
+(StrictMaybe a -&gt; StrictMaybe a -&gt; Ordering)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a)
+-&gt; (StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a)
+-&gt; Ord (StrictMaybe a)
+StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+StrictMaybe a -&gt; StrictMaybe a -&gt; Ordering
+StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (StrictMaybe a)
+forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Ordering
+forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+$ccompare :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Ordering
+compare :: StrictMaybe a -&gt; StrictMaybe a -&gt; Ordering
+$c&lt; :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+&lt; :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+&lt;= :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+&gt; :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+&gt;= :: StrictMaybe a -&gt; StrictMaybe a -&gt; Bool
+$cmax :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+max :: StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+$cmin :: forall a. Ord a =&gt; StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+min :: StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621679102156"><span id="local-6989586621679102161"><span id="local-6989586621679102165"><span class="annot"><span class="annottext">Int -&gt; StrictMaybe a -&gt; ShowS
+[StrictMaybe a] -&gt; ShowS
+StrictMaybe a -&gt; String
+(Int -&gt; StrictMaybe a -&gt; ShowS)
+-&gt; (StrictMaybe a -&gt; String)
+-&gt; ([StrictMaybe a] -&gt; ShowS)
+-&gt; Show (StrictMaybe a)
+forall a. Show a =&gt; Int -&gt; StrictMaybe a -&gt; ShowS
+forall a. Show a =&gt; [StrictMaybe a] -&gt; ShowS
+forall a. Show a =&gt; StrictMaybe a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; StrictMaybe a -&gt; ShowS
+showsPrec :: Int -&gt; StrictMaybe a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; StrictMaybe a -&gt; String
+show :: StrictMaybe a -&gt; String
+$cshowList :: forall a. Show a =&gt; [StrictMaybe a] -&gt; ShowS
+showList :: [StrictMaybe a] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621679102169"><span id="local-6989586621679102171"><span class="annot"><span class="annottext">(forall x. StrictMaybe a -&gt; Rep (StrictMaybe a) x)
+-&gt; (forall x. Rep (StrictMaybe a) x -&gt; StrictMaybe a)
+-&gt; Generic (StrictMaybe a)
+forall x. Rep (StrictMaybe a) x -&gt; StrictMaybe a
+forall x. StrictMaybe a -&gt; Rep (StrictMaybe a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (StrictMaybe a) x -&gt; StrictMaybe a
+forall a x. StrictMaybe a -&gt; Rep (StrictMaybe a) x
+$cfrom :: forall a x. StrictMaybe a -&gt; Rep (StrictMaybe a) x
+from :: forall x. StrictMaybe a -&gt; Rep (StrictMaybe a) x
+$cto :: forall a x. Rep (StrictMaybe a) x -&gt; StrictMaybe a
+to :: forall x. Rep (StrictMaybe a) x -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621679102175"><span id="local-6989586621679102177"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b)
+-&gt; (forall a b. a -&gt; StrictMaybe b -&gt; StrictMaybe a)
+-&gt; Functor StrictMaybe
+forall a b. a -&gt; StrictMaybe b -&gt; StrictMaybe a
+forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+fmap :: forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+$c&lt;$ :: forall a b. a -&gt; StrictMaybe b -&gt; StrictMaybe a
+&lt;$ :: forall a b. a -&gt; StrictMaybe b -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>      </span><span id="local-6989586621679102181"><span id="local-6989586621679102187"><span id="local-6989586621679102191"><span id="local-6989586621679102196"><span id="local-6989586621679102198"><span id="local-6989586621679102201"><span id="local-6989586621679102204"><span id="local-6989586621679102207"><span id="local-6989586621679102210"><span id="local-6989586621679102213"><span id="local-6989586621679102216"><span id="local-6989586621679102218"><span id="local-6989586621679102221"><span id="local-6989586621679102226"><span id="local-6989586621679102231"><span id="local-6989586621679102236"><span id="local-6989586621679102241"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; StrictMaybe m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a)
+-&gt; (forall a. StrictMaybe a -&gt; [a])
+-&gt; (forall a. StrictMaybe a -&gt; Bool)
+-&gt; (forall a. StrictMaybe a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; StrictMaybe a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; StrictMaybe a -&gt; a)
+-&gt; (forall a. Ord a =&gt; StrictMaybe a -&gt; a)
+-&gt; (forall a. Num a =&gt; StrictMaybe a -&gt; a)
+-&gt; (forall a. Num a =&gt; StrictMaybe a -&gt; a)
+-&gt; Foldable StrictMaybe
+forall a. Eq a =&gt; a -&gt; StrictMaybe a -&gt; Bool
+forall a. Num a =&gt; StrictMaybe a -&gt; a
+forall a. Ord a =&gt; StrictMaybe a -&gt; a
+forall m. Monoid m =&gt; StrictMaybe m -&gt; m
+forall a. StrictMaybe a -&gt; Bool
+forall a. StrictMaybe a -&gt; Int
+forall a. StrictMaybe a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall m. Monoid m =&gt; StrictMaybe m -&gt; m
+fold :: forall m. Monoid m =&gt; StrictMaybe m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StrictMaybe a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StrictMaybe a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; StrictMaybe a -&gt; a
+$ctoList :: forall a. StrictMaybe a -&gt; [a]
+toList :: forall a. StrictMaybe a -&gt; [a]
+$cnull :: forall a. StrictMaybe a -&gt; Bool
+null :: forall a. StrictMaybe a -&gt; Bool
+$clength :: forall a. StrictMaybe a -&gt; Int
+length :: forall a. StrictMaybe a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; StrictMaybe a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; StrictMaybe a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; StrictMaybe a -&gt; a
+maximum :: forall a. Ord a =&gt; StrictMaybe a -&gt; a
+$cminimum :: forall a. Ord a =&gt; StrictMaybe a -&gt; a
+minimum :: forall a. Ord a =&gt; StrictMaybe a -&gt; a
+$csum :: forall a. Num a =&gt; StrictMaybe a -&gt; a
+sum :: forall a. Num a =&gt; StrictMaybe a -&gt; a
+$cproduct :: forall a. Num a =&gt; StrictMaybe a -&gt; a
+product :: forall a. Num a =&gt; StrictMaybe a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>      </span><span id="local-6989586621679102251"><span id="local-6989586621679102257"><span id="local-6989586621679102263"><span id="local-6989586621679102268"><span class="annot"><span class="annottext">Functor StrictMaybe
+Foldable StrictMaybe
+(Functor StrictMaybe, Foldable StrictMaybe) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; StrictMaybe a -&gt; f (StrictMaybe b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    StrictMaybe (f a) -&gt; f (StrictMaybe a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; StrictMaybe a -&gt; m (StrictMaybe b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    StrictMaybe (m a) -&gt; m (StrictMaybe a))
+-&gt; Traversable StrictMaybe
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StrictMaybe (m a) -&gt; m (StrictMaybe a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+StrictMaybe (f a) -&gt; f (StrictMaybe a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StrictMaybe a -&gt; m (StrictMaybe b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StrictMaybe a -&gt; f (StrictMaybe b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StrictMaybe a -&gt; f (StrictMaybe b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StrictMaybe a -&gt; f (StrictMaybe b)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+StrictMaybe (f a) -&gt; f (StrictMaybe a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+StrictMaybe (f a) -&gt; f (StrictMaybe a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StrictMaybe a -&gt; m (StrictMaybe b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StrictMaybe a -&gt; m (StrictMaybe b)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StrictMaybe (m a) -&gt; m (StrictMaybe a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StrictMaybe (m a) -&gt; m (StrictMaybe a)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Traversable.html#Traversable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621679102276"><span id="local-6989586621679102280"><span id="local-6989586621679102286"><span class="annot"><span class="annottext">Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+Proxy (StrictMaybe a) -&gt; String
+(Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (StrictMaybe a) -&gt; String)
+-&gt; NoThunks (StrictMaybe a)
+forall a.
+NoThunks a =&gt;
+Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+forall a. NoThunks a =&gt; Proxy (StrictMaybe a) -&gt; String
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: forall a.
+NoThunks a =&gt;
+Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: forall a.
+NoThunks a =&gt;
+Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; StrictMaybe a -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: forall a. NoThunks a =&gt; Proxy (StrictMaybe a) -&gt; String
+showTypeOf :: Proxy (StrictMaybe a) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621679102314"><span class="annot"><span class="annottext">StrictMaybe a -&gt; ()
+(StrictMaybe a -&gt; ()) -&gt; NFData (StrictMaybe a)
+forall a. NFData a =&gt; StrictMaybe a -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall a. NFData a =&gt; StrictMaybe a -&gt; ()
+rnf :: StrictMaybe a -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102336"><span id="local-6989586621679102341"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Applicative"><span class="hs-identifier hs-type">Applicative</span></a></span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679102344"><span class="annot"><span class="annottext">pure :: forall a. a -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var hs-var hs-var hs-var">pure</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102346"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679102346"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679102347"><span class="annot"><span class="annottext">&lt;*&gt; :: forall a b. StrictMaybe (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;*&gt;</span></a></span></span><span> </span><span id="local-6989586621679102348"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102348"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+forall a b. (a -&gt; b) -&gt; StrictMaybe a -&gt; StrictMaybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679102346"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102348"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="annottext">StrictMaybe (a -&gt; b)
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span id="local-6989586621679102349"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102349"><span class="hs-identifier hs-var">_m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe b
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102350"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102350"><span class="hs-identifier hs-var">_m1</span></a></span></span><span> </span><span id="local-6989586621679102351"><span class="annot"><span class="annottext">*&gt; :: forall a b. StrictMaybe a -&gt; StrictMaybe b -&gt; StrictMaybe b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2A%3E"><span class="hs-operator hs-var hs-var hs-var hs-var">*&gt;</span></a></span></span><span> </span><span id="local-6989586621679102352"><span class="annot"><span class="annottext">StrictMaybe b
+</span><a href="#local-6989586621679102352"><span class="hs-identifier hs-var">m2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe b
+</span><a href="#local-6989586621679102352"><span class="hs-identifier hs-var">m2</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2A%3E"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span id="local-6989586621679102353"><span class="annot"><span class="annottext">StrictMaybe b
+</span><a href="#local-6989586621679102353"><span class="hs-identifier hs-var">_m2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe b
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Monad"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102361"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102361"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679102362"><span class="annot"><span class="annottext">&gt;&gt;= :: forall a b. StrictMaybe a -&gt; (a -&gt; StrictMaybe b) -&gt; StrictMaybe b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var hs-var hs-var hs-var">&gt;&gt;=</span></a></span></span><span> </span><span id="local-6989586621679102363"><span class="annot"><span class="annottext">a -&gt; StrictMaybe b
+</span><a href="#local-6989586621679102363"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe b
+</span><a href="#local-6989586621679102363"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102361"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe b
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679102365"><span class="annot"><span class="annottext">&gt;&gt; :: forall a b. StrictMaybe a -&gt; StrictMaybe b -&gt; StrictMaybe b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3E%3E"><span class="hs-operator hs-var hs-var hs-var hs-var">(&gt;&gt;)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; StrictMaybe b -&gt; StrictMaybe b
+forall a b. StrictMaybe a -&gt; StrictMaybe b -&gt; StrictMaybe b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2A%3E"><span class="hs-operator hs-var">(*&gt;)</span></a></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621679102367"><span class="annot"><span class="annottext">return :: forall a. a -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var hs-var hs-var hs-var">return</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#MonadFail"><span class="hs-identifier hs-type">MonadFail</span></a></span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679102373"><span class="annot"><span class="annottext">fail :: forall a. String -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var hs-var hs-var hs-var">fail</span></a></span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102034"><span id="local-6989586621679102381"><span id="local-6989586621679102385"><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="annot"><a href="#local-6989586621679102034"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102034"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621679102392"><span class="annot"><span class="annottext">toCBOR :: StrictMaybe a -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toCBOR</span></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102393"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102393"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; Encoding
+forall a. ToCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">toCBOR</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102393"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102042"><span id="local-6989586621679102401"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="annot"><a href="#local-6989586621679102042"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102042"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679102428"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s (StrictMaybe a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621679102429"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621679102429"><span class="hs-identifier hs-var">maybeN</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s (Maybe Int)
+forall s. Decoder s (Maybe Int)
+</span><span class="hs-identifier hs-var">decodeListLenOrIndef</span></span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621679102429"><span class="hs-identifier hs-var">maybeN</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Decoder s (StrictMaybe a)
+forall a. a -&gt; Decoder s a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; StrictMaybe a) -&gt; Decoder s a -&gt; Decoder s (StrictMaybe a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s a
+forall s. Decoder s a
+forall a s. FromCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">fromCBOR</span></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder s (StrictMaybe a)
+forall a. String -&gt; Decoder s a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;too many elements in length-style decoding of StrictMaybe.&quot;</span></span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>        </span><span id="local-6989586621679102431"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679102431"><span class="hs-identifier hs-var">isBreak</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s Bool
+forall s. Decoder s Bool
+</span><span class="hs-identifier hs-var">decodeBreakOr</span></span><span>
+</span><span id="line-83"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679102431"><span class="hs-identifier hs-var">isBreak</span></a></span><span>
+</span><span id="line-84"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Decoder s (StrictMaybe a)
+forall a. a -&gt; Decoder s a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-85"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-86"></span><span>            </span><span id="local-6989586621679102432"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102432"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s a
+forall s. Decoder s a
+forall a s. FromCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">fromCBOR</span></span><span>
+</span><span id="line-87"></span><span>            </span><span id="local-6989586621679102433"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679102433"><span class="hs-identifier hs-var">isBreak2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s Bool
+forall s. Decoder s Bool
+</span><span class="hs-identifier hs-var">decodeBreakOr</span></span><span>
+</span><span id="line-88"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679102433"><span class="hs-identifier hs-var">isBreak2</span></a></span><span>
+</span><span id="line-89"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Decoder s (StrictMaybe a)
+forall a. a -&gt; Decoder s a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102432"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>              </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder s (StrictMaybe a)
+forall a. String -&gt; Decoder s a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;too many elements in break-style decoding of StrictMaybe.&quot;</span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102058"><span id="local-6989586621679102438"><span id="local-6989586621679102442"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621679102058"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102058"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621679102447"><span class="annot"><span class="annottext">toJSON :: StrictMaybe a -&gt; Value
+</span><a href="#local-6989586621679102447"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Maybe a -&gt; Value)
+-&gt; (StrictMaybe a -&gt; Maybe a) -&gt; StrictMaybe a -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Maybe a
+forall a. StrictMaybe a -&gt; Maybe a
+</span><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier hs-var">strictMaybeToMaybe</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621679102451"><span class="annot"><span class="annottext">toEncoding :: StrictMaybe a -&gt; Encoding
+</span><a href="#local-6989586621679102451"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Encoding
+forall a. ToJSON a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">toEncoding</span></span><span> </span><span class="annot"><span class="annottext">(Maybe a -&gt; Encoding)
+-&gt; (StrictMaybe a -&gt; Maybe a) -&gt; StrictMaybe a -&gt; Encoding
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Maybe a
+forall a. StrictMaybe a -&gt; Maybe a
+</span><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier hs-var">strictMaybeToMaybe</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102068"><span id="local-6989586621679102456"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621679102068"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102068"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621679102464"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (StrictMaybe a)
+</span><a href="#local-6989586621679102464"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621679102466"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679102466"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; StrictMaybe a
+forall a. Maybe a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#maybeToStrictMaybe"><span class="hs-identifier hs-var">maybeToStrictMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe a -&gt; StrictMaybe a)
+-&gt; Parser (Maybe a) -&gt; Parser (StrictMaybe a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser (Maybe a)
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679102466"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621679102063"><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier hs-type">strictMaybeToMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102063"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102063"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-100"></span><span id="strictMaybeToMaybe"><span class="annot"><span class="annottext">strictMaybeToMaybe :: forall a. StrictMaybe a -&gt; Maybe a
+</span><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier hs-var hs-var">strictMaybeToMaybe</span></a></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybeToMaybe"><span class="hs-identifier hs-var">strictMaybeToMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102467"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102467"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102467"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621679102070"><span class="annot"><a href="Data.Maybe.Strict.html#maybeToStrictMaybe"><span class="hs-identifier hs-type">maybeToStrictMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102070"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102070"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-104"></span><span id="maybeToStrictMaybe"><span class="annot"><span class="annottext">maybeToStrictMaybe :: forall a. Maybe a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#maybeToStrictMaybe"><span class="hs-identifier hs-var hs-var">maybeToStrictMaybe</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-105"></span><span class="annot"><a href="Data.Maybe.Strict.html#maybeToStrictMaybe"><span class="hs-identifier hs-var">maybeToStrictMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679102468"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102468"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102468"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="annot"><span class="hs-comment">-- | Same as `Data.Maybe.fromMaybe`</span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621679102074"><span class="annot"><a href="Data.Maybe.Strict.html#fromSMaybe"><span class="hs-identifier hs-type">fromSMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679102074"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102074"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679102074"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-109"></span><span id="fromSMaybe"><span class="annot"><span class="annottext">fromSMaybe :: forall a. a -&gt; StrictMaybe a -&gt; a
+</span><a href="Data.Maybe.Strict.html#fromSMaybe"><span class="hs-identifier hs-var hs-var">fromSMaybe</span></a></span></span><span> </span><span id="local-6989586621679102469"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102469"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102469"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Data.Maybe.Strict.html#fromSMaybe"><span class="hs-identifier hs-var">fromSMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102470"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102470"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102470"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="annot"><span class="hs-comment">-- | Same as `Data.Maybe.isNothing`</span></span><span>
+</span><span id="line-114"></span><span id="local-6989586621679102471"><span class="annot"><a href="Data.Maybe.Strict.html#isSNothing"><span class="hs-identifier hs-type">isSNothing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102471"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-115"></span><span id="isSNothing"><span class="annot"><span class="annottext">isSNothing :: forall a. StrictMaybe a -&gt; Bool
+</span><a href="Data.Maybe.Strict.html#isSNothing"><span class="hs-identifier hs-var hs-var">isSNothing</span></a></span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-116"></span><span class="annot"><a href="Data.Maybe.Strict.html#isSNothing"><span class="hs-identifier hs-var">isSNothing</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="annot"><span class="hs-comment">-- | Same as `Data.Maybe.isJust`</span></span><span>
+</span><span id="line-119"></span><span id="local-6989586621679102472"><span class="annot"><a href="Data.Maybe.Strict.html#isSJust"><span class="hs-identifier hs-type">isSJust</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102472"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span></span><span>
+</span><span id="line-120"></span><span id="isSJust"><span class="annot"><span class="annottext">isSJust :: forall a. StrictMaybe a -&gt; Bool
+</span><a href="Data.Maybe.Strict.html#isSJust"><span class="hs-identifier hs-var hs-var">isSJust</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#not"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (StrictMaybe a -&gt; Bool) -&gt; StrictMaybe a -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a -&gt; Bool
+forall a. StrictMaybe a -&gt; Bool
+</span><a href="Data.Maybe.Strict.html#isSNothing"><span class="hs-identifier hs-var">isSNothing</span></a></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="annot"><span class="hs-comment">-- | Same as `Data.Maybe.maybe`</span></span><span>
+</span><span id="line-123"></span><span id="local-6989586621679102078"><span id="local-6989586621679102079"><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybe"><span class="hs-identifier hs-type">strictMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679102078"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679102079"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679102078"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102079"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679102078"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-124"></span><span id="strictMaybe"><span class="annot"><span class="annottext">strictMaybe :: forall a b. a -&gt; (b -&gt; a) -&gt; StrictMaybe b -&gt; a
+</span><a href="Data.Maybe.Strict.html#strictMaybe"><span class="hs-identifier hs-var hs-var">strictMaybe</span></a></span></span><span> </span><span id="local-6989586621679102474"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102474"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="annottext">b -&gt; a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">StrictMaybe b
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102474"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-125"></span><span class="annot"><a href="Data.Maybe.Strict.html#strictMaybe"><span class="hs-identifier hs-var">strictMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679102475"><span class="annot"><span class="annottext">b -&gt; a
+</span><a href="#local-6989586621679102475"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102476"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679102476"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; a
+</span><a href="#local-6989586621679102475"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679102476"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102085"><span class="annot"><span class="hs-identifier hs-type">Default</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102085"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621679102480"><span class="annot"><span class="annottext">def :: StrictMaybe t
+</span><a href="#local-6989586621679102480"><span class="hs-identifier hs-var hs-var hs-var hs-var">def</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe t
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102089"><span id="local-6989586621679102485"><span id="local-6989586621679102489"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102089"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102089"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span id="local-6989586621679102495"><span class="annot"><span class="annottext">&lt;&gt; :: StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span id="local-6989586621679102496"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102496"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102496"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621679102497"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102497"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102497"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102498"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102498"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-type">SJust</span></a></span><span> </span><span id="local-6989586621679102499"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102499"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; StrictMaybe a
+forall a. a -&gt; StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SJust"><span class="hs-identifier hs-var">SJust</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102498"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679102499"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102092"><span id="local-6989586621679102505"><span id="local-6989586621679102509"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102092"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679102092"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-139"></span><span>  </span><span id="local-6989586621679102512"><span class="annot"><span class="annottext">mempty :: StrictMaybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679102518"><span id="local-6989586621679102522"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Alternative"><span class="hs-identifier hs-type">Alternative</span></a></span><span> </span><span class="annot"><a href="Data.Maybe.Strict.html#StrictMaybe"><span class="hs-identifier hs-type">StrictMaybe</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621679102525"><span class="annot"><span class="annottext">empty :: forall a. StrictMaybe a
+</span><a href="#local-6989586621679102525"><span class="hs-identifier hs-var hs-var hs-var hs-var">empty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+forall a. StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="Data.Maybe.Strict.html#SNothing"><span class="hs-identifier hs-var">SNothing</span></a></span><span> </span><span id="local-6989586621679102527"><span class="annot"><span class="annottext">&lt;|&gt; :: forall a. StrictMaybe a -&gt; StrictMaybe a -&gt; StrictMaybe a
+</span><a href="#local-6989586621679102527"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;|&gt;</span></a></span></span><span> </span><span id="local-6989586621679102529"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102529"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102529"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621679102530"><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102530"><span class="hs-identifier hs-var">l</span></a></span></span><span>        </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%7C%3E"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictMaybe a
+</span><a href="#local-6989586621679102530"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-145"></span></pre></body></html>

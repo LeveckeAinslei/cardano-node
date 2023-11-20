@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Crypto.DSIGN.NeverUsed</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier">NeverDSIGN</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#VerKeyDSIGN"><span class="hs-identifier">VerKeyDSIGN</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SignKeyDSIGN"><span class="hs-identifier">SignKeyDSIGN</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SigDSIGN"><span class="hs-identifier">SigDSIGN</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html"><span class="hs-identifier">Cardano.Crypto.DSIGN.Class</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | DSIGN never used</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- The type of keys and signatures is isomorphic to unit, but when actually</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- trying to sign or verify something a runtime exception will be thrown.</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="NeverDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-var">NeverDSIGN</span></a></span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679189644"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#DSIGNAlgorithm"><span class="hs-identifier hs-type">DSIGNAlgorithm</span></a></span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SeedSizeDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SeedSizeDSIGN"><span class="hs-identifier hs-var">SeedSizeDSIGN</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SizeVerKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SizeVerKeyDSIGN"><span class="hs-identifier hs-var">SizeVerKeyDSIGN</span></a></span></span><span>  </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SizeSignKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SizeSignKeyDSIGN"><span class="hs-identifier hs-var">SizeSignKeyDSIGN</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SizeSigDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SizeSigDSIGN"><span class="hs-identifier hs-var">SizeSigDSIGN</span></a></span></span><span>     </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="VerKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#VerKeyDSIGN"><span class="hs-identifier hs-var">VerKeyDSIGN</span></a></span></span><span>  </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedVerKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedVerKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedVerKeyDSIGN</span></a></span></span><span>
+</span><span id="line-34"></span><span>     </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189661"><span id="local-6989586621679189663"><span id="local-6989586621679189666"><span class="annot"><span class="annottext">Int -&gt; VerKeyDSIGN NeverDSIGN -&gt; ShowS
+[VerKeyDSIGN NeverDSIGN] -&gt; ShowS
+VerKeyDSIGN NeverDSIGN -&gt; String
+(Int -&gt; VerKeyDSIGN NeverDSIGN -&gt; ShowS)
+-&gt; (VerKeyDSIGN NeverDSIGN -&gt; String)
+-&gt; ([VerKeyDSIGN NeverDSIGN] -&gt; ShowS)
+-&gt; Show (VerKeyDSIGN NeverDSIGN)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; VerKeyDSIGN NeverDSIGN -&gt; ShowS
+showsPrec :: Int -&gt; VerKeyDSIGN NeverDSIGN -&gt; ShowS
+$cshow :: VerKeyDSIGN NeverDSIGN -&gt; String
+show :: VerKeyDSIGN NeverDSIGN -&gt; String
+$cshowList :: [VerKeyDSIGN NeverDSIGN] -&gt; ShowS
+showList :: [VerKeyDSIGN NeverDSIGN] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189670"><span id="local-6989586621679189672"><span class="annot"><span class="annottext">VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool
+(VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool)
+-&gt; (VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool)
+-&gt; Eq (VerKeyDSIGN NeverDSIGN)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool
+== :: VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool
+$c/= :: VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool
+/= :: VerKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189676"><span id="local-6989586621679189678"><span class="annot"><span class="annottext">(forall x.
+ VerKeyDSIGN NeverDSIGN -&gt; Rep (VerKeyDSIGN NeverDSIGN) x)
+-&gt; (forall x.
+    Rep (VerKeyDSIGN NeverDSIGN) x -&gt; VerKeyDSIGN NeverDSIGN)
+-&gt; Generic (VerKeyDSIGN NeverDSIGN)
+forall x. Rep (VerKeyDSIGN NeverDSIGN) x -&gt; VerKeyDSIGN NeverDSIGN
+forall x. VerKeyDSIGN NeverDSIGN -&gt; Rep (VerKeyDSIGN NeverDSIGN) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. VerKeyDSIGN NeverDSIGN -&gt; Rep (VerKeyDSIGN NeverDSIGN) x
+from :: forall x. VerKeyDSIGN NeverDSIGN -&gt; Rep (VerKeyDSIGN NeverDSIGN) x
+$cto :: forall x. Rep (VerKeyDSIGN NeverDSIGN) x -&gt; VerKeyDSIGN NeverDSIGN
+to :: forall x. Rep (VerKeyDSIGN NeverDSIGN) x -&gt; VerKeyDSIGN NeverDSIGN
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189682"><span id="local-6989586621679189685"><span id="local-6989586621679189691"><span class="annot"><span class="annottext">Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+Proxy (VerKeyDSIGN NeverDSIGN) -&gt; String
+(Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (VerKeyDSIGN NeverDSIGN) -&gt; String)
+-&gt; NoThunks (VerKeyDSIGN NeverDSIGN)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; VerKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (VerKeyDSIGN NeverDSIGN) -&gt; String
+showTypeOf :: Proxy (VerKeyDSIGN NeverDSIGN) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="SignKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SignKeyDSIGN"><span class="hs-identifier hs-var">SignKeyDSIGN</span></a></span></span><span> </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedSignKeyDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedSignKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedSignKeyDSIGN</span></a></span></span><span>
+</span><span id="line-37"></span><span>     </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189712"><span id="local-6989586621679189714"><span id="local-6989586621679189717"><span class="annot"><span class="annottext">Int -&gt; SignKeyDSIGN NeverDSIGN -&gt; ShowS
+[SignKeyDSIGN NeverDSIGN] -&gt; ShowS
+SignKeyDSIGN NeverDSIGN -&gt; String
+(Int -&gt; SignKeyDSIGN NeverDSIGN -&gt; ShowS)
+-&gt; (SignKeyDSIGN NeverDSIGN -&gt; String)
+-&gt; ([SignKeyDSIGN NeverDSIGN] -&gt; ShowS)
+-&gt; Show (SignKeyDSIGN NeverDSIGN)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SignKeyDSIGN NeverDSIGN -&gt; ShowS
+showsPrec :: Int -&gt; SignKeyDSIGN NeverDSIGN -&gt; ShowS
+$cshow :: SignKeyDSIGN NeverDSIGN -&gt; String
+show :: SignKeyDSIGN NeverDSIGN -&gt; String
+$cshowList :: [SignKeyDSIGN NeverDSIGN] -&gt; ShowS
+showList :: [SignKeyDSIGN NeverDSIGN] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189720"><span id="local-6989586621679189722"><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool
+(SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool)
+-&gt; (SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool)
+-&gt; Eq (SignKeyDSIGN NeverDSIGN)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool
+== :: SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool
+$c/= :: SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool
+/= :: SignKeyDSIGN NeverDSIGN -&gt; SignKeyDSIGN NeverDSIGN -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189726"><span id="local-6989586621679189728"><span class="annot"><span class="annottext">(forall x.
+ SignKeyDSIGN NeverDSIGN -&gt; Rep (SignKeyDSIGN NeverDSIGN) x)
+-&gt; (forall x.
+    Rep (SignKeyDSIGN NeverDSIGN) x -&gt; SignKeyDSIGN NeverDSIGN)
+-&gt; Generic (SignKeyDSIGN NeverDSIGN)
+forall x.
+Rep (SignKeyDSIGN NeverDSIGN) x -&gt; SignKeyDSIGN NeverDSIGN
+forall x.
+SignKeyDSIGN NeverDSIGN -&gt; Rep (SignKeyDSIGN NeverDSIGN) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x.
+SignKeyDSIGN NeverDSIGN -&gt; Rep (SignKeyDSIGN NeverDSIGN) x
+from :: forall x.
+SignKeyDSIGN NeverDSIGN -&gt; Rep (SignKeyDSIGN NeverDSIGN) x
+$cto :: forall x.
+Rep (SignKeyDSIGN NeverDSIGN) x -&gt; SignKeyDSIGN NeverDSIGN
+to :: forall x.
+Rep (SignKeyDSIGN NeverDSIGN) x -&gt; SignKeyDSIGN NeverDSIGN
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189731"><span id="local-6989586621679189734"><span id="local-6989586621679189740"><span class="annot"><span class="annottext">Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+Proxy (SignKeyDSIGN NeverDSIGN) -&gt; String
+(Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (SignKeyDSIGN NeverDSIGN) -&gt; String)
+-&gt; NoThunks (SignKeyDSIGN NeverDSIGN)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SignKeyDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (SignKeyDSIGN NeverDSIGN) -&gt; String
+showTypeOf :: Proxy (SignKeyDSIGN NeverDSIGN) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="SigDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.Class.html#SigDSIGN"><span class="hs-identifier hs-var">SigDSIGN</span></a></span></span><span>     </span><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverDSIGN"><span class="hs-identifier hs-type">NeverDSIGN</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NeverUsedSigDSIGN"><span class="annot"><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedSigDSIGN"><span class="hs-identifier hs-var">NeverUsedSigDSIGN</span></a></span></span><span>
+</span><span id="line-40"></span><span>     </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679189754"><span id="local-6989586621679189756"><span id="local-6989586621679189759"><span class="annot"><span class="annottext">Int -&gt; SigDSIGN NeverDSIGN -&gt; ShowS
+[SigDSIGN NeverDSIGN] -&gt; ShowS
+SigDSIGN NeverDSIGN -&gt; String
+(Int -&gt; SigDSIGN NeverDSIGN -&gt; ShowS)
+-&gt; (SigDSIGN NeverDSIGN -&gt; String)
+-&gt; ([SigDSIGN NeverDSIGN] -&gt; ShowS)
+-&gt; Show (SigDSIGN NeverDSIGN)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SigDSIGN NeverDSIGN -&gt; ShowS
+showsPrec :: Int -&gt; SigDSIGN NeverDSIGN -&gt; ShowS
+$cshow :: SigDSIGN NeverDSIGN -&gt; String
+show :: SigDSIGN NeverDSIGN -&gt; String
+$cshowList :: [SigDSIGN NeverDSIGN] -&gt; ShowS
+showList :: [SigDSIGN NeverDSIGN] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189762"><span id="local-6989586621679189764"><span class="annot"><span class="annottext">SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool
+(SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool)
+-&gt; (SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool)
+-&gt; Eq (SigDSIGN NeverDSIGN)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool
+== :: SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool
+$c/= :: SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool
+/= :: SigDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189767"><span id="local-6989586621679189769"><span class="annot"><span class="annottext">(forall x. SigDSIGN NeverDSIGN -&gt; Rep (SigDSIGN NeverDSIGN) x)
+-&gt; (forall x. Rep (SigDSIGN NeverDSIGN) x -&gt; SigDSIGN NeverDSIGN)
+-&gt; Generic (SigDSIGN NeverDSIGN)
+forall x. Rep (SigDSIGN NeverDSIGN) x -&gt; SigDSIGN NeverDSIGN
+forall x. SigDSIGN NeverDSIGN -&gt; Rep (SigDSIGN NeverDSIGN) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SigDSIGN NeverDSIGN -&gt; Rep (SigDSIGN NeverDSIGN) x
+from :: forall x. SigDSIGN NeverDSIGN -&gt; Rep (SigDSIGN NeverDSIGN) x
+$cto :: forall x. Rep (SigDSIGN NeverDSIGN) x -&gt; SigDSIGN NeverDSIGN
+to :: forall x. Rep (SigDSIGN NeverDSIGN) x -&gt; SigDSIGN NeverDSIGN
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679189772"><span id="local-6989586621679189775"><span id="local-6989586621679189781"><span class="annot"><span class="annottext">Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+Proxy (SigDSIGN NeverDSIGN) -&gt; String
+(Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (SigDSIGN NeverDSIGN) -&gt; String)
+-&gt; NoThunks (SigDSIGN NeverDSIGN)
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; SigDSIGN NeverDSIGN -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy (SigDSIGN NeverDSIGN) -&gt; String
+showTypeOf :: Proxy (SigDSIGN NeverDSIGN) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679189793"><span class="annot"><span class="annottext">algorithmNameDSIGN :: forall (proxy :: * -&gt; *). proxy NeverDSIGN -&gt; String
+</span><a href="#local-6989586621679189793"><span class="hs-identifier hs-var hs-var hs-var hs-var">algorithmNameDSIGN</span></a></span></span><span> </span><span class="annot"><span class="annottext">proxy NeverDSIGN
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;never&quot;</span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679189795"><span class="annot"><span class="annottext">deriveVerKeyDSIGN :: SignKeyDSIGN NeverDSIGN -&gt; VerKeyDSIGN NeverDSIGN
+</span><a href="#local-6989586621679189795"><span class="hs-identifier hs-var hs-var hs-var hs-var">deriveVerKeyDSIGN</span></a></span></span><span> </span><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyDSIGN NeverDSIGN
+</span><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedVerKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedVerKeyDSIGN</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621679189801"><span class="annot"><span class="annottext">signDSIGN :: forall a.
+(Signable NeverDSIGN a, HasCallStack) =&gt;
+ContextDSIGN NeverDSIGN
+-&gt; a -&gt; SignKeyDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN
+</span><a href="#local-6989586621679189801"><span class="hs-identifier hs-var hs-var hs-var hs-var">signDSIGN</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; () -&gt; a -&gt; SignKeyDSIGN NeverDSIGN -&gt; SigDSIGN NeverDSIGN
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;DSIGN not available&quot;</span></span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679189808"><span class="annot"><span class="annottext">verifyDSIGN :: forall a.
+(Signable NeverDSIGN a, HasCallStack) =&gt;
+ContextDSIGN NeverDSIGN
+-&gt; VerKeyDSIGN NeverDSIGN
+-&gt; a
+-&gt; SigDSIGN NeverDSIGN
+-&gt; Either String ()
+</span><a href="#local-6989586621679189808"><span class="hs-identifier hs-var hs-var hs-var hs-var">verifyDSIGN</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; ()
+-&gt; VerKeyDSIGN NeverDSIGN
+-&gt; a
+-&gt; SigDSIGN NeverDSIGN
+-&gt; Either String ()
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;DSIGN not available&quot;</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621679189810"><span class="annot"><span class="annottext">genKeyDSIGN :: Seed -&gt; SignKeyDSIGN NeverDSIGN
+</span><a href="#local-6989586621679189810"><span class="hs-identifier hs-var hs-var hs-var hs-var">genKeyDSIGN</span></a></span></span><span>       </span><span class="annot"><span class="annottext">Seed
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN
+</span><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedSignKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedSignKeyDSIGN</span></a></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679189814"><span class="annot"><span class="annottext">rawSerialiseVerKeyDSIGN :: VerKeyDSIGN NeverDSIGN -&gt; ByteString
+</span><a href="#local-6989586621679189814"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseVerKeyDSIGN</span></a></span></span><span>  </span><span class="annot"><span class="annottext">VerKeyDSIGN NeverDSIGN
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679189817"><span class="annot"><span class="annottext">rawSerialiseSignKeyDSIGN :: SignKeyDSIGN NeverDSIGN -&gt; ByteString
+</span><a href="#local-6989586621679189817"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseSignKeyDSIGN</span></a></span></span><span> </span><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679189820"><span class="annot"><span class="annottext">rawSerialiseSigDSIGN :: SigDSIGN NeverDSIGN -&gt; ByteString
+</span><a href="#local-6989586621679189820"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawSerialiseSigDSIGN</span></a></span></span><span>     </span><span class="annot"><span class="annottext">SigDSIGN NeverDSIGN
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679189822"><span class="annot"><span class="annottext">rawDeserialiseVerKeyDSIGN :: ByteString -&gt; Maybe (VerKeyDSIGN NeverDSIGN)
+</span><a href="#local-6989586621679189822"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseVerKeyDSIGN</span></a></span></span><span>  </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VerKeyDSIGN NeverDSIGN -&gt; Maybe (VerKeyDSIGN NeverDSIGN)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">VerKeyDSIGN NeverDSIGN
+</span><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedVerKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedVerKeyDSIGN</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679189824"><span class="annot"><span class="annottext">rawDeserialiseSignKeyDSIGN :: ByteString -&gt; Maybe (SignKeyDSIGN NeverDSIGN)
+</span><a href="#local-6989586621679189824"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseSignKeyDSIGN</span></a></span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN -&gt; Maybe (SignKeyDSIGN NeverDSIGN)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SignKeyDSIGN NeverDSIGN
+</span><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedSignKeyDSIGN"><span class="hs-identifier hs-var">NeverUsedSignKeyDSIGN</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679189826"><span class="annot"><span class="annottext">rawDeserialiseSigDSIGN :: ByteString -&gt; Maybe (SigDSIGN NeverDSIGN)
+</span><a href="#local-6989586621679189826"><span class="hs-identifier hs-var hs-var hs-var hs-var">rawDeserialiseSigDSIGN</span></a></span></span><span>     </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SigDSIGN NeverDSIGN -&gt; Maybe (SigDSIGN NeverDSIGN)
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">SigDSIGN NeverDSIGN
+</span><a href="Cardano.Crypto.DSIGN.NeverUsed.html#NeverUsedSigDSIGN"><span class="hs-identifier hs-var">NeverUsedSigDSIGN</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span></pre></body></html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.Metrics.Store.Acceptor</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier">storeMetrics</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier">MetricsLocalStore</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#emptyMetricsLocalStore"><span class="hs-identifier">emptyMetricsLocalStore</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.html"><span class="hs-identifier">Control.Concurrent.STM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#atomically"><span class="hs-identifier">atomically</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html"><span class="hs-identifier">Control.Concurrent.STM.TVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier">TVar</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html#modifyTVar%27"><span class="hs-identifier">modifyTVar'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#readTVarIO"><span class="hs-identifier">readTVarIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html"><span class="hs-identifier">Control.Monad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#forM_"><span class="hs-identifier">forM_</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#when"><span class="hs-identifier">when</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HashMap</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(!)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Int.html"><span class="hs-identifier">Data.Int</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier">Int64</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier">Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics.Counter</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics.Gauge</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics.Label</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.ReqResp.html"><span class="hs-identifier">System.Metrics.ReqResp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier">MetricName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricValue"><span class="hs-identifier">MetricValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier">Response</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier hs-type">storeMetrics</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span id="storeMetrics"><span class="annot"><span class="annottext">storeMetrics :: Response -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier hs-var hs-var">storeMetrics</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.ReqResp.html#ResponseMetrics"><span class="hs-identifier hs-type">ResponseMetrics</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#storeMetrics"><span class="hs-identifier hs-var">storeMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.ReqResp.html#ResponseMetrics"><span class="hs-identifier hs-type">ResponseMetrics</span></a></span><span> </span><span id="local-6989586621679109927"><span class="annot"><span class="annottext">[(Text, MetricValue)]
+</span><a href="#local-6989586621679109927"><span class="hs-identifier hs-var">newMetrics</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679109928"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109928"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span id="local-6989586621679109929"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109929"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679109930"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109930"><span class="hs-identifier hs-var">storedMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore -&gt; IO MetricsLocalStore
+forall a. TVar a -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#readTVarIO"><span class="hs-identifier hs-var">readTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109929"><span class="hs-identifier hs-var">metricsStore</span></a></span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="annottext">[(Text, MetricValue)] -&gt; ((Text, MetricValue) -&gt; IO ()) -&gt; IO ()
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Foldable t, Monad m) =&gt;
+t a -&gt; (a -&gt; m b) -&gt; m ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#forM_"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, MetricValue)]
+</span><a href="#local-6989586621679109927"><span class="hs-identifier hs-var">newMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">(((Text, MetricValue) -&gt; IO ()) -&gt; IO ())
+-&gt; ((Text, MetricValue) -&gt; IO ()) -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679109931"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109931"><span class="hs-identifier hs-var">mName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679109932"><span class="annot"><span class="annottext">MetricValue
+</span><a href="#local-6989586621679109932"><span class="hs-identifier hs-var">mValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MetricValue
+</span><a href="#local-6989586621679109932"><span class="hs-identifier hs-var">mValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-31"></span><span>      </span><span class="annot"><a href="System.Metrics.ReqResp.html#CounterValue"><span class="hs-identifier hs-type">CounterValue</span></a></span><span> </span><span id="local-6989586621679109934"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109934"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; MetricsLocalStore
+-&gt; Int64
+-&gt; (Text -&gt; MetricsLocalStore -&gt; Bool)
+-&gt; (Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ())
+-&gt; (Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ())
+-&gt; IO ()
+forall {t} {t} {t} {t}.
+t
+-&gt; t
+-&gt; t
+-&gt; (t -&gt; t -&gt; Bool)
+-&gt; (t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t)
+-&gt; (t -&gt; t -&gt; t -&gt; t)
+-&gt; t
+</span><a href="#local-6989586621679109935"><span class="hs-identifier hs-var">addOrUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109931"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109930"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109934"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109936"><span class="hs-identifier hs-var">checkCounter</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addCounter"><span class="hs-identifier hs-var">addCounter</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateCounter"><span class="hs-identifier hs-var">updateCounter</span></a></span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><a href="System.Metrics.ReqResp.html#GaugeValue"><span class="hs-identifier hs-type">GaugeValue</span></a></span><span> </span><span id="local-6989586621679109940"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109940"><span class="hs-identifier hs-var">g</span></a></span></span><span>   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; MetricsLocalStore
+-&gt; Int64
+-&gt; (Text -&gt; MetricsLocalStore -&gt; Bool)
+-&gt; (Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ())
+-&gt; (Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ())
+-&gt; IO ()
+forall {t} {t} {t} {t}.
+t
+-&gt; t
+-&gt; t
+-&gt; (t -&gt; t -&gt; Bool)
+-&gt; (t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t)
+-&gt; (t -&gt; t -&gt; t -&gt; t)
+-&gt; t
+</span><a href="#local-6989586621679109935"><span class="hs-identifier hs-var">addOrUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109931"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109930"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109940"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109941"><span class="hs-identifier hs-var">checkGauge</span></a></span><span>   </span><span class="annot"><span class="annottext">Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addGauge"><span class="hs-identifier hs-var">addGauge</span></a></span><span>   </span><span class="annot"><span class="annottext">Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateGauge"><span class="hs-identifier hs-var">updateGauge</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><a href="System.Metrics.ReqResp.html#LabelValue"><span class="hs-identifier hs-type">LabelValue</span></a></span><span> </span><span id="local-6989586621679109945"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109945"><span class="hs-identifier hs-var">l</span></a></span></span><span>   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; MetricsLocalStore
+-&gt; Text
+-&gt; (Text -&gt; MetricsLocalStore -&gt; Bool)
+-&gt; (Text -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ())
+-&gt; (Text -&gt; Text -&gt; MetricsLocalStore -&gt; IO ())
+-&gt; IO ()
+forall {t} {t} {t} {t}.
+t
+-&gt; t
+-&gt; t
+-&gt; (t -&gt; t -&gt; Bool)
+-&gt; (t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t)
+-&gt; (t -&gt; t -&gt; t -&gt; t)
+-&gt; t
+</span><a href="#local-6989586621679109935"><span class="hs-identifier hs-var">addOrUpdate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109931"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109930"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109945"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109946"><span class="hs-identifier hs-var">checkLabel</span></a></span><span>   </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addLabel"><span class="hs-identifier hs-var">addLabel</span></a></span><span>   </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateLabel"><span class="hs-identifier hs-var">updateLabel</span></a></span><span>
+</span><span id="line-34"></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621679109935"><span class="annot"><span class="annottext">addOrUpdate :: t
+-&gt; t
+-&gt; t
+-&gt; (t -&gt; t -&gt; Bool)
+-&gt; (t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t)
+-&gt; (t -&gt; t -&gt; t -&gt; t)
+-&gt; t
+</span><a href="#local-6989586621679109935"><span class="hs-identifier hs-var hs-var">addOrUpdate</span></a></span></span><span> </span><span id="local-6989586621679109949"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109949"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679109950"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109950"><span class="hs-identifier hs-var">storedMetrics</span></a></span></span><span> </span><span id="local-6989586621679109951"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109951"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621679109952"><span class="annot"><span class="annottext">t -&gt; t -&gt; Bool
+</span><a href="#local-6989586621679109952"><span class="hs-identifier hs-var">checkIt</span></a></span></span><span> </span><span id="local-6989586621679109953"><span class="annot"><span class="annottext">t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t
+</span><a href="#local-6989586621679109953"><span class="hs-identifier hs-var">addIt</span></a></span></span><span> </span><span id="local-6989586621679109954"><span class="annot"><span class="annottext">t -&gt; t -&gt; t -&gt; t
+</span><a href="#local-6989586621679109954"><span class="hs-identifier hs-var">updateIt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; Bool
+</span><a href="#local-6989586621679109952"><span class="hs-identifier hs-var">checkIt</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109949"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109950"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t -&gt; t
+</span><a href="#local-6989586621679109954"><span class="hs-identifier hs-var">updateIt</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109951"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109949"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109950"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span>
+</span><span id="line-38"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; Store -&gt; TVar MetricsLocalStore -&gt; t
+</span><a href="#local-6989586621679109953"><span class="hs-identifier hs-var">addIt</span></a></span><span>    </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109951"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679109949"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109928"><span class="hs-identifier hs-var">ekgStore</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109929"><span class="hs-identifier hs-var">metricsStore</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-comment">-- We have to check if this metric is already registered, because if we'll try</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-comment">-- to add the metric with existing name, 'ekg-core' will throw an exception.</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621679109936"><span class="annot"><span class="annottext">checkCounter :: Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109936"><span class="hs-identifier hs-var hs-var">checkCounter</span></a></span></span><span> </span><span id="local-6989586621679109957"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109957"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Counter -&gt; Bool
+forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
+</span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109957"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Counter -&gt; Bool)
+-&gt; (MetricsLocalStore -&gt; HashMap Text Counter)
+-&gt; MetricsLocalStore
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Counter
+</span><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var">ekgCounters</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621679109941"><span class="annot"><span class="annottext">checkGauge :: Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109941"><span class="hs-identifier hs-var hs-var">checkGauge</span></a></span></span><span> </span><span id="local-6989586621679109963"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109963"><span class="hs-identifier hs-var">mName</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Gauge -&gt; Bool
+forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
+</span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109963"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Gauge -&gt; Bool)
+-&gt; (MetricsLocalStore -&gt; HashMap Text Gauge)
+-&gt; MetricsLocalStore
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Gauge
+</span><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var">ekgGauges</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679109946"><span class="annot"><span class="annottext">checkLabel :: Text -&gt; MetricsLocalStore -&gt; Bool
+</span><a href="#local-6989586621679109946"><span class="hs-identifier hs-var hs-var">checkLabel</span></a></span></span><span> </span><span id="local-6989586621679109967"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109967"><span class="hs-identifier hs-var">mName</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Label -&gt; Bool
+forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
+</span><span class="hs-identifier hs-var">HM.member</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109967"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Label -&gt; Bool)
+-&gt; (MetricsLocalStore -&gt; HashMap Text Label)
+-&gt; MetricsLocalStore
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Label
+</span><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var">ekgLabels</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#addCounter"><span class="hs-identifier hs-type">addCounter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span id="addCounter"><span class="annot"><span class="annottext">addCounter :: Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addCounter"><span class="hs-identifier hs-var hs-var">addCounter</span></a></span></span><span> </span><span id="local-6989586621679109969"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109969"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679109970"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109970"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679109971"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109971"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span id="local-6989586621679109972"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109972"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679109973"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621679109973"><span class="hs-identifier hs-var">newCounter</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Store -&gt; IO Counter
+</span><span class="hs-identifier hs-var">EKG.createCounter</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109970"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109971"><span class="hs-identifier hs-var">ekgStore</span></a></span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
+</span><span class="hs-identifier hs-var">C.add</span></span><span> </span><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621679109973"><span class="hs-identifier hs-var">newCounter</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109969"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#atomically"><span class="hs-identifier hs-var">atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html#modifyTVar%27"><span class="hs-identifier hs-var">modifyTVar'</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109972"><span class="hs-identifier hs-var">metricsStore</span></a></span><span> </span><span class="annot"><span class="annottext">((MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ())
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679109976"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109976"><span class="hs-identifier hs-var">currentStore</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109976"><span class="hs-identifier hs-var">currentStore</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var">ekgCounters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HM.insert</span></span><span> </span><span class="annot"><a href="#local-6989586621679109970"><span class="hs-identifier hs-type">mName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109973"><span class="hs-identifier hs-type">newCounter</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-type">$</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var">ekgCounters</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109976"><span class="hs-identifier hs-type">currentStore</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#addGauge"><span class="hs-identifier hs-type">addGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span id="addGauge"><span class="annot"><span class="annottext">addGauge :: Int64 -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addGauge"><span class="hs-identifier hs-var hs-var">addGauge</span></a></span></span><span> </span><span id="local-6989586621679109978"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109978"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621679109979"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109979"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679109980"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109980"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span id="local-6989586621679109981"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109981"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679109982"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621679109982"><span class="hs-identifier hs-var">newGauge</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Store -&gt; IO Gauge
+</span><span class="hs-identifier hs-var">EKG.createGauge</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109979"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109980"><span class="hs-identifier hs-var">ekgStore</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">Gauge -&gt; Int64 -&gt; IO ()
+</span><span class="hs-identifier hs-var">G.set</span></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621679109982"><span class="hs-identifier hs-var">newGauge</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109978"><span class="hs-identifier hs-var">g</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#atomically"><span class="hs-identifier hs-var">atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html#modifyTVar%27"><span class="hs-identifier hs-var">modifyTVar'</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109981"><span class="hs-identifier hs-var">metricsStore</span></a></span><span> </span><span class="annot"><span class="annottext">((MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ())
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679109985"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109985"><span class="hs-identifier hs-var">currentStore</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109985"><span class="hs-identifier hs-var">currentStore</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var">ekgGauges</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HM.insert</span></span><span> </span><span class="annot"><a href="#local-6989586621679109979"><span class="hs-identifier hs-type">mName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109982"><span class="hs-identifier hs-type">newGauge</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-type">$</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var">ekgGauges</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109985"><span class="hs-identifier hs-type">currentStore</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#addLabel"><span class="hs-identifier hs-type">addLabel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#TVar"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span id="addLabel"><span class="annot"><span class="annottext">addLabel :: Text -&gt; Text -&gt; Store -&gt; TVar MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#addLabel"><span class="hs-identifier hs-var hs-var">addLabel</span></a></span></span><span> </span><span id="local-6989586621679109986"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109986"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679109987"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109987"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679109988"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109988"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span id="local-6989586621679109989"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109989"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679109990"><span class="annot"><span class="annottext">Label
+</span><a href="#local-6989586621679109990"><span class="hs-identifier hs-var">newLabel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Store -&gt; IO Label
+</span><span class="hs-identifier hs-var">EKG.createLabel</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109987"><span class="hs-identifier hs-var">mName</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679109988"><span class="hs-identifier hs-var">ekgStore</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">Label -&gt; Text -&gt; IO ()
+</span><span class="hs-identifier hs-var">L.set</span></span><span> </span><span class="annot"><span class="annottext">Label
+</span><a href="#local-6989586621679109990"><span class="hs-identifier hs-var">newLabel</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109986"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#atomically"><span class="hs-identifier hs-var">atomically</span></a></span><span> </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a. TVar a -&gt; (a -&gt; a) -&gt; STM ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html#modifyTVar%27"><span class="hs-identifier hs-var">modifyTVar'</span></a></span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679109989"><span class="hs-identifier hs-var">metricsStore</span></a></span><span> </span><span class="annot"><span class="annottext">((MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ())
+-&gt; (MetricsLocalStore -&gt; MetricsLocalStore) -&gt; STM ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679109993"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109993"><span class="hs-identifier hs-var">currentStore</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109993"><span class="hs-identifier hs-var">currentStore</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var">ekgLabels</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HM.insert</span></span><span> </span><span class="annot"><a href="#local-6989586621679109987"><span class="hs-identifier hs-type">mName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109990"><span class="hs-identifier hs-type">newLabel</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-type">$</span></a></span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var">ekgLabels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679109993"><span class="hs-identifier hs-type">currentStore</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#updateCounter"><span class="hs-identifier hs-type">updateCounter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span id="updateCounter"><span class="annot"><span class="annottext">updateCounter :: Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateCounter"><span class="hs-identifier hs-var hs-var">updateCounter</span></a></span></span><span> </span><span id="local-6989586621679109994"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109994"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679109995"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109995"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679109996"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109996"><span class="hs-identifier hs-var">storedMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110001"><span class="annot"><span class="annottext">counter :: Counter
+</span><a href="#local-6989586621679110001"><span class="hs-identifier hs-var hs-var">counter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Counter
+</span><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var">ekgCounters</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679109996"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Counter -&gt; Text -&gt; Counter
+forall k v.
+(Eq k, Hashable k, HasCallStack) =&gt;
+HashMap k v -&gt; k -&gt; v
+</span><span class="hs-operator hs-var">!</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679109995"><span class="hs-identifier hs-var">mName</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621679110002"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110002"><span class="hs-identifier hs-var">currentValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Counter -&gt; IO Int64
+</span><span class="hs-identifier hs-var">C.read</span></span><span> </span><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621679110001"><span class="hs-identifier hs-var">counter</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110005"><span class="annot"><span class="annottext">difference :: Int64
+</span><a href="#local-6989586621679110005"><span class="hs-identifier hs-var hs-var">difference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679109994"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Int64
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#-"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110002"><span class="hs-identifier hs-var">currentValue</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#when"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110005"><span class="hs-identifier hs-var">difference</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3E"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
+</span><span class="hs-identifier hs-var">C.add</span></span><span> </span><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621679110001"><span class="hs-identifier hs-var">counter</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110005"><span class="hs-identifier hs-var">difference</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#updateGauge"><span class="hs-identifier hs-type">updateGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Int.html#Int64"><span class="hs-identifier hs-type">Int64</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span id="updateGauge"><span class="annot"><span class="annottext">updateGauge :: Int64 -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateGauge"><span class="hs-identifier hs-var hs-var">updateGauge</span></a></span></span><span> </span><span id="local-6989586621679110007"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110007"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621679110008"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110008"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679110009"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679110009"><span class="hs-identifier hs-var">storedMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110014"><span class="annot"><span class="annottext">gauge :: Gauge
+</span><a href="#local-6989586621679110014"><span class="hs-identifier hs-var hs-var">gauge</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Gauge
+</span><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var">ekgGauges</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679110009"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Gauge -&gt; Text -&gt; Gauge
+forall k v.
+(Eq k, Hashable k, HasCallStack) =&gt;
+HashMap k v -&gt; k -&gt; v
+</span><span class="hs-operator hs-var">!</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110008"><span class="hs-identifier hs-var">mName</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span id="local-6989586621679110015"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110015"><span class="hs-identifier hs-var">currentValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO Int64
+</span><span class="hs-identifier hs-var">G.read</span></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621679110014"><span class="hs-identifier hs-var">gauge</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#when"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110015"><span class="hs-identifier hs-var">currentValue</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%2F%3D"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110007"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Gauge -&gt; Int64 -&gt; IO ()
+</span><span class="hs-identifier hs-var">G.set</span></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621679110014"><span class="hs-identifier hs-var">gauge</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679110007"><span class="hs-identifier hs-var">g</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#updateLabel"><span class="hs-identifier hs-type">updateLabel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span id="updateLabel"><span class="annot"><span class="annottext">updateLabel :: Text -&gt; Text -&gt; MetricsLocalStore -&gt; IO ()
+</span><a href="System.Metrics.Store.Acceptor.html#updateLabel"><span class="hs-identifier hs-var hs-var">updateLabel</span></a></span></span><span> </span><span id="local-6989586621679110018"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110018"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679110019"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110019"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621679110020"><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679110020"><span class="hs-identifier hs-var">storedMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679110025"><span class="annot"><span class="annottext">label :: Label
+</span><a href="#local-6989586621679110025"><span class="hs-keyword hs-var hs-var">label</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Label
+</span><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var">ekgLabels</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="#local-6989586621679110020"><span class="hs-identifier hs-var">storedMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Label -&gt; Text -&gt; Label
+forall k v.
+(Eq k, Hashable k, HasCallStack) =&gt;
+HashMap k v -&gt; k -&gt; v
+</span><span class="hs-operator hs-var">!</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110019"><span class="hs-identifier hs-var">mName</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621679110026"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110026"><span class="hs-identifier hs-var">currentValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Label -&gt; IO Text
+</span><span class="hs-identifier hs-var">L.read</span></span><span> </span><span class="annot"><span class="annottext">Label
+</span><a href="#local-6989586621679110025"><span class="hs-keyword hs-var">label</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#when"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110026"><span class="hs-identifier hs-var">currentValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%2F%3D"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110018"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Label -&gt; Text -&gt; IO ()
+</span><span class="hs-identifier hs-var">L.set</span></span><span> </span><span class="annot"><span class="annottext">Label
+</span><a href="#local-6989586621679110025"><span class="hs-keyword hs-var">label</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679110018"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- Local storage for metrics. We need it be able to update metrics in EKG.Store</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- by new values we receive from the forwarder.</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">data</span><span> </span><span id="MetricsLocalStore"><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-var">MetricsLocalStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetricsLocalStore"><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-var">MetricsLocalStore</span></a></span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ekgCounters"><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Counter
+</span><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var hs-var">ekgCounters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">C.Counter</span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ekgGauges"><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Gauge
+</span><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var hs-var">ekgGauges</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Gauge</span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ekgLabels"><span class="annot"><span class="annottext">MetricsLocalStore -&gt; HashMap Text Label
+</span><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var hs-var">ekgLabels</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="System.Metrics.ReqResp.html#MetricName"><span class="hs-identifier hs-type">MetricName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">L.Label</span></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#emptyMetricsLocalStore"><span class="hs-identifier hs-type">emptyMetricsLocalStore</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span>
+</span><span id="line-99"></span><span id="emptyMetricsLocalStore"><span class="annot"><span class="annottext">emptyMetricsLocalStore :: MetricsLocalStore
+</span><a href="System.Metrics.Store.Acceptor.html#emptyMetricsLocalStore"><span class="hs-identifier hs-var hs-var">emptyMetricsLocalStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#MetricsLocalStore"><span class="hs-identifier hs-type">MetricsLocalStore</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ekgCounters :: HashMap Text Counter
+</span><a href="System.Metrics.Store.Acceptor.html#ekgCounters"><span class="hs-identifier hs-var">ekgCounters</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Counter
+forall k v. HashMap k v
+</span><span class="hs-identifier hs-var">HM.empty</span></span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ekgGauges :: HashMap Text Gauge
+</span><a href="System.Metrics.Store.Acceptor.html#ekgGauges"><span class="hs-identifier hs-var">ekgGauges</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Gauge
+forall k v. HashMap k v
+</span><span class="hs-identifier hs-var">HM.empty</span></span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ekgLabels :: HashMap Text Label
+</span><a href="System.Metrics.Store.Acceptor.html#ekgLabels"><span class="hs-identifier hs-var">ekgLabels</span></a></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Label
+forall k v. HashMap k v
+</span><span class="hs-identifier hs-var">HM.empty</span></span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-105"></span></pre></body></html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds           #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric       #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia         #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE EmptyCase           #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances   #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE GADTs               #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE PolyKinds           #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving  #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications    #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies        #-}</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Network.Protocol.PeerSharing.Type</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Codec.Serialise.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Serialise</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word8"><span class="hs-identifier">Word8</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Network.TypedProtocol.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Protocol</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Util.ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | PeerSharing amount new type.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- We use 'Word8' to be faithful to the CDDL specification.</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="PeerSharingAmount"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingAmount"><span class="hs-identifier hs-var">PeerSharingAmount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PeerSharingAmount"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingAmount"><span class="hs-identifier hs-var">PeerSharingAmount</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="getAmount"><span class="annot"><span class="annottext">PeerSharingAmount -&gt; Word8
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#getAmount"><span class="hs-identifier hs-var hs-var">getAmount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word8"><span class="hs-identifier hs-type">Word8</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679135598"><span id="local-6989586621679135603"><span class="annot"><span class="annottext">PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+(PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; Eq PeerSharingAmount
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+== :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+$c/= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+/= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135609"><span id="local-6989586621679135615"><span id="local-6989586621679135619"><span class="annot"><span class="annottext">Int -&gt; PeerSharingAmount -&gt; ShowS
+[PeerSharingAmount] -&gt; ShowS
+PeerSharingAmount -&gt; String
+(Int -&gt; PeerSharingAmount -&gt; ShowS)
+-&gt; (PeerSharingAmount -&gt; String)
+-&gt; ([PeerSharingAmount] -&gt; ShowS)
+-&gt; Show PeerSharingAmount
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PeerSharingAmount -&gt; ShowS
+showsPrec :: Int -&gt; PeerSharingAmount -&gt; ShowS
+$cshow :: PeerSharingAmount -&gt; String
+show :: PeerSharingAmount -&gt; String
+$cshowList :: [PeerSharingAmount] -&gt; ShowS
+showList :: [PeerSharingAmount] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135625"><span id="local-6989586621679135630"><span id="local-6989586621679135634"><span id="local-6989586621679135638"><span id="local-6989586621679135642"><span id="local-6989586621679135646"><span id="local-6989586621679135650"><span class="annot"><span class="annottext">Eq PeerSharingAmount
+Eq PeerSharingAmount =&gt;
+(PeerSharingAmount -&gt; PeerSharingAmount -&gt; Ordering)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; Ord PeerSharingAmount
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; Ordering
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Ordering
+compare :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Ordering
+$c&lt; :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+&lt; :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+$c&lt;= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+&lt;= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+$c&gt; :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+&gt; :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+$c&gt;= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+&gt;= :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; Bool
+$cmax :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+max :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$cmin :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+min :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135656"><span id="local-6989586621679135658"><span class="annot"><span class="annottext">(forall x. PeerSharingAmount -&gt; Rep PeerSharingAmount x)
+-&gt; (forall x. Rep PeerSharingAmount x -&gt; PeerSharingAmount)
+-&gt; Generic PeerSharingAmount
+forall x. Rep PeerSharingAmount x -&gt; PeerSharingAmount
+forall x. PeerSharingAmount -&gt; Rep PeerSharingAmount x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. PeerSharingAmount -&gt; Rep PeerSharingAmount x
+from :: forall x. PeerSharingAmount -&gt; Rep PeerSharingAmount x
+$cto :: forall x. Rep PeerSharingAmount x -&gt; PeerSharingAmount
+to :: forall x. Rep PeerSharingAmount x -&gt; PeerSharingAmount
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679135662"><span id="local-6989586621679135667"><span id="local-6989586621679135671"><span id="local-6989586621679135675"><span id="local-6989586621679135679"><span id="local-6989586621679135683"><span id="local-6989586621679135687"><span id="local-6989586621679135691"><span class="annot"><span class="annottext">Int -&gt; PeerSharingAmount
+PeerSharingAmount -&gt; Int
+PeerSharingAmount -&gt; [PeerSharingAmount]
+PeerSharingAmount -&gt; PeerSharingAmount
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+(PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (Int -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; Int)
+-&gt; (PeerSharingAmount -&gt; [PeerSharingAmount])
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount])
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount])
+-&gt; (PeerSharingAmount
+    -&gt; PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount])
+-&gt; Enum PeerSharingAmount
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: PeerSharingAmount -&gt; PeerSharingAmount
+succ :: PeerSharingAmount -&gt; PeerSharingAmount
+$cpred :: PeerSharingAmount -&gt; PeerSharingAmount
+pred :: PeerSharingAmount -&gt; PeerSharingAmount
+$ctoEnum :: Int -&gt; PeerSharingAmount
+toEnum :: Int -&gt; PeerSharingAmount
+$cfromEnum :: PeerSharingAmount -&gt; Int
+fromEnum :: PeerSharingAmount -&gt; Int
+$cenumFrom :: PeerSharingAmount -&gt; [PeerSharingAmount]
+enumFrom :: PeerSharingAmount -&gt; [PeerSharingAmount]
+$cenumFromThen :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+enumFromThen :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+$cenumFromTo :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+enumFromTo :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+$cenumFromThenTo :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+enumFromThenTo :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; PeerSharingAmount -&gt; [PeerSharingAmount]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Enum"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135697"><span id="local-6989586621679135702"><span id="local-6989586621679135706"><span id="local-6989586621679135710"><span id="local-6989586621679135714"><span id="local-6989586621679135718"><span id="local-6989586621679135722"><span class="annot"><span class="annottext">Integer -&gt; PeerSharingAmount
+PeerSharingAmount -&gt; PeerSharingAmount
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+(PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (Integer -&gt; PeerSharingAmount)
+-&gt; Num PeerSharingAmount
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+$c+ :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
++ :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$c- :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+- :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$c* :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+* :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$cnegate :: PeerSharingAmount -&gt; PeerSharingAmount
+negate :: PeerSharingAmount -&gt; PeerSharingAmount
+$cabs :: PeerSharingAmount -&gt; PeerSharingAmount
+abs :: PeerSharingAmount -&gt; PeerSharingAmount
+$csignum :: PeerSharingAmount -&gt; PeerSharingAmount
+signum :: PeerSharingAmount -&gt; PeerSharingAmount
+$cfromInteger :: Integer -&gt; PeerSharingAmount
+fromInteger :: Integer -&gt; PeerSharingAmount
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#Num"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135732"><span class="annot"><span class="annottext">Num PeerSharingAmount
+Ord PeerSharingAmount
+(Num PeerSharingAmount, Ord PeerSharingAmount) =&gt;
+(PeerSharingAmount -&gt; Rational) -&gt; Real PeerSharingAmount
+PeerSharingAmount -&gt; Rational
+forall a. (Num a, Ord a) =&gt; (a -&gt; Rational) -&gt; Real a
+$ctoRational :: PeerSharingAmount -&gt; Rational
+toRational :: PeerSharingAmount -&gt; Rational
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#Real"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135743"><span id="local-6989586621679135748"><span id="local-6989586621679135752"><span id="local-6989586621679135756"><span id="local-6989586621679135760"><span id="local-6989586621679135764"><span id="local-6989586621679135768"><span class="annot"><span class="annottext">Enum PeerSharingAmount
+Real PeerSharingAmount
+(Real PeerSharingAmount, Enum PeerSharingAmount) =&gt;
+(PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount)
+-&gt; (PeerSharingAmount
+    -&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount))
+-&gt; (PeerSharingAmount
+    -&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount))
+-&gt; (PeerSharingAmount -&gt; Integer)
+-&gt; Integral PeerSharingAmount
+PeerSharingAmount -&gt; Integer
+PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount)
+PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+forall a.
+(Real a, Enum a) =&gt;
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; (a, a))
+-&gt; (a -&gt; a -&gt; (a, a))
+-&gt; (a -&gt; Integer)
+-&gt; Integral a
+$cquot :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+quot :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$crem :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+rem :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$cdiv :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+div :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$cmod :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+mod :: PeerSharingAmount -&gt; PeerSharingAmount -&gt; PeerSharingAmount
+$cquotRem :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount)
+quotRem :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount)
+$cdivMod :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount)
+divMod :: PeerSharingAmount
+-&gt; PeerSharingAmount -&gt; (PeerSharingAmount, PeerSharingAmount)
+$ctoInteger :: PeerSharingAmount -&gt; Integer
+toInteger :: PeerSharingAmount -&gt; Integer
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Real.html#Integral"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Integral</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135774"><span id="local-6989586621679135779"><span id="local-6989586621679135783"><span id="local-6989586621679135787"><span class="annot"><span class="annottext">[PeerSharingAmount] -&gt; Encoding
+PeerSharingAmount -&gt; Encoding
+(PeerSharingAmount -&gt; Encoding)
+-&gt; (forall s. Decoder s PeerSharingAmount)
+-&gt; ([PeerSharingAmount] -&gt; Encoding)
+-&gt; (forall s. Decoder s [PeerSharingAmount])
+-&gt; Serialise PeerSharingAmount
+forall s. Decoder s [PeerSharingAmount]
+forall s. Decoder s PeerSharingAmount
+forall a.
+(a -&gt; Encoding)
+-&gt; (forall s. Decoder s a)
+-&gt; ([a] -&gt; Encoding)
+-&gt; (forall s. Decoder s [a])
+-&gt; Serialise a
+$cencode :: PeerSharingAmount -&gt; Encoding
+encode :: PeerSharingAmount -&gt; Encoding
+$cdecode :: forall s. Decoder s PeerSharingAmount
+decode :: forall s. Decoder s PeerSharingAmount
+$cencodeList :: [PeerSharingAmount] -&gt; Encoding
+encodeList :: [PeerSharingAmount] -&gt; Encoding
+$cdecodeList :: forall s. Decoder s [PeerSharingAmount]
+decodeList :: forall s. Decoder s [PeerSharingAmount]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Serialise</span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word8"><span class="hs-identifier hs-type">Word8</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- | PeerSharing Result type.</span><span>
+</span><span id="line-29"></span><span class="hs-comment">--</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- We need a constructor for the case when the Governor wins the race versus</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- the Mux (when initialising the peer sharing miniprotocol). This leads the</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- Governor to lookup a peer that hasn't been registered yet.</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="PeerSharingResult"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingResult"><span class="hs-identifier hs-var">PeerSharingResult</span></a></span></span><span> </span><span id="local-6989586621679135792"><span class="annot"><a href="#local-6989586621679135792"><span class="hs-identifier hs-type">peerAddress</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PeerSharingResult"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingResult"><span class="hs-identifier hs-var">PeerSharingResult</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679135792"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-34"></span><span>                                   </span><span class="hs-glyph">|</span><span> </span><span id="PeerSharingNotRegisteredYet"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingNotRegisteredYet"><span class="hs-identifier hs-var">PeerSharingNotRegisteredYet</span></a></span></span><span>
+</span><span id="line-35"></span><span>                                   </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679135797"><span id="local-6989586621679135801"><span class="annot"><span class="annottext">PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+(PeerSharingResult peerAddress
+ -&gt; PeerSharingResult peerAddress -&gt; Bool)
+-&gt; (PeerSharingResult peerAddress
+    -&gt; PeerSharingResult peerAddress -&gt; Bool)
+-&gt; Eq (PeerSharingResult peerAddress)
+forall peerAddress.
+Eq peerAddress =&gt;
+PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall peerAddress.
+Eq peerAddress =&gt;
+PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+== :: PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+$c/= :: forall peerAddress.
+Eq peerAddress =&gt;
+PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+/= :: PeerSharingResult peerAddress
+-&gt; PeerSharingResult peerAddress -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679135806"><span id="local-6989586621679135811"><span id="local-6989586621679135815"><span class="annot"><span class="annottext">Int -&gt; PeerSharingResult peerAddress -&gt; ShowS
+[PeerSharingResult peerAddress] -&gt; ShowS
+PeerSharingResult peerAddress -&gt; String
+(Int -&gt; PeerSharingResult peerAddress -&gt; ShowS)
+-&gt; (PeerSharingResult peerAddress -&gt; String)
+-&gt; ([PeerSharingResult peerAddress] -&gt; ShowS)
+-&gt; Show (PeerSharingResult peerAddress)
+forall peerAddress.
+Show peerAddress =&gt;
+Int -&gt; PeerSharingResult peerAddress -&gt; ShowS
+forall peerAddress.
+Show peerAddress =&gt;
+[PeerSharingResult peerAddress] -&gt; ShowS
+forall peerAddress.
+Show peerAddress =&gt;
+PeerSharingResult peerAddress -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall peerAddress.
+Show peerAddress =&gt;
+Int -&gt; PeerSharingResult peerAddress -&gt; ShowS
+showsPrec :: Int -&gt; PeerSharingResult peerAddress -&gt; ShowS
+$cshow :: forall peerAddress.
+Show peerAddress =&gt;
+PeerSharingResult peerAddress -&gt; String
+show :: PeerSharingResult peerAddress -&gt; String
+$cshowList :: forall peerAddress.
+Show peerAddress =&gt;
+[PeerSharingResult peerAddress] -&gt; ShowS
+showList :: [PeerSharingResult peerAddress] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- | A kind to identify our protocol, and the types of the states in the state</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- transition diagram of the protocol.</span><span>
+</span><span id="line-39"></span><span class="hs-comment">--</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="PeerSharing"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-var">PeerSharing</span></a></span></span><span> </span><span id="local-6989586621679135817"><span class="annot"><a href="#local-6989586621679135817"><span class="hs-identifier hs-type">peerAddress</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-comment">-- | The client can send a request and the server is waiting for a request.</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621679135818"><span id="StIdle"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StIdle"><span class="hs-identifier hs-var">StIdle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135818"><span class="hs-identifier hs-type">peerAddress</span></a></span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-comment">-- | The server is responsible for sending response back.</span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621679135819"><span id="StBusy"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StBusy"><span class="hs-identifier hs-var">StBusy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135819"><span class="hs-identifier hs-type">peerAddress</span></a></span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-comment">-- | Both the client and server are in the terminal state. They're done.</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621679135820"><span id="StDone"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StDone"><span class="hs-identifier hs-var">StDone</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135820"><span class="hs-identifier hs-type">peerAddress</span></a></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679135547"><span class="annot"><span class="hs-identifier hs-type">ShowProxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135547"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621679135824"><span class="annot"><span class="annottext">showProxy :: Proxy (PeerSharing peer) -&gt; String
+</span><a href="#local-6989586621679135824"><span class="hs-identifier hs-var hs-var hs-var hs-var">showProxy</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy (PeerSharing peer)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PeerSharing&quot;</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679135559"><span class="annot"><span class="hs-identifier hs-type">Protocol</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135559"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="Message"><span class="annot"><span class="hs-identifier hs-var">Message</span></span></span><span> </span><span id="local-6989586621679135831"><span id="local-6989586621679135832"><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135559"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679135831"><span class="hs-identifier hs-type">from</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135832"><span class="hs-identifier hs-type">to</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679135833"><span id="MsgShareRequest"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgShareRequest"><span class="hs-identifier hs-var">MsgShareRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharingAmount"><span class="hs-identifier hs-type">PeerSharingAmount</span></a></span><span>
+</span><span id="line-60"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Message</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135833"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StIdle"><span class="hs-identifier hs-type">StIdle</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StBusy"><span class="hs-identifier hs-type">StBusy</span></a></span></span><span>
+</span><span id="line-61"></span><span>    </span><span id="local-6989586621679135835"><span id="MsgSharePeers"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgSharePeers"><span class="hs-identifier hs-var">MsgSharePeers</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679135835"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-62"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Message</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135835"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StBusy"><span class="hs-identifier hs-type">StBusy</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StIdle"><span class="hs-identifier hs-type">StIdle</span></a></span></span><span>
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621679135837"><span id="MsgDone"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgDone"><span class="hs-identifier hs-var">MsgDone</span></a></span></span><span>         </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Message</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135837"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StIdle"><span class="hs-identifier hs-type">StIdle</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StDone"><span class="hs-identifier hs-type">StDone</span></a></span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="ClientHasAgency"><span class="annot"><span class="hs-identifier hs-var">ClientHasAgency</span></span></span><span> </span><span id="local-6989586621679135839"><span class="annot"><a href="#local-6989586621679135839"><span class="hs-identifier hs-type hs-type">st</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>    </span><span id="TokIdle"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokIdle"><span class="hs-identifier hs-var">TokIdle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientHasAgency</span></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StIdle"><span class="hs-identifier hs-type">StIdle</span></a></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="ServerHasAgency"><span class="annot"><span class="hs-identifier hs-var">ServerHasAgency</span></span></span><span> </span><span id="local-6989586621679135841"><span class="annot"><a href="#local-6989586621679135841"><span class="hs-identifier hs-type hs-type">st</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>    </span><span id="TokBusy"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokBusy"><span class="hs-identifier hs-var">TokBusy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ServerHasAgency</span></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StBusy"><span class="hs-identifier hs-type">StBusy</span></a></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">data</span><span> </span><span id="NobodyHasAgency"><span class="annot"><span class="hs-identifier hs-var">NobodyHasAgency</span></span></span><span> </span><span id="local-6989586621679135843"><span class="annot"><a href="#local-6989586621679135843"><span class="hs-identifier hs-type hs-type">st</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>    </span><span id="TokDone"><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokDone"><span class="hs-identifier hs-var">TokDone</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NobodyHasAgency</span></span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#StDone"><span class="hs-identifier hs-type">StDone</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679135845"><span class="annot"><span class="annottext">exclusionLemma_ClientAndServerHaveAgency :: forall (st :: PeerSharing peerAddress).
+ClientHasAgency st -&gt; ServerHasAgency st -&gt; Void
+</span><a href="#local-6989586621679135845"><span class="hs-identifier hs-var hs-var hs-var hs-var">exclusionLemma_ClientAndServerHaveAgency</span></a></span></span><span> </span><span class="annot"><span class="annottext">ClientHasAgency st
+R:ClientHasAgencyPeerSharingst k peerAddress st
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokIdle"><span class="hs-identifier hs-var">TokIdle</span></a></span><span> </span><span id="local-6989586621679135848"><span class="annot"><span class="annottext">ServerHasAgency st
+</span><a href="#local-6989586621679135848"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerHasAgency st
+</span><a href="#local-6989586621679135848"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679135849"><span class="annot"><span class="annottext">exclusionLemma_NobodyAndClientHaveAgency :: forall (st :: PeerSharing peerAddress).
+NobodyHasAgency st -&gt; ClientHasAgency st -&gt; Void
+</span><a href="#local-6989586621679135849"><span class="hs-identifier hs-var hs-var hs-var hs-var">exclusionLemma_NobodyAndClientHaveAgency</span></a></span></span><span> </span><span class="annot"><span class="annottext">NobodyHasAgency st
+R:NobodyHasAgencyPeerSharingst k peerAddress st
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokDone"><span class="hs-identifier hs-var">TokDone</span></a></span><span> </span><span id="local-6989586621679135852"><span class="annot"><span class="annottext">ClientHasAgency st
+</span><a href="#local-6989586621679135852"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ClientHasAgency st
+</span><a href="#local-6989586621679135852"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621679135853"><span class="annot"><span class="annottext">exclusionLemma_NobodyAndServerHaveAgency :: forall (st :: PeerSharing peerAddress).
+NobodyHasAgency st -&gt; ServerHasAgency st -&gt; Void
+</span><a href="#local-6989586621679135853"><span class="hs-identifier hs-var hs-var hs-var hs-var">exclusionLemma_NobodyAndServerHaveAgency</span></a></span></span><span> </span><span class="annot"><span class="annottext">NobodyHasAgency st
+R:NobodyHasAgencyPeerSharingst k peerAddress st
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokDone"><span class="hs-identifier hs-var">TokDone</span></a></span><span> </span><span id="local-6989586621679135856"><span class="annot"><span class="annottext">ServerHasAgency st
+</span><a href="#local-6989586621679135856"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerHasAgency st
+</span><a href="#local-6989586621679135856"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679135571"><span id="local-6989586621679135572"><span id="local-6989586621679135573"><span id="local-6989586621679135859"><span id="local-6989586621679135864"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135571"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Message</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135571"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679135572"><span class="hs-identifier hs-type">from</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135573"><span class="hs-identifier hs-type">to</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679135866"><span class="annot"><span class="annottext">show :: Message (PeerSharing peer) from to -&gt; String
+</span><a href="#local-6989586621679135866"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgShareRequest"><span class="hs-identifier hs-type">MsgShareRequest</span></a></span><span> </span><span id="local-6989586621679135871"><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679135871"><span class="hs-identifier hs-var">amount</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;MsgShareRequest &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2B%2B"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679135871"><span class="hs-identifier hs-var">amount</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgSharePeers"><span class="hs-identifier hs-type">MsgSharePeers</span></a></span><span> </span><span id="local-6989586621679135879"><span class="annot"><span class="annottext">[peerAddress]
+</span><a href="#local-6989586621679135879"><span class="hs-identifier hs-var">resp</span></a></span></span><span class="hs-special">)</span><span>     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;MsgSharePeers &quot;</span></span><span>   </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%2B%2B"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[peerAddress] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">[peerAddress]
+</span><a href="#local-6989586621679135879"><span class="hs-identifier hs-var">resp</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Message (PeerSharing peer) from to
+R:MessagePeerSharingfromto (*) peer from to
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#MsgDone"><span class="hs-identifier hs-var">MsgDone</span></a></span><span>                  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;MsgDone&quot;</span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621679135579"><span id="local-6989586621679135884"><span id="local-6989586621679135886"><span id="local-6989586621679135890"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135579"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135579"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span id="local-6989586621679135581"><span id="local-6989586621679135894"><span id="local-6989586621679135896"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135581"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135581"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679135586"><span id="local-6989586621679135587"><span id="local-6989586621679135900"><span id="local-6989586621679135905"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ClientHasAgency</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679135587"><span class="hs-identifier hs-type">st</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135586"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679135907"><span class="annot"><span class="annottext">show :: ClientHasAgency st -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="annot"><span class="annottext">ClientHasAgency st
+R:ClientHasAgencyPeerSharingst k peerAddress st
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokIdle"><span class="hs-identifier hs-var">TokIdle</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;TokIdle&quot;</span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679135592"><span id="local-6989586621679135593"><span id="local-6989586621679135910"><span id="local-6989586621679135915"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ServerHasAgency</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679135593"><span class="hs-identifier hs-type">st</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#PeerSharing"><span class="hs-identifier hs-type">PeerSharing</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679135592"><span class="hs-identifier hs-type">peerAddress</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621679135917"><span class="annot"><span class="annottext">show :: ServerHasAgency st -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="annot"><span class="annottext">ServerHasAgency st
+R:ServerHasAgencyPeerSharingst k peerAddress st
+</span><a href="Ouroboros.Network.Protocol.PeerSharing.Type.html#TokBusy"><span class="hs-identifier hs-var">TokBusy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;TokBusy&quot;</span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span></pre></body></html>

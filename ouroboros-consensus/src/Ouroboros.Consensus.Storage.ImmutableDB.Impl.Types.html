@@ -1,0 +1,700 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass    #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric     #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveTraversable #-}</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Misc types</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#BlockOrEBB"><span class="hs-identifier">BlockOrEBB</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#WithBlockSize"><span class="hs-identifier">WithBlockSize</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#isBlockOrEBB"><span class="hs-identifier">isBlockOrEBB</span></a></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Validation policy</span></span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidationPolicy"><span class="hs-identifier">ValidationPolicy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Chunk file error</span></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkFileError"><span class="hs-identifier">ChunkFileError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Tracing</span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceCacheEvent"><span class="hs-identifier">TraceCacheEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceChunkValidation"><span class="hs-identifier">TraceChunkValidation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceEvent"><span class="hs-identifier">TraceEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier">Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Block.html"><span class="hs-identifier">Ouroboros.Consensus.Block</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.API.html"><span class="hs-identifier">Ouroboros.Consensus.Storage.ImmutableDB.API</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.API.html#Tip"><span class="hs-identifier">Tip</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html"><span class="hs-identifier">Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal</span></a></span><span>
+</span><span id="line-26"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier">ChunkNo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Util.CBOR.html"><span class="hs-identifier">Ouroboros.Consensus.Util.CBOR</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Util.CBOR.html#ReadIncrementalErr"><span class="hs-identifier">ReadIncrementalErr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">{------------------------------------------------------------------------------
+  Misc types
+------------------------------------------------------------------------------}</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="BlockOrEBB"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#BlockOrEBB"><span class="hs-identifier hs-var">BlockOrEBB</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-34"></span><span>    </span><span id="Block"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#Block"><span class="hs-identifier hs-var">Block</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EBB"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#EBB"><span class="hs-identifier hs-var">EBB</span></a></span></span><span>   </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">EpochNo</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679851997"><span id="local-6989586621679852003"><span class="annot"><span class="annottext">BlockOrEBB -&gt; BlockOrEBB -&gt; Bool
+(BlockOrEBB -&gt; BlockOrEBB -&gt; Bool)
+-&gt; (BlockOrEBB -&gt; BlockOrEBB -&gt; Bool) -&gt; Eq BlockOrEBB
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: BlockOrEBB -&gt; BlockOrEBB -&gt; Bool
+== :: BlockOrEBB -&gt; BlockOrEBB -&gt; Bool
+$c/= :: BlockOrEBB -&gt; BlockOrEBB -&gt; Bool
+/= :: BlockOrEBB -&gt; BlockOrEBB -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852008"><span id="local-6989586621679852017"><span id="local-6989586621679852021"><span class="annot"><span class="annottext">Int -&gt; BlockOrEBB -&gt; ShowS
+[BlockOrEBB] -&gt; ShowS
+BlockOrEBB -&gt; String
+(Int -&gt; BlockOrEBB -&gt; ShowS)
+-&gt; (BlockOrEBB -&gt; String)
+-&gt; ([BlockOrEBB] -&gt; ShowS)
+-&gt; Show BlockOrEBB
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; BlockOrEBB -&gt; ShowS
+showsPrec :: Int -&gt; BlockOrEBB -&gt; ShowS
+$cshow :: BlockOrEBB -&gt; String
+show :: BlockOrEBB -&gt; String
+$cshowList :: [BlockOrEBB] -&gt; ShowS
+showList :: [BlockOrEBB] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852025"><span id="local-6989586621679852027"><span class="annot"><span class="annottext">(forall x. BlockOrEBB -&gt; Rep BlockOrEBB x)
+-&gt; (forall x. Rep BlockOrEBB x -&gt; BlockOrEBB) -&gt; Generic BlockOrEBB
+forall x. Rep BlockOrEBB x -&gt; BlockOrEBB
+forall x. BlockOrEBB -&gt; Rep BlockOrEBB x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. BlockOrEBB -&gt; Rep BlockOrEBB x
+from :: forall x. BlockOrEBB -&gt; Rep BlockOrEBB x
+$cto :: forall x. Rep BlockOrEBB x -&gt; BlockOrEBB
+to :: forall x. Rep BlockOrEBB x -&gt; BlockOrEBB
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852031"><span id="local-6989586621679852035"><span id="local-6989586621679852041"><span class="annot"><span class="annottext">Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo)
+Proxy BlockOrEBB -&gt; String
+(Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy BlockOrEBB -&gt; String)
+-&gt; NoThunks BlockOrEBB
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; BlockOrEBB -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy BlockOrEBB -&gt; String
+showTypeOf :: Proxy BlockOrEBB -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#isBlockOrEBB"><span class="hs-identifier hs-type">isBlockOrEBB</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#BlockOrEBB"><span class="hs-identifier hs-type">BlockOrEBB</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Block.EBB.html#IsEBB"><span class="hs-identifier hs-type">IsEBB</span></a></span><span>
+</span><span id="line-39"></span><span id="isBlockOrEBB"><span class="annot"><span class="annottext">isBlockOrEBB :: BlockOrEBB -&gt; IsEBB
+</span><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#isBlockOrEBB"><span class="hs-identifier hs-var hs-var">isBlockOrEBB</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#Block"><span class="hs-identifier hs-type">Block</span></a></span><span> </span><span class="annot"><span class="annottext">SlotNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IsEBB
+</span><a href="Ouroboros.Consensus.Block.EBB.html#IsNotEBB"><span class="hs-identifier hs-var">IsNotEBB</span></a></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#isBlockOrEBB"><span class="hs-identifier hs-var">isBlockOrEBB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#EBB"><span class="hs-identifier hs-type">EBB</span></a></span><span>   </span><span class="annot"><span class="annottext">EpochNo
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IsEBB
+</span><a href="Ouroboros.Consensus.Block.EBB.html#IsEBB"><span class="hs-identifier hs-var">IsEBB</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">data</span><span> </span><span id="WithBlockSize"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#WithBlockSize"><span class="hs-identifier hs-var">WithBlockSize</span></a></span></span><span> </span><span id="local-6989586621679851871"><span class="annot"><a href="#local-6989586621679851871"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WithBlockSize"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#WithBlockSize"><span class="hs-identifier hs-var">WithBlockSize</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-43"></span><span>      </span><span id="blockSize"><span class="annot"><span class="annottext">forall a. WithBlockSize a -&gt; Word32
+</span><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#blockSize"><span class="hs-identifier hs-var hs-var">blockSize</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="withoutBlockSize"><span class="annot"><span class="annottext">forall a. WithBlockSize a -&gt; a
+</span><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#withoutBlockSize"><span class="hs-identifier hs-var hs-var">withoutBlockSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621679851871"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852078"><span id="local-6989586621679852083"><span class="annot"><span class="annottext">WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+(WithBlockSize a -&gt; WithBlockSize a -&gt; Bool)
+-&gt; (WithBlockSize a -&gt; WithBlockSize a -&gt; Bool)
+-&gt; Eq (WithBlockSize a)
+forall a. Eq a =&gt; WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. Eq a =&gt; WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+== :: WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+/= :: WithBlockSize a -&gt; WithBlockSize a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852088"><span id="local-6989586621679852094"><span id="local-6989586621679852098"><span class="annot"><span class="annottext">Int -&gt; WithBlockSize a -&gt; ShowS
+[WithBlockSize a] -&gt; ShowS
+WithBlockSize a -&gt; String
+(Int -&gt; WithBlockSize a -&gt; ShowS)
+-&gt; (WithBlockSize a -&gt; String)
+-&gt; ([WithBlockSize a] -&gt; ShowS)
+-&gt; Show (WithBlockSize a)
+forall a. Show a =&gt; Int -&gt; WithBlockSize a -&gt; ShowS
+forall a. Show a =&gt; [WithBlockSize a] -&gt; ShowS
+forall a. Show a =&gt; WithBlockSize a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; WithBlockSize a -&gt; ShowS
+showsPrec :: Int -&gt; WithBlockSize a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; WithBlockSize a -&gt; String
+show :: WithBlockSize a -&gt; String
+$cshowList :: forall a. Show a =&gt; [WithBlockSize a] -&gt; ShowS
+showList :: [WithBlockSize a] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852101"><span id="local-6989586621679852103"><span class="annot"><span class="annottext">(forall x. WithBlockSize a -&gt; Rep (WithBlockSize a) x)
+-&gt; (forall x. Rep (WithBlockSize a) x -&gt; WithBlockSize a)
+-&gt; Generic (WithBlockSize a)
+forall x. Rep (WithBlockSize a) x -&gt; WithBlockSize a
+forall x. WithBlockSize a -&gt; Rep (WithBlockSize a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (WithBlockSize a) x -&gt; WithBlockSize a
+forall a x. WithBlockSize a -&gt; Rep (WithBlockSize a) x
+$cfrom :: forall a x. WithBlockSize a -&gt; Rep (WithBlockSize a) x
+from :: forall x. WithBlockSize a -&gt; Rep (WithBlockSize a) x
+$cto :: forall a x. Rep (WithBlockSize a) x -&gt; WithBlockSize a
+to :: forall x. Rep (WithBlockSize a) x -&gt; WithBlockSize a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852107"><span id="local-6989586621679852111"><span id="local-6989586621679852117"><span class="annot"><span class="annottext">Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+Proxy (WithBlockSize a) -&gt; String
+(Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy (WithBlockSize a) -&gt; String)
+-&gt; NoThunks (WithBlockSize a)
+forall a.
+NoThunks a =&gt;
+Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+forall a. NoThunks a =&gt; Proxy (WithBlockSize a) -&gt; String
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: forall a.
+NoThunks a =&gt;
+Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: forall a.
+NoThunks a =&gt;
+Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; WithBlockSize a -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: forall a. NoThunks a =&gt; Proxy (WithBlockSize a) -&gt; String
+showTypeOf :: Proxy (WithBlockSize a) -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852143"><span id="local-6989586621679852145"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; WithBlockSize a -&gt; WithBlockSize b)
+-&gt; (forall a b. a -&gt; WithBlockSize b -&gt; WithBlockSize a)
+-&gt; Functor WithBlockSize
+forall a b. a -&gt; WithBlockSize b -&gt; WithBlockSize a
+forall a b. (a -&gt; b) -&gt; WithBlockSize a -&gt; WithBlockSize b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b. (a -&gt; b) -&gt; WithBlockSize a -&gt; WithBlockSize b
+fmap :: forall a b. (a -&gt; b) -&gt; WithBlockSize a -&gt; WithBlockSize b
+$c&lt;$ :: forall a b. a -&gt; WithBlockSize b -&gt; WithBlockSize a
+&lt;$ :: forall a b. a -&gt; WithBlockSize b -&gt; WithBlockSize a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852149"><span id="local-6989586621679852155"><span id="local-6989586621679852158"><span id="local-6989586621679852163"><span id="local-6989586621679852165"><span id="local-6989586621679852168"><span id="local-6989586621679852171"><span id="local-6989586621679852174"><span id="local-6989586621679852177"><span id="local-6989586621679852180"><span id="local-6989586621679852183"><span id="local-6989586621679852185"><span id="local-6989586621679852188"><span id="local-6989586621679852193"><span id="local-6989586621679852198"><span id="local-6989586621679852203"><span id="local-6989586621679852208"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; WithBlockSize m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a)
+-&gt; (forall a. WithBlockSize a -&gt; [a])
+-&gt; (forall a. WithBlockSize a -&gt; Bool)
+-&gt; (forall a. WithBlockSize a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; WithBlockSize a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; WithBlockSize a -&gt; a)
+-&gt; (forall a. Ord a =&gt; WithBlockSize a -&gt; a)
+-&gt; (forall a. Num a =&gt; WithBlockSize a -&gt; a)
+-&gt; (forall a. Num a =&gt; WithBlockSize a -&gt; a)
+-&gt; Foldable WithBlockSize
+forall a. Eq a =&gt; a -&gt; WithBlockSize a -&gt; Bool
+forall a. Num a =&gt; WithBlockSize a -&gt; a
+forall a. Ord a =&gt; WithBlockSize a -&gt; a
+forall m. Monoid m =&gt; WithBlockSize m -&gt; m
+forall a. WithBlockSize a -&gt; Bool
+forall a. WithBlockSize a -&gt; Int
+forall a. WithBlockSize a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall m. Monoid m =&gt; WithBlockSize m -&gt; m
+fold :: forall m. Monoid m =&gt; WithBlockSize m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithBlockSize a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithBlockSize a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithBlockSize a -&gt; a
+$ctoList :: forall a. WithBlockSize a -&gt; [a]
+toList :: forall a. WithBlockSize a -&gt; [a]
+$cnull :: forall a. WithBlockSize a -&gt; Bool
+null :: forall a. WithBlockSize a -&gt; Bool
+$clength :: forall a. WithBlockSize a -&gt; Int
+length :: forall a. WithBlockSize a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; WithBlockSize a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; WithBlockSize a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; WithBlockSize a -&gt; a
+maximum :: forall a. Ord a =&gt; WithBlockSize a -&gt; a
+$cminimum :: forall a. Ord a =&gt; WithBlockSize a -&gt; a
+minimum :: forall a. Ord a =&gt; WithBlockSize a -&gt; a
+$csum :: forall a. Num a =&gt; WithBlockSize a -&gt; a
+sum :: forall a. Num a =&gt; WithBlockSize a -&gt; a
+$cproduct :: forall a. Num a =&gt; WithBlockSize a -&gt; a
+product :: forall a. Num a =&gt; WithBlockSize a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#Foldable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852218"><span id="local-6989586621679852223"><span id="local-6989586621679852229"><span id="local-6989586621679852234"><span class="annot"><span class="annottext">Functor WithBlockSize
+Foldable WithBlockSize
+(Functor WithBlockSize, Foldable WithBlockSize) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; WithBlockSize a -&gt; f (WithBlockSize b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    WithBlockSize (f a) -&gt; f (WithBlockSize a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; WithBlockSize a -&gt; m (WithBlockSize b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    WithBlockSize (m a) -&gt; m (WithBlockSize a))
+-&gt; Traversable WithBlockSize
+forall (t :: * -&gt; *).
+(Functor t, Foldable t) =&gt;
+(forall (f :: * -&gt; *) a b.
+ Applicative f =&gt;
+ (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+WithBlockSize (m a) -&gt; m (WithBlockSize a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+WithBlockSize (f a) -&gt; f (WithBlockSize a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; WithBlockSize a -&gt; m (WithBlockSize b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; WithBlockSize a -&gt; f (WithBlockSize b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; WithBlockSize a -&gt; f (WithBlockSize b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; WithBlockSize a -&gt; f (WithBlockSize b)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+WithBlockSize (f a) -&gt; f (WithBlockSize a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+WithBlockSize (f a) -&gt; f (WithBlockSize a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; WithBlockSize a -&gt; m (WithBlockSize b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; WithBlockSize a -&gt; m (WithBlockSize b)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+WithBlockSize (m a) -&gt; m (WithBlockSize a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+WithBlockSize (m a) -&gt; m (WithBlockSize a)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Traversable.html#Traversable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">{------------------------------------------------------------------------------
+  Validation policy
+------------------------------------------------------------------------------}</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | The validation policy used when opening an</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- 'Ouroboros.Consensus.Storage.ImmutableDB.API.ImmutableDB'.</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- The validation policy is used by</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- 'Ouroboros.Consensus.Storage.ImmutableDB.Impl.openDB': the initial opening of</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- the database, either an empty database or a database that was previously</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- closed.</span><span>
+</span><span id="line-59"></span><span class="hs-comment">--</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- The recovery policy dictates which on-disk files should be validated.</span><span>
+</span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="ValidationPolicy"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidationPolicy"><span class="hs-identifier hs-var">ValidationPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-62"></span><span>    </span><span id="ValidateMostRecentChunk"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidateMostRecentChunk"><span class="hs-identifier hs-var">ValidateMostRecentChunk</span></a></span></span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-comment">-- ^ The chunk and index files of the most recent chunk stored on disk will</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-comment">-- be validated.</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-comment">-- Prior chunk and index files are ignored, even their presence will not</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-comment">-- be checked.</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-comment">-- A 'MissingFileError' or an 'InvalidFileError' will be thrown in case of a</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-comment">-- missing or invalid chunk file, or an invalid index file.</span><span>
+</span><span id="line-71"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-comment">-- Because not all files are validated, subsequent operations on the</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-comment">-- database after opening may result in unexpected errors.</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ValidateAllChunks"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidateAllChunks"><span class="hs-identifier hs-var">ValidateAllChunks</span></a></span></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- ^ The chunk and index files of all chunks starting from the first one up</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-comment">-- to the last chunk stored on disk will be validated.</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-comment">-- A 'MissingFileError' or an 'InvalidFileError' will be thrown in case of a</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-comment">-- missing or invalid chunk file, or an invalid index file.</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852243"><span id="local-6989586621679852245"><span id="local-6989586621679852249"><span class="annot"><span class="annottext">Int -&gt; ValidationPolicy -&gt; ShowS
+[ValidationPolicy] -&gt; ShowS
+ValidationPolicy -&gt; String
+(Int -&gt; ValidationPolicy -&gt; ShowS)
+-&gt; (ValidationPolicy -&gt; String)
+-&gt; ([ValidationPolicy] -&gt; ShowS)
+-&gt; Show ValidationPolicy
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ValidationPolicy -&gt; ShowS
+showsPrec :: Int -&gt; ValidationPolicy -&gt; ShowS
+$cshow :: ValidationPolicy -&gt; String
+show :: ValidationPolicy -&gt; String
+$cshowList :: [ValidationPolicy] -&gt; ShowS
+showList :: [ValidationPolicy] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852252"><span id="local-6989586621679852254"><span class="annot"><span class="annottext">ValidationPolicy -&gt; ValidationPolicy -&gt; Bool
+(ValidationPolicy -&gt; ValidationPolicy -&gt; Bool)
+-&gt; (ValidationPolicy -&gt; ValidationPolicy -&gt; Bool)
+-&gt; Eq ValidationPolicy
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ValidationPolicy -&gt; ValidationPolicy -&gt; Bool
+== :: ValidationPolicy -&gt; ValidationPolicy -&gt; Bool
+$c/= :: ValidationPolicy -&gt; ValidationPolicy -&gt; Bool
+/= :: ValidationPolicy -&gt; ValidationPolicy -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852258"><span id="local-6989586621679852260"><span class="annot"><span class="annottext">(forall x. ValidationPolicy -&gt; Rep ValidationPolicy x)
+-&gt; (forall x. Rep ValidationPolicy x -&gt; ValidationPolicy)
+-&gt; Generic ValidationPolicy
+forall x. Rep ValidationPolicy x -&gt; ValidationPolicy
+forall x. ValidationPolicy -&gt; Rep ValidationPolicy x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ValidationPolicy -&gt; Rep ValidationPolicy x
+from :: forall x. ValidationPolicy -&gt; Rep ValidationPolicy x
+$cto :: forall x. Rep ValidationPolicy x -&gt; ValidationPolicy
+to :: forall x. Rep ValidationPolicy x -&gt; ValidationPolicy
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-comment">{------------------------------------------------------------------------------
+  Chunk file error
+------------------------------------------------------------------------------}</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | Defined here instead of in the @Parser@ module because 'TraceEvent'</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- depends on it.</span><span>
+</span><span id="line-88"></span><span class="hs-keyword">data</span><span> </span><span id="ChunkFileError"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkFileError"><span class="hs-identifier hs-var">ChunkFileError</span></a></span></span><span> </span><span id="local-6989586621679852262"><span class="annot"><a href="#local-6989586621679852262"><span class="hs-identifier hs-type">blk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="hs-comment">-- | A block could not be decoded</span></span><span>
+</span><span id="line-90"></span><span>    </span><span id="ChunkErrRead"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkErrRead"><span class="hs-identifier hs-var">ChunkErrRead</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.CBOR.html#ReadIncrementalErr"><span class="hs-identifier hs-type">ReadIncrementalErr</span></a></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-comment">-- | The previous hash of a block did not match the hash of the previous</span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-comment">-- block.</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ChunkErrHashMismatch"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkErrHashMismatch"><span class="hs-identifier hs-var">ChunkErrHashMismatch</span></a></span></span><span>
+</span><span id="line-95"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HeaderHash</span></span><span> </span><span class="annot"><a href="#local-6989586621679852262"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>  </span><span class="annot"><span class="hs-comment">-- ^ The hash of the previous block</span></span><span>
+</span><span id="line-96"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ChainHash</span></span><span> </span><span class="annot"><a href="#local-6989586621679852262"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>   </span><span class="annot"><span class="hs-comment">-- ^ The previous hash of the block</span></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-comment">-- | The integrity verification of the block with the given point returned</span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-comment">-- 'False', indicating that the block got corrupted.</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ChunkErrCorrupt"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkErrCorrupt"><span class="hs-identifier hs-var">ChunkErrCorrupt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679852262"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852268"><span id="local-6989586621679852278"><span class="annot"><span class="annottext">ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+(ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool)
+-&gt; (ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool)
+-&gt; Eq (ChunkFileError blk)
+forall blk.
+StandardHash blk =&gt;
+ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall blk.
+StandardHash blk =&gt;
+ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+== :: ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+$c/= :: forall blk.
+StandardHash blk =&gt;
+ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+/= :: ChunkFileError blk -&gt; ChunkFileError blk -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852284"><span id="local-6989586621679852297"><span id="local-6989586621679852301"><span class="annot"><span class="annottext">Int -&gt; ChunkFileError blk -&gt; ShowS
+[ChunkFileError blk] -&gt; ShowS
+ChunkFileError blk -&gt; String
+(Int -&gt; ChunkFileError blk -&gt; ShowS)
+-&gt; (ChunkFileError blk -&gt; String)
+-&gt; ([ChunkFileError blk] -&gt; ShowS)
+-&gt; Show (ChunkFileError blk)
+forall blk. StandardHash blk =&gt; Int -&gt; ChunkFileError blk -&gt; ShowS
+forall blk. StandardHash blk =&gt; [ChunkFileError blk] -&gt; ShowS
+forall blk. StandardHash blk =&gt; ChunkFileError blk -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall blk. StandardHash blk =&gt; Int -&gt; ChunkFileError blk -&gt; ShowS
+showsPrec :: Int -&gt; ChunkFileError blk -&gt; ShowS
+$cshow :: forall blk. StandardHash blk =&gt; ChunkFileError blk -&gt; String
+show :: ChunkFileError blk -&gt; String
+$cshowList :: forall blk. StandardHash blk =&gt; [ChunkFileError blk] -&gt; ShowS
+showList :: [ChunkFileError blk] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">{------------------------------------------------------------------------------
+  Tracing
+------------------------------------------------------------------------------}</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">data</span><span> </span><span id="TraceEvent"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceEvent"><span class="hs-identifier hs-var">TraceEvent</span></a></span></span><span> </span><span id="local-6989586621679852304"><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-108"></span><span>    </span><span id="NoValidLastLocation"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#NoValidLastLocation"><span class="hs-identifier hs-var">NoValidLastLocation</span></a></span></span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ValidatedLastLocation"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidatedLastLocation"><span class="hs-identifier hs-var">ValidatedLastLocation</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.API.html#Tip"><span class="hs-identifier hs-type">Tip</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-comment">-- Validation of previous DB</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ChunkValidationEvent"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkValidationEvent"><span class="hs-identifier hs-var">ChunkValidationEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceChunkValidation"><span class="hs-identifier hs-type">TraceChunkValidation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ChunkFileDoesntFit"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkFileDoesntFit"><span class="hs-identifier hs-var">ChunkFileDoesntFit</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ChainHash</span></span><span> </span><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ChainHash</span></span><span> </span><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>    </span><span class="hs-comment">-- ^ The hash of the last block in the previous epoch doesn't match the</span><span>
+</span><span id="line-114"></span><span>    </span><span class="hs-comment">-- previous hash of the first block in the current epoch</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Migrating"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#Migrating"><span class="hs-identifier hs-var">Migrating</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="hs-comment">-- ^ Performing a migration of the on-disk files</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span>    </span><span class="hs-comment">-- Delete after</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DeletingAfter"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#DeletingAfter"><span class="hs-identifier hs-var">DeletingAfter</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">WithOrigin</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.API.html#Tip"><span class="hs-identifier hs-type">Tip</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852304"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span class="hs-comment">-- Closing the DB</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DBAlreadyClosed"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#DBAlreadyClosed"><span class="hs-identifier hs-var">DBAlreadyClosed</span></a></span></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DBClosed"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#DBClosed"><span class="hs-identifier hs-var">DBClosed</span></a></span></span><span>
+</span><span id="line-123"></span><span>    </span><span class="hs-comment">-- Events traced by the index cache</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TraceCacheEvent"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceCacheEvent"><span class="hs-identifier hs-var">TraceCacheEvent</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceCacheEvent"><span class="hs-identifier hs-type">TraceCacheEvent</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852316"><span id="local-6989586621679852332"><span class="annot"><span class="annottext">TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+(TraceEvent blk -&gt; TraceEvent blk -&gt; Bool)
+-&gt; (TraceEvent blk -&gt; TraceEvent blk -&gt; Bool)
+-&gt; Eq (TraceEvent blk)
+forall blk.
+StandardHash blk =&gt;
+TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall blk.
+StandardHash blk =&gt;
+TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+== :: TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+$c/= :: forall blk.
+StandardHash blk =&gt;
+TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+/= :: TraceEvent blk -&gt; TraceEvent blk -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852336"><span id="local-6989586621679852338"><span class="annot"><span class="annottext">(forall x. TraceEvent blk -&gt; Rep (TraceEvent blk) x)
+-&gt; (forall x. Rep (TraceEvent blk) x -&gt; TraceEvent blk)
+-&gt; Generic (TraceEvent blk)
+forall x. Rep (TraceEvent blk) x -&gt; TraceEvent blk
+forall x. TraceEvent blk -&gt; Rep (TraceEvent blk) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall blk x. Rep (TraceEvent blk) x -&gt; TraceEvent blk
+forall blk x. TraceEvent blk -&gt; Rep (TraceEvent blk) x
+$cfrom :: forall blk x. TraceEvent blk -&gt; Rep (TraceEvent blk) x
+from :: forall x. TraceEvent blk -&gt; Rep (TraceEvent blk) x
+$cto :: forall blk x. Rep (TraceEvent blk) x -&gt; TraceEvent blk
+to :: forall x. Rep (TraceEvent blk) x -&gt; TraceEvent blk
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852342"><span id="local-6989586621679852364"><span id="local-6989586621679852368"><span class="annot"><span class="annottext">Int -&gt; TraceEvent blk -&gt; ShowS
+[TraceEvent blk] -&gt; ShowS
+TraceEvent blk -&gt; String
+(Int -&gt; TraceEvent blk -&gt; ShowS)
+-&gt; (TraceEvent blk -&gt; String)
+-&gt; ([TraceEvent blk] -&gt; ShowS)
+-&gt; Show (TraceEvent blk)
+forall blk. StandardHash blk =&gt; Int -&gt; TraceEvent blk -&gt; ShowS
+forall blk. StandardHash blk =&gt; [TraceEvent blk] -&gt; ShowS
+forall blk. StandardHash blk =&gt; TraceEvent blk -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall blk. StandardHash blk =&gt; Int -&gt; TraceEvent blk -&gt; ShowS
+showsPrec :: Int -&gt; TraceEvent blk -&gt; ShowS
+$cshow :: forall blk. StandardHash blk =&gt; TraceEvent blk -&gt; String
+show :: TraceEvent blk -&gt; String
+$cshowList :: forall blk. StandardHash blk =&gt; [TraceEvent blk] -&gt; ShowS
+showList :: [TraceEvent blk] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-keyword">data</span><span> </span><span id="TraceChunkValidation"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceChunkValidation"><span class="hs-identifier hs-var">TraceChunkValidation</span></a></span></span><span> </span><span id="local-6989586621679852370"><span class="annot"><a href="#local-6989586621679852370"><span class="hs-identifier hs-type">blk</span></a></span></span><span> </span><span id="local-6989586621679852371"><span class="annot"><a href="#local-6989586621679852371"><span class="hs-identifier hs-type">validateTo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>    </span><span id="StartedValidatingChunk"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#StartedValidatingChunk"><span class="hs-identifier hs-var">StartedValidatingChunk</span></a></span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852371"><span class="hs-identifier hs-type">validateTo</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ValidatedChunk"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ValidatedChunk"><span class="hs-identifier hs-var">ValidatedChunk</span></a></span></span><span>         </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852371"><span class="hs-identifier hs-type">validateTo</span></a></span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MissingChunkFile"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#MissingChunkFile"><span class="hs-identifier hs-var">MissingChunkFile</span></a></span></span><span>       </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InvalidChunkFile"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#InvalidChunkFile"><span class="hs-identifier hs-var">InvalidChunkFile</span></a></span></span><span>       </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#ChunkFileError"><span class="hs-identifier hs-type">ChunkFileError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679852370"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MissingPrimaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#MissingPrimaryIndex"><span class="hs-identifier hs-var">MissingPrimaryIndex</span></a></span></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MissingSecondaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#MissingSecondaryIndex"><span class="hs-identifier hs-var">MissingSecondaryIndex</span></a></span></span><span>  </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InvalidPrimaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#InvalidPrimaryIndex"><span class="hs-identifier hs-var">InvalidPrimaryIndex</span></a></span></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InvalidSecondaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#InvalidSecondaryIndex"><span class="hs-identifier hs-var">InvalidSecondaryIndex</span></a></span></span><span>  </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RewritePrimaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#RewritePrimaryIndex"><span class="hs-identifier hs-var">RewritePrimaryIndex</span></a></span></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RewriteSecondaryIndex"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#RewriteSecondaryIndex"><span class="hs-identifier hs-var">RewriteSecondaryIndex</span></a></span></span><span>  </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852383"><span id="local-6989586621679852385"><span class="annot"><span class="annottext">(forall x.
+ TraceChunkValidation blk validateTo
+ -&gt; Rep (TraceChunkValidation blk validateTo) x)
+-&gt; (forall x.
+    Rep (TraceChunkValidation blk validateTo) x
+    -&gt; TraceChunkValidation blk validateTo)
+-&gt; Generic (TraceChunkValidation blk validateTo)
+forall x.
+Rep (TraceChunkValidation blk validateTo) x
+-&gt; TraceChunkValidation blk validateTo
+forall x.
+TraceChunkValidation blk validateTo
+-&gt; Rep (TraceChunkValidation blk validateTo) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall blk validateTo x.
+Rep (TraceChunkValidation blk validateTo) x
+-&gt; TraceChunkValidation blk validateTo
+forall blk validateTo x.
+TraceChunkValidation blk validateTo
+-&gt; Rep (TraceChunkValidation blk validateTo) x
+$cfrom :: forall blk validateTo x.
+TraceChunkValidation blk validateTo
+-&gt; Rep (TraceChunkValidation blk validateTo) x
+from :: forall x.
+TraceChunkValidation blk validateTo
+-&gt; Rep (TraceChunkValidation blk validateTo) x
+$cto :: forall blk validateTo x.
+Rep (TraceChunkValidation blk validateTo) x
+-&gt; TraceChunkValidation blk validateTo
+to :: forall x.
+Rep (TraceChunkValidation blk validateTo) x
+-&gt; TraceChunkValidation blk validateTo
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852390"><span id="local-6989586621679852405"><span class="annot"><span class="annottext">TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+(TraceChunkValidation blk validateTo
+ -&gt; TraceChunkValidation blk validateTo -&gt; Bool)
+-&gt; (TraceChunkValidation blk validateTo
+    -&gt; TraceChunkValidation blk validateTo -&gt; Bool)
+-&gt; Eq (TraceChunkValidation blk validateTo)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall blk validateTo.
+(StandardHash blk, Eq validateTo) =&gt;
+TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+$c== :: forall blk validateTo.
+(StandardHash blk, Eq validateTo) =&gt;
+TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+== :: TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+$c/= :: forall blk validateTo.
+(StandardHash blk, Eq validateTo) =&gt;
+TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+/= :: TraceChunkValidation blk validateTo
+-&gt; TraceChunkValidation blk validateTo -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852410"><span id="local-6989586621679852435"><span id="local-6989586621679852438"><span class="annot"><span class="annottext">Int -&gt; TraceChunkValidation blk validateTo -&gt; ShowS
+[TraceChunkValidation blk validateTo] -&gt; ShowS
+TraceChunkValidation blk validateTo -&gt; String
+(Int -&gt; TraceChunkValidation blk validateTo -&gt; ShowS)
+-&gt; (TraceChunkValidation blk validateTo -&gt; String)
+-&gt; ([TraceChunkValidation blk validateTo] -&gt; ShowS)
+-&gt; Show (TraceChunkValidation blk validateTo)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+Int -&gt; TraceChunkValidation blk validateTo -&gt; ShowS
+forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+[TraceChunkValidation blk validateTo] -&gt; ShowS
+forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+TraceChunkValidation blk validateTo -&gt; String
+$cshowsPrec :: forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+Int -&gt; TraceChunkValidation blk validateTo -&gt; ShowS
+showsPrec :: Int -&gt; TraceChunkValidation blk validateTo -&gt; ShowS
+$cshow :: forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+TraceChunkValidation blk validateTo -&gt; String
+show :: TraceChunkValidation blk validateTo -&gt; String
+$cshowList :: forall blk validateTo.
+(StandardHash blk, Show validateTo) =&gt;
+[TraceChunkValidation blk validateTo] -&gt; ShowS
+showList :: [TraceChunkValidation blk validateTo] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852441"><span id="local-6989586621679852443"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; TraceChunkValidation blk a -&gt; TraceChunkValidation blk b)
+-&gt; (forall a b.
+    a -&gt; TraceChunkValidation blk b -&gt; TraceChunkValidation blk a)
+-&gt; Functor (TraceChunkValidation blk)
+forall a b.
+a -&gt; TraceChunkValidation blk b -&gt; TraceChunkValidation blk a
+forall a b.
+(a -&gt; b)
+-&gt; TraceChunkValidation blk a -&gt; TraceChunkValidation blk b
+forall blk a b.
+a -&gt; TraceChunkValidation blk b -&gt; TraceChunkValidation blk a
+forall blk a b.
+(a -&gt; b)
+-&gt; TraceChunkValidation blk a -&gt; TraceChunkValidation blk b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall blk a b.
+(a -&gt; b)
+-&gt; TraceChunkValidation blk a -&gt; TraceChunkValidation blk b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; TraceChunkValidation blk a -&gt; TraceChunkValidation blk b
+$c&lt;$ :: forall blk a b.
+a -&gt; TraceChunkValidation blk b -&gt; TraceChunkValidation blk a
+&lt;$ :: forall a b.
+a -&gt; TraceChunkValidation blk b -&gt; TraceChunkValidation blk a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- | The argument with type 'Word32' is the number of past chunk currently in</span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- the cache.</span><span>
+</span><span id="line-142"></span><span class="hs-keyword">data</span><span> </span><span id="TraceCacheEvent"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceCacheEvent"><span class="hs-identifier hs-var">TraceCacheEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-143"></span><span>    </span><span id="TraceCurrentChunkHit"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TraceCurrentChunkHit"><span class="hs-identifier hs-var">TraceCurrentChunkHit</span></a></span></span><span>   </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>   </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TracePastChunkHit"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TracePastChunkHit"><span class="hs-identifier hs-var">TracePastChunkHit</span></a></span></span><span>      </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>   </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TracePastChunkMiss"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TracePastChunkMiss"><span class="hs-identifier hs-var">TracePastChunkMiss</span></a></span></span><span>     </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>   </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TracePastChunkEvict"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TracePastChunkEvict"><span class="hs-identifier hs-var">TracePastChunkEvict</span></a></span></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span>   </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span class="hs-comment">-- ^ The least recently used past chunk was evicted because the cache</span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-comment">-- was full.</span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TracePastChunksExpired"><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Impl.Types.html#TracePastChunksExpired"><span class="hs-identifier hs-var">TracePastChunksExpired</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Ouroboros.Consensus.Storage.ImmutableDB.Chunks.Internal.html#ChunkNo"><span class="hs-identifier hs-type">ChunkNo</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word32"><span class="hs-identifier hs-type">Word32</span></a></span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-comment">-- ^ Past chunks were expired from the cache because they haven't been</span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-comment">-- used for a while.</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679852451"><span id="local-6989586621679852464"><span class="annot"><span class="annottext">TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool
+(TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool)
+-&gt; (TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool)
+-&gt; Eq TraceCacheEvent
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool
+== :: TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool
+$c/= :: TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool
+/= :: TraceCacheEvent -&gt; TraceCacheEvent -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852467"><span id="local-6989586621679852469"><span class="annot"><span class="annottext">(forall x. TraceCacheEvent -&gt; Rep TraceCacheEvent x)
+-&gt; (forall x. Rep TraceCacheEvent x -&gt; TraceCacheEvent)
+-&gt; Generic TraceCacheEvent
+forall x. Rep TraceCacheEvent x -&gt; TraceCacheEvent
+forall x. TraceCacheEvent -&gt; Rep TraceCacheEvent x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TraceCacheEvent -&gt; Rep TraceCacheEvent x
+from :: forall x. TraceCacheEvent -&gt; Rep TraceCacheEvent x
+$cto :: forall x. Rep TraceCacheEvent x -&gt; TraceCacheEvent
+to :: forall x. Rep TraceCacheEvent x -&gt; TraceCacheEvent
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679852472"><span id="local-6989586621679852490"><span id="local-6989586621679852493"><span class="annot"><span class="annottext">Int -&gt; TraceCacheEvent -&gt; ShowS
+[TraceCacheEvent] -&gt; ShowS
+TraceCacheEvent -&gt; String
+(Int -&gt; TraceCacheEvent -&gt; ShowS)
+-&gt; (TraceCacheEvent -&gt; String)
+-&gt; ([TraceCacheEvent] -&gt; ShowS)
+-&gt; Show TraceCacheEvent
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TraceCacheEvent -&gt; ShowS
+showsPrec :: Int -&gt; TraceCacheEvent -&gt; ShowS
+$cshow :: TraceCacheEvent -&gt; String
+show :: TraceCacheEvent -&gt; String
+$cshowList :: [TraceCacheEvent] -&gt; ShowS
+showList :: [TraceCacheEvent] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span></pre></body></html>

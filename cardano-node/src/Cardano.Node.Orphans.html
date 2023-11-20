@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Node.Orphans</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/a252mxmjl9dr6r0lfdazazn9ind0l01w-cardano-api-lib-cardano-api-8.29.0.0-haddock-doc/share/doc/cardano-api/html/src/Cardano.Api.html"><span class="hs-identifier">Cardano.Api</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Cardano.BM.Data.Tracer</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">TracingVerbosity</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/hsknrmvgaxfgjp1mmkd1bvv4qclcranv-ouroboros-network-lib-ouroboros-network-0.9.1.0-haddock-doc/share/doc/ouroboros-network/html/src/Ouroboros.Network.NodeToNode.html"><span class="hs-identifier">Ouroboros.Network.NodeToNode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AcceptedConnectionsLimit</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/hfcm1m3xip2dazw36ny7dkklxc8k1a4f-ouroboros-network-api-lib-ouroboros-network-api-0.5.1.1-haddock-doc/share/doc/ouroboros-network-api/html/src/Ouroboros.Network.SizeInBytes.html"><span class="hs-identifier">Ouroboros.Network.SizeInBytes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hfcm1m3xip2dazw36ny7dkklxc8k1a4f-ouroboros-network-api-lib-ouroboros-network-api-0.5.1.1-haddock-doc/share/doc/ouroboros-network-api/html/src/Ouroboros.Network.SizeInBytes.html#SizeInBytes"><span class="hs-identifier">SizeInBytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Text.Printf.html"><span class="hs-identifier">Text.Printf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Text.Printf.html#PrintfArg"><span class="hs-identifier">PrintfArg</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724289"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TracingVerbosity</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621679724321"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TracingVerbosity
+</span><a href="#local-6989586621679724321"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621679724324"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679724324"><span class="hs-identifier hs-var">str</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679724324"><span class="hs-identifier hs-var">str</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;MinimalVerbosity&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TracingVerbosity -&gt; Parser TracingVerbosity
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">TracingVerbosity
+</span><span class="hs-identifier hs-var">MinimalVerbosity</span></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;MaximalVerbosity&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TracingVerbosity -&gt; Parser TracingVerbosity
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">TracingVerbosity
+</span><span class="hs-identifier hs-var">MaximalVerbosity</span></span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;NormalVerbosity&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TracingVerbosity -&gt; Parser TracingVerbosity
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">TracingVerbosity
+</span><span class="hs-identifier hs-var">NormalVerbosity</span></span><span>
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621679724328"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679724328"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser TracingVerbosity
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser TracingVerbosity)
+-&gt; String -&gt; Parser TracingVerbosity
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Parsing of TracingVerbosity failed, &quot;</span></span><span>
+</span><span id="line-27"></span><span>                </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/text-2.0.2/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">Text.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679724328"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; is not a valid TracingVerbosity&quot;</span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621679724330"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679724330"><span class="hs-identifier hs-var">invalid</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser TracingVerbosity
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.Fail.html#fail"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser TracingVerbosity)
+-&gt; String -&gt; Parser TracingVerbosity
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Parsing of TracingVerbosity failed due to type mismatch. &quot;</span></span><span>
+</span><span id="line-29"></span><span>                           </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Encountered: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679724330"><span class="hs-identifier hs-var">invalid</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="local-6989586621679724333"><span id="local-6989586621679724335"><span id="local-6989586621679724339"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TracingVerbosity</span></span></span></span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724344"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Text.Printf.html#PrintfArg"><span class="hs-identifier hs-type">PrintfArg</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/hfcm1m3xip2dazw36ny7dkklxc8k1a4f-ouroboros-network-api-lib-ouroboros-network-api-0.5.1.1-haddock-doc/share/doc/ouroboros-network-api/html/src/Ouroboros.Network.SizeInBytes.html#SizeInBytes"><span class="hs-identifier hs-type">SizeInBytes</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621679724350"><span class="annot"><span class="annottext">formatArg :: SizeInBytes -&gt; FieldFormatter
+</span><a href="#local-6989586621679724350"><span class="hs-identifier hs-var hs-var hs-var hs-var">formatArg</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/hfcm1m3xip2dazw36ny7dkklxc8k1a4f-ouroboros-network-api-lib-ouroboros-network-api-0.5.1.1-haddock-doc/share/doc/ouroboros-network-api/html/src/Ouroboros.Network.SizeInBytes.html#SizeInBytes"><span class="hs-identifier hs-type">SizeInBytes</span></a></span><span> </span><span id="local-6989586621679724353"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679724353"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; FieldFormatter
+forall a. PrintfArg a =&gt; a -&gt; FieldFormatter
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Text.Printf.html#formatArg"><span class="hs-identifier hs-var">formatArg</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679724353"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724356"><span id="local-6989586621679724360"><span id="local-6989586621679724363"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AcceptedConnectionsLimit</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621679724388"><span class="annot"><span class="annottext">toJSON :: AcceptedConnectionsLimit -&gt; Value
+</span><a href="#local-6989586621679724388"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AcceptedConnectionsLimit</span></span><span>
+</span><span id="line-38"></span><span>          </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679724391"><span class="annot"><span class="annottext">Word32
+acceptedConnectionsHardLimit :: Word32
+acceptedConnectionsHardLimit :: AcceptedConnectionsLimit -&gt; Word32
+</span><a href="#local-6989586621679724391"><span class="hs-identifier hs-var hs-var">acceptedConnectionsHardLimit</span></a></span></span><span>
+</span><span id="line-39"></span><span>          </span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724393"><span class="annot"><span class="annottext">Word32
+acceptedConnectionsSoftLimit :: Word32
+acceptedConnectionsSoftLimit :: AcceptedConnectionsLimit -&gt; Word32
+</span><a href="#local-6989586621679724393"><span class="hs-identifier hs-var hs-var">acceptedConnectionsSoftLimit</span></a></span></span><span>
+</span><span id="line-40"></span><span>          </span><span class="hs-special">,</span><span> </span><span id="local-6989586621679724395"><span class="annot"><span class="annottext">DiffTime
+acceptedConnectionsDelay :: DiffTime
+acceptedConnectionsDelay :: AcceptedConnectionsLimit -&gt; DiffTime
+</span><a href="#local-6989586621679724395"><span class="hs-identifier hs-var hs-var">acceptedConnectionsDelay</span></a></span></span><span>
+</span><span id="line-41"></span><span>          </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;AcceptedConnectionsLimit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;hardLimit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span>
+</span><span id="line-44"></span><span>                  </span><span class="annot"><span class="annottext">Word32 -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679724391"><span class="hs-identifier hs-var">acceptedConnectionsHardLimit</span></a></span><span>
+</span><span id="line-45"></span><span>             </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;softLimit&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span>
+</span><span id="line-46"></span><span>                  </span><span class="annot"><span class="annottext">Word32 -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679724393"><span class="hs-identifier hs-var">acceptedConnectionsSoftLimit</span></a></span><span>
+</span><span id="line-47"></span><span>             </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;delay&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span>
+</span><span id="line-48"></span><span>                  </span><span class="annot"><span class="annottext">DiffTime -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621679724395"><span class="hs-identifier hs-var">acceptedConnectionsDelay</span></a></span><span>
+</span><span id="line-49"></span><span>             </span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span>           </span><span class="hs-special">]</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679724401"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AcceptedConnectionsLimit</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679724416"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser AcceptedConnectionsLimit
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser AcceptedConnectionsLimit)
+-&gt; Value
+-&gt; Parser AcceptedConnectionsLimit
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;AcceptedConnectionsLimit&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser AcceptedConnectionsLimit)
+ -&gt; Value -&gt; Parser AcceptedConnectionsLimit)
+-&gt; (Object -&gt; Parser AcceptedConnectionsLimit)
+-&gt; Value
+-&gt; Parser AcceptedConnectionsLimit
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679724418"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679724418"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; DiffTime -&gt; AcceptedConnectionsLimit
+</span><span class="hs-identifier hs-var">AcceptedConnectionsLimit</span></span><span>
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">(Word32 -&gt; Word32 -&gt; DiffTime -&gt; AcceptedConnectionsLimit)
+-&gt; Parser Word32
+-&gt; Parser (Word32 -&gt; DiffTime -&gt; AcceptedConnectionsLimit)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679724418"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Word32
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;hardLimit&quot;</span></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">Parser (Word32 -&gt; DiffTime -&gt; AcceptedConnectionsLimit)
+-&gt; Parser Word32 -&gt; Parser (DiffTime -&gt; AcceptedConnectionsLimit)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679724418"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Word32
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;softLimit&quot;</span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">Parser (DiffTime -&gt; AcceptedConnectionsLimit)
+-&gt; Parser DiffTime -&gt; Parser AcceptedConnectionsLimit
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621679724418"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser DiffTime
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;delay&quot;</span></span><span>
+</span><span id="line-58"></span></pre></body></html>

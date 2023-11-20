@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621680235764"><span id="local-6989586621680235765"><span id="local-6989586621680235766"><span id="local-6989586621680235767"></span></span></span></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion"><span class="hs-identifier">ByronNodeToClientVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion"><span class="hs-identifier">ByronNodeToNodeVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Block.html"><span class="hs-identifier">Ouroboros.Consensus.Byron.Ledger.Block</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Consensus.Node.NetworkProtocolVersion</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="ByronNodeToNodeVersion"><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion"><span class="hs-identifier hs-var">ByronNodeToNodeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><span class="hs-comment">-- | We send headers without a size hint</span></span><span>
+</span><span id="line-16"></span><span>    </span><span id="ByronNodeToNodeVersion1"><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion1"><span class="hs-identifier hs-var">ByronNodeToNodeVersion1</span></a></span></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- | We send headers /with/ a size hint</span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ByronNodeToNodeVersion2"><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion2"><span class="hs-identifier hs-var">ByronNodeToNodeVersion2</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621680235771"><span id="local-6989586621680235773"><span id="local-6989586621680235777"><span class="annot"><span class="annottext">Int -&gt; ByronNodeToNodeVersion -&gt; ShowS
+[ByronNodeToNodeVersion] -&gt; ShowS
+ByronNodeToNodeVersion -&gt; String
+(Int -&gt; ByronNodeToNodeVersion -&gt; ShowS)
+-&gt; (ByronNodeToNodeVersion -&gt; String)
+-&gt; ([ByronNodeToNodeVersion] -&gt; ShowS)
+-&gt; Show ByronNodeToNodeVersion
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ByronNodeToNodeVersion -&gt; ShowS
+showsPrec :: Int -&gt; ByronNodeToNodeVersion -&gt; ShowS
+$cshow :: ByronNodeToNodeVersion -&gt; String
+show :: ByronNodeToNodeVersion -&gt; String
+$cshowList :: [ByronNodeToNodeVersion] -&gt; ShowS
+showList :: [ByronNodeToNodeVersion] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235781"><span id="local-6989586621680235783"><span class="annot"><span class="annottext">ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+(ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; Eq ByronNodeToNodeVersion
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+== :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+$c/= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+/= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235790"><span id="local-6989586621680235792"><span id="local-6989586621680235794"><span id="local-6989586621680235798"><span id="local-6989586621680235801"><span id="local-6989586621680235804"><span id="local-6989586621680235807"><span class="annot"><span class="annottext">Eq ByronNodeToNodeVersion
+Eq ByronNodeToNodeVersion =&gt;
+(ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Ordering)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool)
+-&gt; (ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion)
+-&gt; (ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion)
+-&gt; Ord ByronNodeToNodeVersion
+ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Ordering
+ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Ordering
+compare :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Ordering
+$c&lt; :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+&lt; :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+$c&lt;= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+&lt;= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+$c&gt; :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+&gt; :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+$c&gt;= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+&gt;= :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion -&gt; Bool
+$cmax :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+max :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+$cmin :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+min :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235811"><span id="local-6989586621680235819"><span id="local-6989586621680235825"><span id="local-6989586621680235835"><span id="local-6989586621680235837"><span id="local-6989586621680235841"><span id="local-6989586621680235845"><span id="local-6989586621680235849"><span class="annot"><span class="annottext">Int -&gt; ByronNodeToNodeVersion
+ByronNodeToNodeVersion -&gt; Int
+ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; [ByronNodeToNodeVersion]
+(ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion)
+-&gt; (ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion)
+-&gt; (Int -&gt; ByronNodeToNodeVersion)
+-&gt; (ByronNodeToNodeVersion -&gt; Int)
+-&gt; (ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion])
+-&gt; (ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion])
+-&gt; (ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion])
+-&gt; (ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion
+    -&gt; ByronNodeToNodeVersion
+    -&gt; [ByronNodeToNodeVersion])
+-&gt; Enum ByronNodeToNodeVersion
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+succ :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+$cpred :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+pred :: ByronNodeToNodeVersion -&gt; ByronNodeToNodeVersion
+$ctoEnum :: Int -&gt; ByronNodeToNodeVersion
+toEnum :: Int -&gt; ByronNodeToNodeVersion
+$cfromEnum :: ByronNodeToNodeVersion -&gt; Int
+fromEnum :: ByronNodeToNodeVersion -&gt; Int
+$cenumFrom :: ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+enumFrom :: ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+$cenumFromThen :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+enumFromThen :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+$cenumFromTo :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+enumFromTo :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; [ByronNodeToNodeVersion]
+$cenumFromThenTo :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; [ByronNodeToNodeVersion]
+enumFromThenTo :: ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion
+-&gt; [ByronNodeToNodeVersion]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Enum"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235853"><span id="local-6989586621680235855"><span class="annot"><span class="annottext">ByronNodeToNodeVersion
+ByronNodeToNodeVersion
+-&gt; ByronNodeToNodeVersion -&gt; Bounded ByronNodeToNodeVersion
+forall a. a -&gt; a -&gt; Bounded a
+$cminBound :: ByronNodeToNodeVersion
+minBound :: ByronNodeToNodeVersion
+$cmaxBound :: ByronNodeToNodeVersion
+maxBound :: ByronNodeToNodeVersion
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Bounded"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="ByronNodeToClientVersion"><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion"><span class="hs-identifier hs-var">ByronNodeToClientVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>    </span><span id="ByronNodeToClientVersion1"><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion1"><span class="hs-identifier hs-var">ByronNodeToClientVersion1</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621680235860"><span id="local-6989586621680235862"><span id="local-6989586621680235866"><span class="annot"><span class="annottext">Int -&gt; ByronNodeToClientVersion -&gt; ShowS
+[ByronNodeToClientVersion] -&gt; ShowS
+ByronNodeToClientVersion -&gt; String
+(Int -&gt; ByronNodeToClientVersion -&gt; ShowS)
+-&gt; (ByronNodeToClientVersion -&gt; String)
+-&gt; ([ByronNodeToClientVersion] -&gt; ShowS)
+-&gt; Show ByronNodeToClientVersion
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ByronNodeToClientVersion -&gt; ShowS
+showsPrec :: Int -&gt; ByronNodeToClientVersion -&gt; ShowS
+$cshow :: ByronNodeToClientVersion -&gt; String
+show :: ByronNodeToClientVersion -&gt; String
+$cshowList :: [ByronNodeToClientVersion] -&gt; ShowS
+showList :: [ByronNodeToClientVersion] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235869"><span id="local-6989586621680235871"><span class="annot"><span class="annottext">ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+(ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; Eq ByronNodeToClientVersion
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+== :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+$c/= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+/= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235877"><span id="local-6989586621680235879"><span id="local-6989586621680235881"><span id="local-6989586621680235885"><span id="local-6989586621680235888"><span id="local-6989586621680235891"><span id="local-6989586621680235894"><span class="annot"><span class="annottext">Eq ByronNodeToClientVersion
+Eq ByronNodeToClientVersion =&gt;
+(ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Ordering)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool)
+-&gt; (ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion)
+-&gt; (ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion)
+-&gt; Ord ByronNodeToClientVersion
+ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Ordering
+ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Ordering
+compare :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Ordering
+$c&lt; :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+&lt; :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+$c&lt;= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+&lt;= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+$c&gt; :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+&gt; :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+$c&gt;= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+&gt;= :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion -&gt; Bool
+$cmax :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+max :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+$cmin :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+min :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235897"><span id="local-6989586621680235903"><span id="local-6989586621680235909"><span id="local-6989586621680235917"><span id="local-6989586621680235919"><span id="local-6989586621680235922"><span id="local-6989586621680235926"><span id="local-6989586621680235930"><span class="annot"><span class="annottext">Int -&gt; ByronNodeToClientVersion
+ByronNodeToClientVersion -&gt; Int
+ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; [ByronNodeToClientVersion]
+(ByronNodeToClientVersion -&gt; ByronNodeToClientVersion)
+-&gt; (ByronNodeToClientVersion -&gt; ByronNodeToClientVersion)
+-&gt; (Int -&gt; ByronNodeToClientVersion)
+-&gt; (ByronNodeToClientVersion -&gt; Int)
+-&gt; (ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion])
+-&gt; (ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion])
+-&gt; (ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion])
+-&gt; (ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion
+    -&gt; ByronNodeToClientVersion
+    -&gt; [ByronNodeToClientVersion])
+-&gt; Enum ByronNodeToClientVersion
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+$csucc :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+succ :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+$cpred :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+pred :: ByronNodeToClientVersion -&gt; ByronNodeToClientVersion
+$ctoEnum :: Int -&gt; ByronNodeToClientVersion
+toEnum :: Int -&gt; ByronNodeToClientVersion
+$cfromEnum :: ByronNodeToClientVersion -&gt; Int
+fromEnum :: ByronNodeToClientVersion -&gt; Int
+$cenumFrom :: ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+enumFrom :: ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+$cenumFromThen :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+enumFromThen :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+$cenumFromTo :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+enumFromTo :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; [ByronNodeToClientVersion]
+$cenumFromThenTo :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; [ByronNodeToClientVersion]
+enumFromThenTo :: ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion
+-&gt; [ByronNodeToClientVersion]
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Enum"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621680235933"><span id="local-6989586621680235935"><span class="annot"><span class="annottext">ByronNodeToClientVersion
+ByronNodeToClientVersion
+-&gt; ByronNodeToClientVersion -&gt; Bounded ByronNodeToClientVersion
+forall a. a -&gt; a -&gt; Bounded a
+$cminBound :: ByronNodeToClientVersion
+minBound :: ByronNodeToClientVersion
+$cmaxBound :: ByronNodeToClientVersion
+maxBound :: ByronNodeToClientVersion
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Enum.html#Bounded"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasNetworkProtocolVersion</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Block.html#ByronBlock"><span class="hs-identifier hs-type">ByronBlock</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BlockNodeToNodeVersion"><span class="annot"><span class="hs-identifier hs-var">BlockNodeToNodeVersion</span></span></span><span>   </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Block.html#ByronBlock"><span class="hs-identifier hs-type">ByronBlock</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion"><span class="hs-identifier hs-type">ByronNodeToNodeVersion</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BlockNodeToClientVersion"><span class="annot"><span class="hs-identifier hs-var">BlockNodeToClientVersion</span></span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Block.html#ByronBlock"><span class="hs-identifier hs-type">ByronBlock</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion"><span class="hs-identifier hs-type">ByronNodeToClientVersion</span></a></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SupportedNetworkProtocolVersion</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Byron.Ledger.Block.html#ByronBlock"><span class="hs-identifier hs-type">ByronBlock</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621680235960"><span class="annot"><span class="annottext">supportedNodeToNodeVersions :: Proxy ByronBlock
+-&gt; Map NodeToNodeVersion (BlockNodeToNodeVersion ByronBlock)
+</span><a href="#local-6989586621680235960"><span class="hs-identifier hs-var hs-var hs-var hs-var">supportedNodeToNodeVersions</span></a></span></span><span>   </span><span class="annot"><span class="annottext">Proxy ByronBlock
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(NodeToNodeVersion, ByronNodeToNodeVersion)]
+-&gt; Map NodeToNodeVersion ByronNodeToNodeVersion
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#fromList"><span class="hs-identifier hs-var">Map.fromList</span></a></span><span> </span><span class="hs-special">[</span><span>
+</span><span id="line-32"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToNodeVersion
+</span><span class="hs-identifier hs-var">NodeToNodeV_7</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByronNodeToNodeVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion1"><span class="hs-identifier hs-var">ByronNodeToNodeVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToNodeVersion
+</span><span class="hs-identifier hs-var">NodeToNodeV_8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByronNodeToNodeVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToNodeVersion1"><span class="hs-identifier hs-var">ByronNodeToNodeVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621680235967"><span class="annot"><span class="annottext">supportedNodeToClientVersions :: Proxy ByronBlock
+-&gt; Map NodeToClientVersion (BlockNodeToClientVersion ByronBlock)
+</span><a href="#local-6989586621680235967"><span class="hs-identifier hs-var hs-var hs-var hs-var">supportedNodeToClientVersions</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy ByronBlock
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(NodeToClientVersion, ByronNodeToClientVersion)]
+-&gt; Map NodeToClientVersion ByronNodeToClientVersion
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#fromList"><span class="hs-identifier hs-var">Map.fromList</span></a></span><span> </span><span class="hs-special">[</span><span>
+</span><span id="line-36"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToClientVersion
+</span><span class="hs-identifier hs-var">NodeToClientV_9</span></span><span class="hs-special">,</span><span>  </span><span class="annot"><span class="annottext">ByronNodeToClientVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion1"><span class="hs-identifier hs-var">ByronNodeToClientVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToClientVersion
+</span><span class="hs-identifier hs-var">NodeToClientV_10</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByronNodeToClientVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion1"><span class="hs-identifier hs-var">ByronNodeToClientVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToClientVersion
+</span><span class="hs-identifier hs-var">NodeToClientV_11</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByronNodeToClientVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion1"><span class="hs-identifier hs-var">ByronNodeToClientVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeToClientVersion
+</span><span class="hs-identifier hs-var">NodeToClientV_12</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByronNodeToClientVersion
+</span><a href="Ouroboros.Consensus.Byron.Ledger.NetworkProtocolVersion.html#ByronNodeToClientVersion1"><span class="hs-identifier hs-var">ByronNodeToClientVersion1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621680235974"><span class="annot"><span class="annottext">latestReleasedNodeVersion :: Proxy ByronBlock
+-&gt; (Maybe NodeToNodeVersion, Maybe NodeToClientVersion)
+</span><a href="#local-6989586621680235974"><span class="hs-identifier hs-var hs-var hs-var hs-var">latestReleasedNodeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy ByronBlock
+-&gt; (Maybe NodeToNodeVersion, Maybe NodeToClientVersion)
+forall blk.
+SupportedNetworkProtocolVersion blk =&gt;
+Proxy blk -&gt; (Maybe NodeToNodeVersion, Maybe NodeToClientVersion)
+</span><span class="hs-identifier hs-var">latestReleasedNodeVersionDefault</span></span><span>
+</span><span id="line-43"></span></pre></body></html>

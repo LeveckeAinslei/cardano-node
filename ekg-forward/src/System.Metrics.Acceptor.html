@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | This top-level module will be used by the acceptor app</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- (the app that asks EKG metrics from the forwarder app).</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.Metrics.Acceptor</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>  </span><span class="annot"><a href="System.Metrics.Acceptor.html#runEKGAcceptor"><span class="hs-identifier">runEKGAcceptor</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/stm-2.5.1.0/src/Control.Concurrent.STM.TVar.html"><span class="hs-identifier">Control.Concurrent.STM.TVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#newTVarIO"><span class="hs-identifier">newTVarIO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.html"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier">SomeException</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.Base.html#try"><span class="hs-identifier">try</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Monad.html"><span class="hs-identifier">Control.Monad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#void"><span class="hs-identifier">void</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG</span></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.Network.Acceptor.html"><span class="hs-identifier">System.Metrics.Network.Acceptor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.Network.Acceptor.html#listenToForwarder"><span class="hs-identifier">listenToForwarder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.Store.Acceptor.html"><span class="hs-identifier">System.Metrics.Store.Acceptor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.Store.Acceptor.html#emptyMetricsLocalStore"><span class="hs-identifier">emptyMetricsLocalStore</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.Metrics.Configuration.html"><span class="hs-identifier">System.Metrics.Configuration</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier">AcceptorConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="annot"><a href="System.Metrics.Acceptor.html#runEKGAcceptor"><span class="hs-identifier hs-type">runEKGAcceptor</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.Metrics.Configuration.html#AcceptorConfiguration"><span class="hs-identifier hs-type">AcceptorConfiguration</span></a></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Acceptor configuration.</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EKG.Store</span></span><span>              </span><span class="annot"><span class="hs-comment">-- ^ The store all received metrics will be stored in.</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#IO"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span id="runEKGAcceptor"><span class="annot"><span class="annottext">runEKGAcceptor :: AcceptorConfiguration -&gt; Store -&gt; IO ()
+</span><a href="System.Metrics.Acceptor.html#runEKGAcceptor"><span class="hs-identifier hs-var hs-var">runEKGAcceptor</span></a></span></span><span> </span><span id="local-6989586621679110478"><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110478"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679110479"><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110479"><span class="hs-identifier hs-var">ekgStore</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; IO (Either SomeException ())
+forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Exception.Base.html#try"><span class="hs-identifier hs-var">try</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO Void -&gt; IO ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#void"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">(IO Void -&gt; IO ()) -&gt; IO Void -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+-&gt; (ResponderContext (Either LocalAddress SockAddr)
+    -&gt; IO (Store, TVar MetricsLocalStore))
+-&gt; (ResponderContext (Either LocalAddress SockAddr) -&gt; IO ())
+-&gt; IO Void
+</span><a href="System.Metrics.Network.Acceptor.html#listenToForwarder"><span class="hs-identifier hs-var">listenToForwarder</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110478"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr)
+-&gt; IO (Store, TVar MetricsLocalStore)
+forall {p}. p -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110480"><span class="hs-identifier hs-var">mkStores</span></a></span><span> </span><span class="annot"><span class="annottext">ResponderContext (Either LocalAddress SockAddr) -&gt; IO ()
+forall {m :: * -&gt; *} {p}. Monad m =&gt; p -&gt; m ()
+</span><a href="#local-6989586621679110481"><span class="hs-identifier hs-var">peerErrorHandler</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">IO (Either SomeException ())
+-&gt; (Either SomeException () -&gt; IO ()) -&gt; IO ()
+forall a b. IO a -&gt; (a -&gt; IO b) -&gt; IO b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Left"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679110482"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679110482"><span class="hs-identifier hs-var">_e</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration -&gt; Store -&gt; IO ()
+</span><a href="System.Metrics.Acceptor.html#runEKGAcceptor"><span class="hs-identifier hs-var">runEKGAcceptor</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptorConfiguration
+</span><a href="#local-6989586621679110478"><span class="hs-identifier hs-var">config</span></a></span><span> </span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110479"><span class="hs-identifier hs-var">ekgStore</span></a></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Either.html#Right"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621679110480"><span class="annot"><span class="annottext">mkStores :: p -&gt; IO (Store, TVar MetricsLocalStore)
+</span><a href="#local-6989586621679110480"><span class="hs-identifier hs-var hs-var">mkStores</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-29"></span><span>    </span><span id="local-6989586621679110485"><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110485"><span class="hs-identifier hs-var">metricsStore</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore -&gt; IO (TVar MetricsLocalStore)
+forall a. a -&gt; IO (TVar a)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Conc.Sync.html#newTVarIO"><span class="hs-identifier hs-var">newTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsLocalStore
+</span><a href="System.Metrics.Store.Acceptor.html#emptyMetricsLocalStore"><span class="hs-identifier hs-var">emptyMetricsLocalStore</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">(Store, TVar MetricsLocalStore)
+-&gt; IO (Store, TVar MetricsLocalStore)
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Store
+</span><a href="#local-6989586621679110479"><span class="hs-identifier hs-var">ekgStore</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TVar MetricsLocalStore
+</span><a href="#local-6989586621679110485"><span class="hs-identifier hs-var">metricsStore</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679110481"><span class="annot"><span class="annottext">peerErrorHandler :: p -&gt; m ()
+</span><a href="#local-6989586621679110481"><span class="hs-identifier hs-var hs-var">peerErrorHandler</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span></pre></body></html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Network.PeerSelection.PeerAdvertise</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#PeerAdvertise"><span class="hs-identifier">PeerAdvertise</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Bool.html"><span class="hs-identifier">Data.Bool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Bool.html#bool"><span class="hs-identifier">bool</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- | Should this peer be advertised to other peers asking for known peers?</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- For certain peers specified by configuration it would be an appropriate</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- policy to keep them private.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">--</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">data</span><span> </span><span id="PeerAdvertise"><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#PeerAdvertise"><span class="hs-identifier hs-var">PeerAdvertise</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DoNotAdvertisePeer"><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoNotAdvertisePeer"><span class="hs-identifier hs-var">DoNotAdvertisePeer</span></a></span></span><span>
+</span><span id="line-14"></span><span>                   </span><span class="hs-glyph">|</span><span> </span><span id="DoAdvertisePeer"><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoAdvertisePeer"><span class="hs-identifier hs-var">DoAdvertisePeer</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679133960"><span id="local-6989586621679133962"><span class="annot"><span class="annottext">PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+(PeerAdvertise -&gt; PeerAdvertise -&gt; Bool)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; Bool) -&gt; Eq PeerAdvertise
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+== :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+$c/= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+/= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679133967"><span id="local-6989586621679133969"><span id="local-6989586621679133973"><span class="annot"><span class="annottext">Int -&gt; PeerAdvertise -&gt; ShowS
+[PeerAdvertise] -&gt; ShowS
+PeerAdvertise -&gt; String
+(Int -&gt; PeerAdvertise -&gt; ShowS)
+-&gt; (PeerAdvertise -&gt; String)
+-&gt; ([PeerAdvertise] -&gt; ShowS)
+-&gt; Show PeerAdvertise
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PeerAdvertise -&gt; ShowS
+showsPrec :: Int -&gt; PeerAdvertise -&gt; ShowS
+$cshow :: PeerAdvertise -&gt; String
+show :: PeerAdvertise -&gt; String
+$cshowList :: [PeerAdvertise] -&gt; ShowS
+showList :: [PeerAdvertise] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679133979"><span id="local-6989586621679133981"><span id="local-6989586621679133983"><span id="local-6989586621679133987"><span id="local-6989586621679133990"><span id="local-6989586621679133993"><span id="local-6989586621679133996"><span class="annot"><span class="annottext">Eq PeerAdvertise
+Eq PeerAdvertise =&gt;
+(PeerAdvertise -&gt; PeerAdvertise -&gt; Ordering)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; Bool)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; Bool)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; Bool)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; Bool)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise)
+-&gt; (PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise)
+-&gt; Ord PeerAdvertise
+PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+PeerAdvertise -&gt; PeerAdvertise -&gt; Ordering
+PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: PeerAdvertise -&gt; PeerAdvertise -&gt; Ordering
+compare :: PeerAdvertise -&gt; PeerAdvertise -&gt; Ordering
+$c&lt; :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+&lt; :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+$c&lt;= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+&lt;= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+$c&gt; :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+&gt; :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+$c&gt;= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+&gt;= :: PeerAdvertise -&gt; PeerAdvertise -&gt; Bool
+$cmax :: PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise
+max :: PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise
+$cmin :: PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise
+min :: PeerAdvertise -&gt; PeerAdvertise -&gt; PeerAdvertise
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679134000"><span id="local-6989586621679134002"><span class="annot"><span class="annottext">(forall x. PeerAdvertise -&gt; Rep PeerAdvertise x)
+-&gt; (forall x. Rep PeerAdvertise x -&gt; PeerAdvertise)
+-&gt; Generic PeerAdvertise
+forall x. Rep PeerAdvertise x -&gt; PeerAdvertise
+forall x. PeerAdvertise -&gt; Rep PeerAdvertise x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. PeerAdvertise -&gt; Rep PeerAdvertise x
+from :: forall x. PeerAdvertise -&gt; Rep PeerAdvertise x
+$cto :: forall x. Rep PeerAdvertise x -&gt; PeerAdvertise
+to :: forall x. Rep PeerAdvertise x -&gt; PeerAdvertise
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679134007"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#PeerAdvertise"><span class="hs-identifier hs-type">PeerAdvertise</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621679134013"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PeerAdvertise
+</span><a href="#local-6989586621679134013"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Bool -&gt; Parser PeerAdvertise) -&gt; Value -&gt; Parser PeerAdvertise
+forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">withBool</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PeerAdvertise&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Bool -&gt; Parser PeerAdvertise) -&gt; Value -&gt; Parser PeerAdvertise)
+-&gt; (Bool -&gt; Parser PeerAdvertise) -&gt; Value -&gt; Parser PeerAdvertise
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-19"></span><span>      </span><span class="annot"><span class="annottext">PeerAdvertise -&gt; Parser PeerAdvertise
+forall a. a -&gt; Parser a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(PeerAdvertise -&gt; Parser PeerAdvertise)
+-&gt; (Bool -&gt; PeerAdvertise) -&gt; Bool -&gt; Parser PeerAdvertise
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise -&gt; PeerAdvertise -&gt; Bool -&gt; PeerAdvertise
+forall a. a -&gt; a -&gt; Bool -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Bool.html#bool"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoNotAdvertisePeer"><span class="hs-identifier hs-var">DoNotAdvertisePeer</span></a></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoAdvertisePeer"><span class="hs-identifier hs-var">DoAdvertisePeer</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679134019"><span id="local-6989586621679134023"><span id="local-6989586621679134026"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#PeerAdvertise"><span class="hs-identifier hs-type">PeerAdvertise</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621679134029"><span class="annot"><span class="annottext">toJSON :: PeerAdvertise -&gt; Value
+</span><a href="#local-6989586621679134029"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoAdvertisePeer"><span class="hs-identifier hs-var">DoAdvertisePeer</span></a></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">PeerAdvertise
+</span><a href="Ouroboros.Network.PeerSelection.PeerAdvertise.html#DoNotAdvertisePeer"><span class="hs-identifier hs-var">DoNotAdvertisePeer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-24"></span></pre></body></html>

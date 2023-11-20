@@ -1,0 +1,588 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE PatternSynonyms #-}</span><span>
+</span><span id="line-12"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving #-}</span><span>
+</span><span id="line-13"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-14"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators #-}</span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE ViewPatterns #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Ledger.Allegra.TxAuxData</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier">AllegraTxAuxData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier">AllegraTxAuxData</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Deprecations</span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AuxiliaryData"><span class="hs-identifier">AuxiliaryData</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Crypto.Hash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HashAlgorithm</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Era</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier">AllegraEra</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html"><span class="hs-identifier">Cardano.Ledger.Allegra.Scripts</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#Timelock"><span class="hs-identifier">Timelock</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.AuxiliaryData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AuxiliaryDataHash</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="hs-identifier">Annotator</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier">ToCBOR</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-identifier">peekTokenType</span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary.Coders</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Core</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier">Era</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="hs-identifier">EraTxAuxData</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Crypto</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HASH</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Hashes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">EraIndependentTxAuxData</span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.MemoBytes</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier">EqRaw</span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><span class="hs-identifier">Mem</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier">MemoBytes</span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="hs-identifier">MemoHashIndex</span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="hs-identifier">Memoized</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">RawType</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier">getMemoRawType</span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier">getMemoSafeHash</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier">mkMemoized</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.SafeHash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HashAnnotated</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">SafeToHash</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">hashAnnotated</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Shelley.TxAuxData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Metadatum</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ShelleyTxAuxData</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">validMetadatum</span></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.TreeDiff</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Codec.CBOR.Decoding</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-identifier">TokenType</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeListLen</span></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeListLen64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeListLenIndef</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeMapLen</span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeMapLen64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="hs-identifier">TypeMapLenIndef</span></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#deepseq"><span class="hs-identifier">deepseq</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">StrictSeq</span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">StrictSeq</span></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Word.html"><span class="hs-identifier">Data.Word</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier">Word64</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- =======================================</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="annot"><span class="hs-comment">-- | Raw, un-memoised metadata type</span></span><span>
+</span><span id="line-79"></span><span class="hs-keyword">data</span><span> </span><span id="AllegraTxAuxDataRaw"><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span></span><span> </span><span id="local-6989586621679281615"><span class="annot"><a href="#local-6989586621679281615"><span class="hs-identifier hs-type">era</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AllegraTxAuxDataRaw"><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="atadrMetadata"><span class="annot"><span class="annottext">forall era. AllegraTxAuxDataRaw era -&gt; Map Word64 Metadatum
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#atadrMetadata"><span class="hs-identifier hs-var hs-var">atadrMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Metadatum</span></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ Structured transaction metadata</span></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="atadrTimelock"><span class="annot"><span class="annottext">forall era. AllegraTxAuxDataRaw era -&gt; StrictSeq (Timelock era)
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#atadrTimelock"><span class="hs-identifier hs-var hs-var">atadrTimelock</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StrictSeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#Timelock"><span class="hs-identifier hs-type">Timelock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281615"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-comment">-- ^ Pre-images of script hashes found within the TxBody, but which are not</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-comment">-- required as witnesses. Examples include:</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-comment">-- - Token policy IDs appearing in transaction outputs</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-comment">-- - Pool reward account registrations</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679282003"><span id="local-6989586621679282005"><span class="annot"><span class="annottext">(forall x.
+ AllegraTxAuxDataRaw era -&gt; Rep (AllegraTxAuxDataRaw era) x)
+-&gt; (forall x.
+    Rep (AllegraTxAuxDataRaw era) x -&gt; AllegraTxAuxDataRaw era)
+-&gt; Generic (AllegraTxAuxDataRaw era)
+forall x.
+Rep (AllegraTxAuxDataRaw era) x -&gt; AllegraTxAuxDataRaw era
+forall x.
+AllegraTxAuxDataRaw era -&gt; Rep (AllegraTxAuxDataRaw era) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall era x.
+Rep (AllegraTxAuxDataRaw era) x -&gt; AllegraTxAuxDataRaw era
+forall era x.
+AllegraTxAuxDataRaw era -&gt; Rep (AllegraTxAuxDataRaw era) x
+$cfrom :: forall era x.
+AllegraTxAuxDataRaw era -&gt; Rep (AllegraTxAuxDataRaw era) x
+from :: forall x.
+AllegraTxAuxDataRaw era -&gt; Rep (AllegraTxAuxDataRaw era) x
+$cto :: forall era x.
+Rep (AllegraTxAuxDataRaw era) x -&gt; AllegraTxAuxDataRaw era
+to :: forall x.
+Rep (AllegraTxAuxDataRaw era) x -&gt; AllegraTxAuxDataRaw era
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679282009"><span id="local-6989586621679282018"><span class="annot"><span class="annottext">AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+(AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool)
+-&gt; (AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool)
+-&gt; Eq (AllegraTxAuxDataRaw era)
+forall era.
+AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall era.
+AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+== :: AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+$c/= :: forall era.
+AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+/= :: AllegraTxAuxDataRaw era -&gt; AllegraTxAuxDataRaw era -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281675"><span id="local-6989586621679282026"><span id="local-6989586621679282033"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281675"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281703"><span class="annot"><span class="hs-identifier hs-type">Crypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679281703"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraTxAuxData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281703"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="TxAuxData"><span class="annot"><span class="hs-identifier hs-var">TxAuxData</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281703"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Era.html#AllegraEra"><span class="hs-identifier hs-type">AllegraEra</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281703"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621679282146"><span class="annot"><span class="annottext">upgradeTxAuxData :: EraTxAuxData (PreviousEra (AllegraEra c)) =&gt;
+TxAuxData (PreviousEra (AllegraEra c)) -&gt; TxAuxData (AllegraEra c)
+</span><a href="#local-6989586621679282146"><span class="hs-identifier hs-var hs-var hs-var hs-var">upgradeTxAuxData</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ShelleyTxAuxData</span></span><span> </span><span id="local-6989586621679282149"><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282149"><span class="hs-identifier hs-var">md</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; StrictSeq (Timelock (AllegraEra c))
+-&gt; AllegraTxAuxData (AllegraEra c)
+forall era.
+Era era =&gt;
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxData era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-var">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282149"><span class="hs-identifier hs-var">md</span></a></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock (AllegraEra c))
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621679282157"><span class="annot"><span class="annottext">validateTxAuxData :: ProtVer -&gt; TxAuxData (AllegraEra c) -&gt; Bool
+</span><a href="#local-6989586621679282157"><span class="hs-identifier hs-var hs-var hs-var hs-var">validateTxAuxData</span></a></span></span><span> </span><span class="annot"><span class="annottext">ProtVer
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span id="local-6989586621679282159"><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282159"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span id="local-6989586621679282160"><span class="annot"><span class="annottext">StrictSeq (Timelock (AllegraEra c))
+</span><a href="#local-6989586621679282160"><span class="hs-keyword hs-var">as</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock (AllegraEra c))
+</span><a href="#local-6989586621679282160"><span class="hs-keyword hs-var">as</span></a></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock (AllegraEra c)) -&gt; Bool -&gt; Bool
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#deepseq"><span class="hs-operator hs-var">`deepseq`</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadatum -&gt; Bool) -&gt; Map Word64 Metadatum -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Foldable.html#all"><span class="hs-identifier hs-var">all</span></a></span><span> </span><span class="annot"><span class="annottext">Metadatum -&gt; Bool
+</span><span class="hs-identifier hs-var">validMetadatum</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282159"><span class="hs-identifier hs-var">md</span></a></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621679282166"><span class="annot"><span class="annottext">hashTxAuxData :: TxAuxData (AllegraEra c)
+-&gt; AuxiliaryDataHash (EraCrypto (AllegraEra c))
+</span><a href="#local-6989586621679282166"><span class="hs-identifier hs-var hs-var hs-var hs-var">hashTxAuxData</span></a></span></span><span> </span><span id="local-6989586621679282168"><span class="annot"><span class="annottext">TxAuxData (AllegraEra c)
+</span><a href="#local-6989586621679282168"><span class="hs-identifier hs-var">aux</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SafeHash c EraIndependentTxAuxData -&gt; AuxiliaryDataHash c
+forall c. SafeHash c EraIndependentTxAuxData -&gt; AuxiliaryDataHash c
+</span><span class="hs-identifier hs-var">AuxiliaryDataHash</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AllegraTxAuxData (AllegraEra c)
+-&gt; SafeHash c EraIndependentTxAuxData
+forall x index c.
+(HashAnnotated x index c, HashAlgorithm (HASH c)) =&gt;
+x -&gt; SafeHash c index
+</span><span class="hs-identifier hs-var">hashAnnotated</span></span><span> </span><span class="annot"><span class="annottext">TxAuxData (AllegraEra c)
+AllegraTxAuxData (AllegraEra c)
+</span><a href="#local-6989586621679282168"><span class="hs-identifier hs-var">aux</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621679281733"><span id="local-6989586621679282172"><span id="local-6989586621679282183"><span id="local-6989586621679282187"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashAlgorithm</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HASH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679281733"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281733"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621679281772"><span id="local-6989586621679282195"><span id="local-6989586621679282199"><span id="local-6989586621679282205"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281772"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281772"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281789"><span id="local-6989586621679282246"><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281789"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">newtype</span><span> </span><span id="AllegraTxAuxData"><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-var">AllegraTxAuxData</span></a></span></span><span> </span><span id="local-6989586621679282270"><span class="annot"><a href="#local-6989586621679282270"><span class="hs-identifier hs-type">era</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AuxiliaryDataWithBytes"><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AuxiliaryDataWithBytes"><span class="hs-identifier hs-var">AuxiliaryDataWithBytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MemoBytes</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679282270"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679282273"><span id="local-6989586621679282275"><span class="annot"><span class="annottext">(forall x. AllegraTxAuxData era -&gt; Rep (AllegraTxAuxData era) x)
+-&gt; (forall x. Rep (AllegraTxAuxData era) x -&gt; AllegraTxAuxData era)
+-&gt; Generic (AllegraTxAuxData era)
+forall x. Rep (AllegraTxAuxData era) x -&gt; AllegraTxAuxData era
+forall x. AllegraTxAuxData era -&gt; Rep (AllegraTxAuxData era) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall era x. Rep (AllegraTxAuxData era) x -&gt; AllegraTxAuxData era
+forall era x. AllegraTxAuxData era -&gt; Rep (AllegraTxAuxData era) x
+$cfrom :: forall era x. AllegraTxAuxData era -&gt; Rep (AllegraTxAuxData era) x
+from :: forall x. AllegraTxAuxData era -&gt; Rep (AllegraTxAuxData era) x
+$cto :: forall era x. Rep (AllegraTxAuxData era) x -&gt; AllegraTxAuxData era
+to :: forall x. Rep (AllegraTxAuxData era) x -&gt; AllegraTxAuxData era
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679282278"><span id="local-6989586621679282284"><span class="annot"><span class="annottext">AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+(AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool)
+-&gt; (AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool)
+-&gt; Eq (AllegraTxAuxData era)
+forall era. AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall era. AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+== :: AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+$c/= :: forall era. AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+/= :: AllegraTxAuxData era -&gt; AllegraTxAuxData era -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679282293"><span id="local-6989586621679282301"><span id="local-6989586621679282308"><span class="annot"><span class="annottext">Typeable (AllegraTxAuxData era)
+Typeable (AllegraTxAuxData era) =&gt;
+(AllegraTxAuxData era -&gt; Encoding)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy (AllegraTxAuxData era) -&gt; Size)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+    -&gt; Proxy [AllegraTxAuxData era] -&gt; Size)
+-&gt; ToCBOR (AllegraTxAuxData era)
+AllegraTxAuxData era -&gt; Encoding
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [AllegraTxAuxData era] -&gt; Size
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (AllegraTxAuxData era) -&gt; Size
+forall era. Typeable era =&gt; Typeable (AllegraTxAuxData era)
+forall era. Typeable era =&gt; AllegraTxAuxData era -&gt; Encoding
+forall a.
+Typeable a =&gt;
+(a -&gt; Encoding)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy a -&gt; Size)
+-&gt; ((forall t. ToCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy [a] -&gt; Size)
+-&gt; ToCBOR a
+forall era.
+Typeable era =&gt;
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [AllegraTxAuxData era] -&gt; Size
+forall era.
+Typeable era =&gt;
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (AllegraTxAuxData era) -&gt; Size
+$ctoCBOR :: forall era. Typeable era =&gt; AllegraTxAuxData era -&gt; Encoding
+toCBOR :: AllegraTxAuxData era -&gt; Encoding
+$cencodedSizeExpr :: forall era.
+Typeable era =&gt;
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (AllegraTxAuxData era) -&gt; Size
+encodedSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy (AllegraTxAuxData era) -&gt; Size
+$cencodedListSizeExpr :: forall era.
+Typeable era =&gt;
+(forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [AllegraTxAuxData era] -&gt; Size
+encodedListSizeExpr :: (forall t. ToCBOR t =&gt; Proxy t -&gt; Size)
+-&gt; Proxy [AllegraTxAuxData era] -&gt; Size
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToCBOR</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679282314"><span id="local-6989586621679282321"><span class="annot"><span class="annottext">AllegraTxAuxData era -&gt; ByteString
+(AllegraTxAuxData era -&gt; ByteString)
+-&gt; (forall c index.
+    HashAlgorithm (HASH c) =&gt;
+    Proxy c -&gt; Proxy index -&gt; AllegraTxAuxData era -&gt; SafeHash c index)
+-&gt; SafeToHash (AllegraTxAuxData era)
+forall era. AllegraTxAuxData era -&gt; ByteString
+forall t.
+(t -&gt; ByteString)
+-&gt; (forall c index.
+    HashAlgorithm (HASH c) =&gt;
+    Proxy c -&gt; Proxy index -&gt; t -&gt; SafeHash c index)
+-&gt; SafeToHash t
+forall c index.
+HashAlgorithm (HASH c) =&gt;
+Proxy c -&gt; Proxy index -&gt; AllegraTxAuxData era -&gt; SafeHash c index
+forall era c index.
+HashAlgorithm (HASH c) =&gt;
+Proxy c -&gt; Proxy index -&gt; AllegraTxAuxData era -&gt; SafeHash c index
+$coriginalBytes :: forall era. AllegraTxAuxData era -&gt; ByteString
+originalBytes :: AllegraTxAuxData era -&gt; ByteString
+$cmakeHashWithExplicitProxys :: forall era c index.
+HashAlgorithm (HASH c) =&gt;
+Proxy c -&gt; Proxy index -&gt; AllegraTxAuxData era -&gt; SafeHash c index
+makeHashWithExplicitProxys :: forall c index.
+HashAlgorithm (HASH c) =&gt;
+Proxy c -&gt; Proxy index -&gt; AllegraTxAuxData era -&gt; SafeHash c index
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">SafeToHash</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281702"><span id="local-6989586621679282329"><span id="local-6989586621679282335"><span class="annot"><span class="hs-identifier hs-type">ToExpr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281702"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679282356"><span id="local-6989586621679282361"><span class="annot"><span class="hs-identifier hs-type">Memoized</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="RawType"><span class="annot"><span class="hs-identifier hs-var">RawType</span></span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="MemoHashIndex"><span class="annot"><span class="hs-identifier hs-var">MemoHashIndex</span></span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraIndependentTxAuxData</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281700"><span id="local-6989586621679281701"><span id="local-6989586621679282370"><span class="annot"><a href="#local-6989586621679281700"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Types.html#~"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679281701"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashAnnotated</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281701"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EraIndependentTxAuxData</span></span><span> </span><span class="annot"><a href="#local-6989586621679281700"><span class="hs-identifier hs-type">c</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621679282380"><span class="annot"><span class="annottext">hashAnnotated :: HashAlgorithm (HASH c) =&gt;
+AllegraTxAuxData era -&gt; SafeHash c EraIndependentTxAuxData
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashAnnotated</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AllegraTxAuxData era -&gt; SafeHash c EraIndependentTxAuxData
+AllegraTxAuxData era
+-&gt; SafeHash
+     (EraCrypto era) (MemoHashIndex (RawType AllegraTxAuxData))
+forall (t :: * -&gt; *) era.
+Memoized t =&gt;
+t era -&gt; SafeHash (EraCrypto era) (MemoHashIndex (RawType t))
+</span><span class="hs-identifier hs-var">getMemoSafeHash</span></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span id="local-6989586621679282383"><span id="local-6989586621679282389"><span id="local-6989586621679282394"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679281708"><span class="annot"><a href="#local-6989586621679281708"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-122"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashAlgorithm</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HASH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EraCrypto</span></span><span> </span><span class="annot"><a href="#local-6989586621679281708"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281708"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span id="local-6989586621679282400"><span id="local-6989586621679282408"><span id="local-6989586621679282414"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679281707"><span class="annot"><a href="#local-6989586621679281707"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281707"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281707"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span id="local-6989586621679282421"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679281841"><span class="annot"><a href="#local-6989586621679281841"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281841"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281699"><span id="local-6989586621679282428"><span class="annot"><span class="hs-identifier hs-type">EqRaw</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281699"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-keyword">pattern</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621679281600"><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281600"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Word.html#Word64"><span class="hs-identifier hs-type">Word64</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Metadatum</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StrictSeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.Scripts.html#Timelock"><span class="hs-identifier hs-type">Timelock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281600"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281600"><span class="hs-identifier hs-type">era</span></a></span></span><span>
+</span><span id="line-136"></span><span class="hs-keyword">pattern</span><span> </span><span id="AllegraTxAuxData"><span id="%24mAllegraTxAuxData"><span id="%24bAllegraTxAuxData"><span class="annot"><span class="annottext">$mAllegraTxAuxData :: forall {r} {era}.
+Era era =&gt;
+AllegraTxAuxData era
+-&gt; (Map Word64 Metadatum -&gt; StrictSeq (Timelock era) -&gt; r)
+-&gt; ((# #) -&gt; r)
+-&gt; r
+$bAllegraTxAuxData :: forall era.
+Era era =&gt;
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxData era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-var hs-var hs-var hs-var">AllegraTxAuxData</span></a></span></span></span></span><span> </span><span class="annot"><a href="#local-6989586621679282437"><span class="hs-identifier hs-type">blob</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679282438"><span class="hs-identifier hs-type">sp</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">getMemoRawType</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span id="local-6989586621679282437"><span class="annot"><a href="#local-6989586621679282437"><span class="hs-identifier hs-var">blob</span></a></span></span><span> </span><span id="local-6989586621679282438"><span class="annot"><a href="#local-6989586621679282438"><span class="hs-identifier hs-var">sp</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-var">AllegraTxAuxData</span></a></span><span> </span><span id="local-6989586621679282440"><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282440"><span class="hs-identifier hs-var">blob</span></a></span></span><span> </span><span id="local-6989586621679282441"><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+</span><a href="#local-6989586621679282441"><span class="hs-identifier hs-var">sp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RawType AllegraTxAuxData era -&gt; AllegraTxAuxData era
+forall era (t :: * -&gt; *).
+(Era era, EncCBOR (RawType t era), Memoized t) =&gt;
+RawType t era -&gt; t era
+</span><span class="hs-identifier hs-var">mkMemoized</span></span><span> </span><span class="annot"><span class="annottext">(RawType AllegraTxAuxData era -&gt; AllegraTxAuxData era)
+-&gt; RawType AllegraTxAuxData era -&gt; AllegraTxAuxData era
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+forall era.
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282440"><span class="hs-identifier hs-var">blob</span></a></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+</span><a href="#local-6989586621679282441"><span class="hs-identifier hs-var">sp</span></a></span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-pragma">{-# COMPLETE</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-pragma hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-keyword">type</span><span> </span><span id="AuxiliaryData"><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AuxiliaryData"><span class="hs-identifier hs-var">AuxiliaryData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span class="hs-pragma">{-# DEPRECATED</span><span> </span><span class="hs-pragma">AuxiliaryData</span><span> </span><span class="hs-pragma">&quot;Use `AllegraTxAuxData` instead&quot;</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- Serialisation</span><span>
+</span><span id="line-148"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281858"><span id="local-6989586621679282449"><span id="local-6989586621679282452"><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281858"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281858"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621679282467"><span class="annot"><span class="annottext">encCBOR :: AllegraTxAuxDataRaw era -&gt; Encoding
+</span><a href="#local-6989586621679282467"><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span id="local-6989586621679282469"><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282469"><span class="hs-identifier hs-var">blob</span></a></span></span><span> </span><span id="local-6989586621679282470"><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+</span><a href="#local-6989586621679282470"><span class="hs-identifier hs-var">sp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><span class="annottext">Encode ('Closed 'Dense) (AllegraTxAuxDataRaw era) -&gt; Encoding
+forall (w :: Wrapped) t. Encode w t -&gt; Encoding
+</span><span class="hs-identifier hs-var">encode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Map Word64 Metadatum
+ -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Encode
+     ('Closed 'Dense)
+     (Map Word64 Metadatum
+      -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+forall t. t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">Rec</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+forall era.
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (Map Word64 Metadatum
+   -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Encode ('Closed 'Dense) (Map Word64 Metadatum)
+-&gt; Encode
+     ('Closed 'Dense)
+     (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; Encode ('Closed 'Dense) (Map Word64 Metadatum)
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+</span><a href="#local-6989586621679282469"><span class="hs-identifier hs-var">blob</span></a></span><span> </span><span class="annot"><span class="annottext">Encode
+  ('Closed 'Dense)
+  (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Encode ('Closed 'Dense) (StrictSeq (Timelock era))
+-&gt; Encode ('Closed 'Dense) (AllegraTxAuxDataRaw era)
+forall (w :: Wrapped) a t (r :: Density).
+Encode w (a -&gt; t) -&gt; Encode ('Closed r) a -&gt; Encode w t
+</span><span class="hs-operator hs-var">!&gt;</span></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+-&gt; Encode ('Closed 'Dense) (StrictSeq (Timelock era))
+forall t. EncCBOR t =&gt; t -&gt; Encode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">To</span></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+</span><a href="#local-6989586621679282470"><span class="hs-identifier hs-var">sp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="annot"><span class="hs-comment">-- | Encodes memoized bytes created upon construction.</span></span><span>
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281698"><span id="local-6989586621679282481"><span id="local-6989586621679282485"><span id="local-6989586621679282488"><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281698"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281698"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679281919"><span id="local-6989586621679282497"><span id="local-6989586621679282501"><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281919"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Annotator</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281919"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621679282620"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282620"><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">Decoder s TokenType
+forall s. Decoder s TokenType
+</span><span class="hs-identifier hs-var">peekTokenType</span></span><span> </span><span class="annot"><span class="annottext">Decoder s TokenType
+-&gt; (TokenType -&gt; Decoder s (Annotator (AllegraTxAuxDataRaw era)))
+-&gt; Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall a b. Decoder s a -&gt; (a -&gt; Decoder s b) -&gt; Decoder s b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeMapLen</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall {s} {era}. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282622"><span class="hs-identifier hs-var">decodeFromMap</span></a></span><span>
+</span><span id="line-161"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeMapLen64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall {s} {era}. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282622"><span class="hs-identifier hs-var">decodeFromMap</span></a></span><span>
+</span><span id="line-162"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeMapLenIndef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall {s} {era}. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282622"><span class="hs-identifier hs-var">decodeFromMap</span></a></span><span>
+</span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeListLen</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall s. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282623"><span class="hs-identifier hs-var">decodeFromList</span></a></span><span>
+</span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeListLen64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall s. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282623"><span class="hs-identifier hs-var">decodeFromList</span></a></span><span>
+</span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier hs-var">TypeListLenIndef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall s. Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282623"><span class="hs-identifier hs-var">decodeFromList</span></a></span><span>
+</span><span id="line-166"></span><span>      </span><span class="annot"><span class="annottext">TokenType
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall a. HasCallStack =&gt; String -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Err.html#error"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Failed to decode AuxiliaryData&quot;</span></span><span>
+</span><span id="line-167"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-168"></span><span>      </span><span id="local-6989586621679282622"><span class="annot"><span class="annottext">decodeFromMap :: Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282622"><span class="hs-identifier hs-var hs-var">decodeFromMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>        </span><span class="annot"><span class="annottext">Decode Any (Annotator (AllegraTxAuxDataRaw era))
+-&gt; Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall (w :: Wrapped) t s. Decode w t -&gt; Decoder s t
+</span><span class="hs-identifier hs-var">decode</span></span><span>
+</span><span id="line-170"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Decode
+  Any
+  (Map Word64 Metadatum
+   -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Decode
+     Any
+     (Annotator
+        (Map Word64 Metadatum
+         -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+forall (w :: Wrapped) t1. Decode w t1 -&gt; Decode w (Annotator t1)
+</span><span class="hs-identifier hs-var">Ann</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Map Word64 Metadatum
+ -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Decode
+     Any
+     (Map Word64 Metadatum
+      -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+forall t (w :: Wrapped). t -&gt; Decode w t
+</span><span class="hs-identifier hs-var">Emit</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+forall era.
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>              </span><span class="annot"><span class="annottext">Decode
+  Any
+  (Annotator
+     (Map Word64 Metadatum
+      -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+-&gt; Decode ('Closed Any) (Annotator (Map Word64 Metadatum))
+-&gt; Decode
+     Any
+     (Annotator (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+forall (w1 :: Wrapped) a t (d :: Density).
+Decode w1 (Annotator (a -&gt; t))
+-&gt; Decode ('Closed d) (Annotator a) -&gt; Decode w1 (Annotator t)
+</span><span class="hs-operator hs-var">&lt;*!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Map Word64 Metadatum)
+-&gt; Decode ('Closed Any) (Annotator (Map Word64 Metadatum))
+forall (w :: Wrapped) t1. Decode w t1 -&gt; Decode w (Annotator t1)
+</span><span class="hs-identifier hs-var">Ann</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Map Word64 Metadatum)
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-172"></span><span>              </span><span class="annot"><span class="annottext">Decode
+  Any
+  (Annotator (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+-&gt; Decode ('Closed Any) (Annotator (StrictSeq (Timelock era)))
+-&gt; Decode Any (Annotator (AllegraTxAuxDataRaw era))
+forall (w1 :: Wrapped) a t (d :: Density).
+Decode w1 (Annotator (a -&gt; t))
+-&gt; Decode ('Closed d) (Annotator a) -&gt; Decode w1 (Annotator t)
+</span><span class="hs-operator hs-var">&lt;*!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (StrictSeq (Timelock era))
+-&gt; Decode ('Closed Any) (Annotator (StrictSeq (Timelock era)))
+forall (w :: Wrapped) t1. Decode w t1 -&gt; Decode w (Annotator t1)
+</span><span class="hs-identifier hs-var">Ann</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+-&gt; Decode ('Closed Any) (StrictSeq (Timelock era))
+forall t (w :: Wrapped). t -&gt; Decode w t
+</span><span class="hs-identifier hs-var">Emit</span></span><span> </span><span class="annot"><span class="annottext">StrictSeq (Timelock era)
+forall a. StrictSeq a
+</span><span class="hs-identifier hs-var">StrictSeq.empty</span></span><span class="hs-special">)</span><span>
+</span><span id="line-173"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>      </span><span id="local-6989586621679282623"><span class="annot"><span class="annottext">decodeFromList :: Decoder s (Annotator (AllegraTxAuxDataRaw era))
+</span><a href="#local-6989586621679282623"><span class="hs-identifier hs-var hs-var">decodeFromList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">Decode ('Closed 'Dense) (Annotator (AllegraTxAuxDataRaw era))
+-&gt; Decoder s (Annotator (AllegraTxAuxDataRaw era))
+forall (w :: Wrapped) t s. Decode w t -&gt; Decoder s t
+</span><span class="hs-identifier hs-var">decode</span></span><span>
+</span><span id="line-176"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (Map Word64 Metadatum
+   -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Decode
+     ('Closed 'Dense)
+     (Annotator
+        (Map Word64 Metadatum
+         -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+forall (w :: Wrapped) t1. Decode w t1 -&gt; Decode w (Annotator t1)
+</span><span class="hs-identifier hs-var">Ann</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Map Word64 Metadatum
+ -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+-&gt; Decode
+     ('Closed 'Dense)
+     (Map Word64 Metadatum
+      -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era)
+forall t. t -&gt; Decode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">RecD</span></span><span> </span><span class="annot"><span class="annottext">Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+forall era.
+Map Word64 Metadatum
+-&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era
+</span><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-var">AllegraTxAuxDataRaw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-177"></span><span>              </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (Annotator
+     (Map Word64 Metadatum
+      -&gt; StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+-&gt; Decode ('Closed Any) (Annotator (Map Word64 Metadatum))
+-&gt; Decode
+     ('Closed 'Dense)
+     (Annotator (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+forall (w1 :: Wrapped) a t (d :: Density).
+Decode w1 (Annotator (a -&gt; t))
+-&gt; Decode ('Closed d) (Annotator a) -&gt; Decode w1 (Annotator t)
+</span><span class="hs-operator hs-var">&lt;*!</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Map Word64 Metadatum)
+-&gt; Decode ('Closed Any) (Annotator (Map Word64 Metadatum))
+forall (w :: Wrapped) t1. Decode w t1 -&gt; Decode w (Annotator t1)
+</span><span class="hs-identifier hs-var">Ann</span></span><span> </span><span class="annot"><span class="annottext">Decode ('Closed Any) (Map Word64 Metadatum)
+forall t (w :: Wrapped). DecCBOR t =&gt; Decode w t
+</span><span class="hs-identifier hs-var">From</span></span><span>
+</span><span id="line-178"></span><span>              </span><span class="annot"><span class="annottext">Decode
+  ('Closed 'Dense)
+  (Annotator (StrictSeq (Timelock era) -&gt; AllegraTxAuxDataRaw era))
+-&gt; Decode ('Closed 'Dense) (Annotator (StrictSeq (Timelock era)))
+-&gt; Decode ('Closed 'Dense) (Annotator (AllegraTxAuxDataRaw era))
+forall (w1 :: Wrapped) a t (d :: Density).
+Decode w1 (Annotator (a -&gt; t))
+-&gt; Decode ('Closed d) (Annotator a) -&gt; Decode w1 (Annotator t)
+</span><span class="hs-operator hs-var">&lt;*!</span></span><span> </span><span class="annot"><span class="annottext">(forall s. Decoder s (Annotator (StrictSeq (Timelock era))))
+-&gt; Decode ('Closed 'Dense) (Annotator (StrictSeq (Timelock era)))
+forall t. (forall s. Decoder s t) -&gt; Decode ('Closed 'Dense) t
+</span><span class="hs-identifier hs-var">D</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictSeq (Annotator (Timelock era))
+-&gt; Annotator (StrictSeq (Timelock era))
+forall (t :: * -&gt; *) (m :: * -&gt; *) a.
+(Traversable t, Monad m) =&gt;
+t (m a) -&gt; m (t a)
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StrictSeq (m a) -&gt; m (StrictSeq a)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Traversable.html#sequence"><span class="hs-identifier hs-var">sequence</span></a></span><span> </span><span class="annot"><span class="annottext">(StrictSeq (Annotator (Timelock era))
+ -&gt; Annotator (StrictSeq (Timelock era)))
+-&gt; Decoder s (StrictSeq (Annotator (Timelock era)))
+-&gt; Decoder s (Annotator (StrictSeq (Timelock era)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder s (StrictSeq (Annotator (Timelock era)))
+forall s. Decoder s (StrictSeq (Annotator (Timelock era)))
+forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decCBOR</span></span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span id="local-6989586621679282723"><span id="local-6989586621679282730"><span id="local-6989586621679282736"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621679281706"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Mem</span></span><span> </span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxDataRaw"><span class="hs-identifier hs-type">AllegraTxAuxDataRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281706"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-184"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Era</span></span><span> </span><span class="annot"><a href="#local-6989586621679281706"><span class="hs-identifier hs-type">era</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Annotator</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Ledger.Allegra.TxAuxData.html#AllegraTxAuxData"><span class="hs-identifier hs-type">AllegraTxAuxData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679281706"><span class="hs-identifier hs-type">era</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-185"></span></pre></body></html>

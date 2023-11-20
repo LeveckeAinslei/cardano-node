@@ -1,0 +1,338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns   #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TupleSections    #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Network.PeerSharing</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Applicative.html"><span class="hs-identifier">Control.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Alternative"><span class="hs-identifier">Alternative</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Concurrent.Class.MonadMVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadMVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">putMVar</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Concurrent.Class.MonadSTM.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadSTM</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>                     </span><span class="annot"><span class="hs-identifier">StrictTMVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">StrictTVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">atomically</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">modifyTVar</span></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>                     </span><span class="annot"><span class="hs-identifier">newEmptyTMVarIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">newTVarIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">retry</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">takeTMVar</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Monad.Class.MonadThrow</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadThrow</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">bracket</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.html"><span class="hs-identifier">Data.Map.Strict</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Monoid.Synchronisation</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FirstToFinish</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>                     </span><span class="annot"><span class="hs-identifier">runFirstToFinish</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.ControlMessage</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ControlMessage</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>                     </span><span class="annot"><span class="hs-identifier">ControlMessageSTM</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.PeerSharing.Client</span></span><span>
+</span><span id="line-20"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PeerSharingClient</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.PeerSharing.Server</span></span><span>
+</span><span id="line-22"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PeerSharingServer</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.PeerSharing.Type</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">PeerSharingAmount</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- | Request and Result queue for the peer sharing client implementation.</span><span>
+</span><span id="line-26"></span><span class="hs-comment">--</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- Although Peer Sharing is a request-response protocol we can not run it as</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- one, i.e. starting and terminating the protocol on demand since protocol</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- termination as a different semantics. We have to keep the client and server</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- protocol sides running and only issue the requests on demand.</span><span>
+</span><span id="line-31"></span><span class="hs-comment">--</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- A workaround to this is to implement the client side with the help of a</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- PeerSharingController which contains two queues: request and result.</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- The client side will be waiting to receive a 'PeerSharingAmount' from the</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- request queue and as soon as it gets something it will send a</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- 'SendMsgShareRequest' and wait for a response before writing it to the</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- result queue.</span><span>
+</span><span id="line-38"></span><span class="hs-comment">--</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">newtype</span><span> </span><span id="PeerSharingController"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-var">PeerSharingController</span></a></span></span><span> </span><span id="local-6989586621679215668"><span class="annot"><a href="#local-6989586621679215668"><span class="hs-identifier hs-type">peer</span></a></span></span><span> </span><span id="local-6989586621679215669"><span class="annot"><a href="#local-6989586621679215669"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PeerSharingController"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-var">PeerSharingController</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Depth 1 mailbox that contains a locally scoped result queue</span></span><span>
+</span><span id="line-41"></span><span>    </span><span id="requestQueue"><span class="annot"><span class="annottext">forall peer (m :: * -&gt; *).
+PeerSharingController peer m
+-&gt; StrictTMVar m (PeerSharingAmount, MVar m [peer])
+</span><a href="Ouroboros.Network.PeerSharing.html#requestQueue"><span class="hs-identifier hs-var hs-var">requestQueue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StrictTMVar</span></span><span> </span><span class="annot"><a href="#local-6989586621679215669"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PeerSharingAmount</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MVar</span></span><span> </span><span class="annot"><a href="#local-6989586621679215669"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679215668"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- | Peer Sharing Registry is a registry that stores a 'PeerSharingController'</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- for every peer that we connect to.</span><span>
+</span><span id="line-46"></span><span class="hs-comment">--</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- 'bracketPeerSharingClient' should be used.</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">newtype</span><span> </span><span id="PeerSharingRegistry"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-var">PeerSharingRegistry</span></a></span></span><span> </span><span id="local-6989586621679215676"><span class="annot"><a href="#local-6989586621679215676"><span class="hs-identifier hs-type">peer</span></a></span></span><span> </span><span id="local-6989586621679215677"><span class="annot"><a href="#local-6989586621679215677"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PeerSharingRegistry"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-var">PeerSharingRegistry</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-49"></span><span>    </span><span id="getPeerSharingRegistry"><span class="annot"><span class="annottext">forall peer (m :: * -&gt; *).
+PeerSharingRegistry peer m
+-&gt; StrictTVar m (Map peer (PeerSharingController peer m))
+</span><a href="Ouroboros.Network.PeerSharing.html#getPeerSharingRegistry"><span class="hs-identifier hs-var hs-var">getPeerSharingRegistry</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StrictTVar</span></span><span> </span><span class="annot"><a href="#local-6989586621679215677"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215676"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-type">PeerSharingController</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215676"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215677"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span id="local-6989586621679215683"><span id="local-6989586621679215685"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#newPeerSharingRegistry"><span class="hs-identifier hs-type">newPeerSharingRegistry</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadSTM</span></span><span> </span><span class="annot"><a href="#local-6989586621679215683"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215685"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>                       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215683"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-type">PeerSharingRegistry</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215685"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215683"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-54"></span><span id="newPeerSharingRegistry"><span class="annot"><span class="annottext">newPeerSharingRegistry :: forall (m :: * -&gt; *) peer.
+(MonadSTM m, Ord peer) =&gt;
+m (PeerSharingRegistry peer m)
+</span><a href="Ouroboros.Network.PeerSharing.html#newPeerSharingRegistry"><span class="hs-identifier hs-var hs-var">newPeerSharingRegistry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+-&gt; PeerSharingRegistry peer m
+forall peer (m :: * -&gt; *).
+StrictTVar m (Map peer (PeerSharingController peer m))
+-&gt; PeerSharingRegistry peer m
+</span><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-var">PeerSharingRegistry</span></a></span><span> </span><span class="annot"><span class="annottext">(StrictTVar m (Map peer (PeerSharingController peer m))
+ -&gt; PeerSharingRegistry peer m)
+-&gt; m (StrictTVar m (Map peer (PeerSharingController peer m)))
+-&gt; m (PeerSharingRegistry peer m)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Map peer (PeerSharingController peer m)
+-&gt; m (StrictTVar m (Map peer (PeerSharingController peer m)))
+forall (m :: * -&gt; *) a. MonadSTM m =&gt; a -&gt; m (StrictTVar m a)
+</span><span class="hs-identifier hs-var">newTVarIO</span></span><span> </span><span class="annot"><span class="annottext">Map peer (PeerSharingController peer m)
+forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span id="local-6989586621679215699"><span id="local-6989586621679215700"><span id="local-6989586621679215702"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#bracketPeerSharingClient"><span class="hs-identifier hs-type">bracketPeerSharingClient</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215699"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadSTM</span></span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadThrow</span></span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>                         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-type">PeerSharingRegistry</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215699"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-58"></span><span>                         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215699"><span class="hs-identifier hs-type">peer</span></a></span><span>
+</span><span id="line-59"></span><span>                         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-type">PeerSharingController</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215699"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215702"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>                         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215700"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215702"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-61"></span><span id="bracketPeerSharingClient"><span class="annot"><span class="annottext">bracketPeerSharingClient :: forall peer (m :: * -&gt; *) a.
+(Ord peer, MonadSTM m, MonadThrow m) =&gt;
+PeerSharingRegistry peer m
+-&gt; peer -&gt; (PeerSharingController peer m -&gt; m a) -&gt; m a
+</span><a href="Ouroboros.Network.PeerSharing.html#bracketPeerSharingClient"><span class="hs-identifier hs-var hs-var">bracketPeerSharingClient</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingRegistry"><span class="hs-identifier hs-type">PeerSharingRegistry</span></a></span><span> </span><span id="local-6989586621679215809"><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+</span><a href="#local-6989586621679215809"><span class="hs-identifier hs-var">registry</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679215810"><span class="annot"><span class="annottext">peer
+</span><a href="#local-6989586621679215810"><span class="hs-identifier hs-var">peer</span></a></span></span><span> </span><span id="local-6989586621679215811"><span class="annot"><span class="annottext">PeerSharingController peer m -&gt; m a
+</span><a href="#local-6989586621679215811"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-comment">-- Create new PeerSharingController</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679215812"><span class="annot"><span class="annottext">PeerSharingController peer m
+</span><a href="#local-6989586621679215812"><span class="hs-identifier hs-var">newPSController</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StrictTMVar m (PeerSharingAmount, MVar m [peer])
+-&gt; PeerSharingController peer m
+forall peer (m :: * -&gt; *).
+StrictTMVar m (PeerSharingAmount, MVar m [peer])
+-&gt; PeerSharingController peer m
+</span><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-var">PeerSharingController</span></a></span><span> </span><span class="annot"><span class="annottext">(StrictTMVar m (PeerSharingAmount, MVar m [peer])
+ -&gt; PeerSharingController peer m)
+-&gt; m (StrictTMVar m (PeerSharingAmount, MVar m [peer]))
+-&gt; m (PeerSharingController peer m)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">m (StrictTMVar m (PeerSharingAmount, MVar m [peer]))
+forall (m :: * -&gt; *) a. MonadSTM m =&gt; m (StrictTMVar m a)
+</span><span class="hs-identifier hs-var">newEmptyTMVarIO</span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-comment">-- Add peer to registry with fresh controller. Call continuation with new</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-comment">-- controller. If something goes wrong, unregister peer.</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; (() -&gt; m ()) -&gt; (() -&gt; m a) -&gt; m a
+forall a b c. m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m c) -&gt; m c
+forall (m :: * -&gt; *) a b c.
+MonadThrow m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m c) -&gt; m c
+</span><span class="hs-identifier hs-var">bracket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">STM m () -&gt; m ()
+forall a. HasCallStack =&gt; STM m a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM m a -&gt; m a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+-&gt; (Map peer (PeerSharingController peer m)
+    -&gt; Map peer (PeerSharingController peer m))
+-&gt; STM m ()
+forall (m :: * -&gt; *) a.
+MonadSTM m =&gt;
+StrictTVar m a -&gt; (a -&gt; a) -&gt; STM m ()
+</span><span class="hs-identifier hs-var">modifyTVar</span></span><span> </span><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+</span><a href="#local-6989586621679215809"><span class="hs-identifier hs-var">registry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peer
+-&gt; PeerSharingController peer m
+-&gt; Map peer (PeerSharingController peer m)
+-&gt; Map peer (PeerSharingController peer m)
+forall k a. Ord k =&gt; k -&gt; a -&gt; Map k a -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Strict.Internal.html#insert"><span class="hs-identifier hs-var">Map.insert</span></a></span><span> </span><span class="annot"><span class="annottext">peer
+</span><a href="#local-6989586621679215810"><span class="hs-identifier hs-var">peer</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingController peer m
+</span><a href="#local-6989586621679215812"><span class="hs-identifier hs-var">newPSController</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">STM m () -&gt; m ()
+forall a. HasCallStack =&gt; STM m a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM m a -&gt; m a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+-&gt; (Map peer (PeerSharingController peer m)
+    -&gt; Map peer (PeerSharingController peer m))
+-&gt; STM m ()
+forall (m :: * -&gt; *) a.
+MonadSTM m =&gt;
+StrictTVar m a -&gt; (a -&gt; a) -&gt; STM m ()
+</span><span class="hs-identifier hs-var">modifyTVar</span></span><span> </span><span class="annot"><span class="annottext">StrictTVar m (Map peer (PeerSharingController peer m))
+</span><a href="#local-6989586621679215809"><span class="hs-identifier hs-var">registry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">peer
+-&gt; Map peer (PeerSharingController peer m)
+-&gt; Map peer (PeerSharingController peer m)
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Map k a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/containers-0.6.7/src/Data.Map.Internal.html#delete"><span class="hs-identifier hs-var">Map.delete</span></a></span><span> </span><span class="annot"><span class="annottext">peer
+</span><a href="#local-6989586621679215810"><span class="hs-identifier hs-var">peer</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PeerSharingController peer m -&gt; m a
+</span><a href="#local-6989586621679215811"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingController peer m
+</span><a href="#local-6989586621679215812"><span class="hs-identifier hs-var">newPSController</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span id="local-6989586621679215721"><span id="local-6989586621679215725"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#peerSharingClient"><span class="hs-identifier hs-type">peerSharingClient</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Alternative"><span class="hs-identifier hs-type">Alternative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>                     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadMVar</span></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-72"></span><span>                     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadSTM</span></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-73"></span><span>                     </span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>                  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ControlMessageSTM</span></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-75"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-type">PeerSharingController</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215725"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-76"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PeerSharingClient</span></span><span> </span><span class="annot"><a href="#local-6989586621679215725"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215721"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-77"></span><span id="peerSharingClient"><span class="annot"><span class="annottext">peerSharingClient :: forall (m :: * -&gt; *) peer.
+(Alternative (STM m), MonadMVar m, MonadSTM m) =&gt;
+ControlMessageSTM m
+-&gt; PeerSharingController peer m -&gt; m (PeerSharingClient peer m ())
+</span><a href="Ouroboros.Network.PeerSharing.html#peerSharingClient"><span class="hs-identifier hs-var hs-var">peerSharingClient</span></a></span></span><span> </span><span id="local-6989586621679215845"><span class="annot"><span class="annottext">ControlMessageSTM m
+</span><a href="#local-6989586621679215845"><span class="hs-identifier hs-var">controlMessageSTM</span></a></span></span><span>
+</span><span id="line-78"></span><span>                  </span><span id="local-6989586621679215846"><span class="annot"><span class="annottext">psc :: PeerSharingController peer m
+</span><a href="#local-6989586621679215846"><span class="hs-identifier hs-var">psc</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#PeerSharingController"><span class="hs-identifier hs-type">PeerSharingController</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span id="local-6989586621679215847"><span class="annot"><span class="annottext">StrictTMVar m (PeerSharingAmount, MVar m [peer])
+requestQueue :: forall peer (m :: * -&gt; *).
+PeerSharingController peer m
+-&gt; StrictTMVar m (PeerSharingAmount, MVar m [peer])
+requestQueue :: StrictTMVar m (PeerSharingAmount, MVar m [peer])
+</span><a href="Ouroboros.Network.PeerSharing.html#requestQueue"><span class="hs-identifier hs-var hs-var">requestQueue</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621679215848"><span class="annot"><span class="annottext">Maybe (PeerSharingAmount, MVar m [peer])
+</span><a href="#local-6989586621679215848"><span class="hs-identifier hs-var">mbTerminated</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a. HasCallStack =&gt; STM m a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM m a -&gt; m a
+</span><span class="hs-identifier hs-var">atomically</span></span><span>
+</span><span id="line-81"></span><span>                </span><span class="annot"><span class="annottext">(STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+ -&gt; m (Maybe (PeerSharingAmount, MVar m [peer])))
+-&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall (m :: * -&gt; *) a. FirstToFinish m a -&gt; m a
+</span><span class="hs-identifier hs-var">runFirstToFinish</span></span><span>
+</span><span id="line-82"></span><span>                </span><span class="annot"><span class="annottext">(FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+ -&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer])))
+-&gt; FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+forall (m :: * -&gt; *) a. m a -&gt; FirstToFinish m a
+</span><span class="hs-identifier hs-var">FirstToFinish</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(PeerSharingAmount, MVar m [peer])
+-&gt; Maybe (PeerSharingAmount, MVar m [peer])
+forall a. a -&gt; Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">((PeerSharingAmount, MVar m [peer])
+ -&gt; Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; STM m (PeerSharingAmount, MVar m [peer])
+-&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">StrictTMVar m (PeerSharingAmount, MVar m [peer])
+-&gt; STM m (PeerSharingAmount, MVar m [peer])
+forall (m :: * -&gt; *) a. MonadSTM m =&gt; StrictTMVar m a -&gt; STM m a
+</span><span class="hs-identifier hs-var">takeTMVar</span></span><span> </span><span class="annot"><span class="annottext">StrictTMVar m (PeerSharingAmount, MVar m [peer])
+</span><a href="#local-6989586621679215847"><span class="hs-identifier hs-var">requestQueue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>               </span><span class="annot"><span class="annottext">FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+-&gt; FirstToFinish (STM m) (Maybe (PeerSharingAmount, MVar m [peer]))
+forall (m :: * -&gt; *) a. m a -&gt; FirstToFinish m a
+</span><span class="hs-identifier hs-var">FirstToFinish</span></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679215850"><span class="annot"><span class="annottext">ControlMessage
+</span><a href="#local-6989586621679215850"><span class="hs-identifier hs-var">controlMessage</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ControlMessageSTM m
+</span><a href="#local-6989586621679215845"><span class="hs-identifier hs-var">controlMessageSTM</span></a></span><span>
+</span><span id="line-84"></span><span>                                    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ControlMessage
+</span><a href="#local-6989586621679215850"><span class="hs-identifier hs-var">controlMessage</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-85"></span><span>                                         </span><span class="annot"><span class="annottext">ControlMessage
+</span><span class="hs-identifier hs-var">Terminate</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (PeerSharingAmount, MVar m [peer])
+-&gt; STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a. a -&gt; STM m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PeerSharingAmount, MVar m [peer])
+forall a. Maybe a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-86"></span><span>                                         </span><span class="annot"><span class="annottext">ControlMessage
+</span><span class="hs-identifier">_</span></span><span>         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">STM m (Maybe (PeerSharingAmount, MVar m [peer]))
+forall a. STM m a
+forall (m :: * -&gt; *) a. MonadSTM m =&gt; STM m a
+</span><span class="hs-identifier hs-var">retry</span></span><span>
+</span><span id="line-87"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (PeerSharingAmount, MVar m [peer])
+</span><a href="#local-6989586621679215848"><span class="hs-identifier hs-var">mbTerminated</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">Maybe (PeerSharingAmount, MVar m [peer])
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ())
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span>
+</span><span id="line-90"></span><span>                   </span><span class="annot"><span class="annottext">(PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ()))
+-&gt; PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; PeerSharingClient peer m ()
+forall (m :: * -&gt; *) a peerAddress.
+m a -&gt; PeerSharingClient peerAddress m a
+</span><span class="hs-identifier hs-var">SendMsgDone</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">() -&gt; m ()
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679215853"><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679215853"><span class="hs-identifier hs-var">amount</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679215854"><span class="annot"><span class="annottext">MVar m [peer]
+</span><a href="#local-6989586621679215854"><span class="hs-identifier hs-var">resultQueue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ())
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ()))
+-&gt; PeerSharingClient peer m () -&gt; m (PeerSharingClient peer m ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">PeerSharingAmount
+-&gt; ([peer] -&gt; m (PeerSharingClient peer m ()))
+-&gt; PeerSharingClient peer m ()
+forall peerAddress (m :: * -&gt; *) a.
+PeerSharingAmount
+-&gt; ([peerAddress] -&gt; m (PeerSharingClient peerAddress m a))
+-&gt; PeerSharingClient peerAddress m a
+</span><span class="hs-identifier hs-var">SendMsgShareRequest</span></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679215853"><span class="hs-identifier hs-var">amount</span></a></span><span> </span><span class="annot"><span class="annottext">(([peer] -&gt; m (PeerSharingClient peer m ()))
+ -&gt; PeerSharingClient peer m ())
+-&gt; ([peer] -&gt; m (PeerSharingClient peer m ()))
+-&gt; PeerSharingClient peer m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679215855"><span class="annot"><span class="annottext">[peer]
+</span><a href="#local-6989586621679215855"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">MVar m [peer] -&gt; [peer] -&gt; m ()
+forall a. MVar m a -&gt; a -&gt; m ()
+forall (m :: * -&gt; *) a. MonadMVar m =&gt; MVar m a -&gt; a -&gt; m ()
+</span><span class="hs-identifier hs-var">putMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar m [peer]
+</span><a href="#local-6989586621679215854"><span class="hs-identifier hs-var">resultQueue</span></a></span><span> </span><span class="annot"><span class="annottext">[peer]
+</span><a href="#local-6989586621679215855"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">ControlMessageSTM m
+-&gt; PeerSharingController peer m -&gt; m (PeerSharingClient peer m ())
+forall (m :: * -&gt; *) peer.
+(Alternative (STM m), MonadMVar m, MonadSTM m) =&gt;
+ControlMessageSTM m
+-&gt; PeerSharingController peer m -&gt; m (PeerSharingClient peer m ())
+</span><a href="Ouroboros.Network.PeerSharing.html#peerSharingClient"><span class="hs-identifier hs-var">peerSharingClient</span></a></span><span> </span><span class="annot"><span class="annottext">ControlMessageSTM m
+</span><a href="#local-6989586621679215845"><span class="hs-identifier hs-var">controlMessageSTM</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingController peer m
+</span><a href="#local-6989586621679215846"><span class="hs-identifier hs-var">psc</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span id="local-6989586621679215752"><span id="local-6989586621679215753"><span class="annot"><a href="Ouroboros.Network.PeerSharing.html#peerSharingServer"><span class="hs-identifier hs-type">peerSharingServer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Monad"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215752"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-97"></span><span>                  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PeerSharingAmount</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679215752"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679215753"><span class="hs-identifier hs-type">peer</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">PeerSharingServer</span></span><span> </span><span class="annot"><a href="#local-6989586621679215753"><span class="hs-identifier hs-type">peer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679215752"><span class="hs-identifier hs-type">m</span></a></span></span></span><span>
+</span><span id="line-99"></span><span id="peerSharingServer"><span class="annot"><span class="annottext">peerSharingServer :: forall (m :: * -&gt; *) peer.
+Monad m =&gt;
+(PeerSharingAmount -&gt; m [peer]) -&gt; PeerSharingServer peer m
+</span><a href="Ouroboros.Network.PeerSharing.html#peerSharingServer"><span class="hs-identifier hs-var hs-var">peerSharingServer</span></a></span></span><span> </span><span id="local-6989586621679215864"><span class="annot"><span class="annottext">PeerSharingAmount -&gt; m [peer]
+</span><a href="#local-6989586621679215864"><span class="hs-identifier hs-var">computePeersToShare</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">PeerSharingServer</span></span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">recvMsgShareRequest :: PeerSharingAmount -&gt; m ([peer], PeerSharingServer peer m)
+</span><span class="hs-identifier hs-var">recvMsgShareRequest</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679215867"><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679215867"><span class="hs-identifier hs-var">amount</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([peer]
+ -&gt; PeerSharingServer peer m -&gt; ([peer], PeerSharingServer peer m))
+-&gt; m [peer]
+-&gt; m (PeerSharingServer peer m
+      -&gt; ([peer], PeerSharingServer peer m))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount -&gt; m [peer]
+</span><a href="#local-6989586621679215864"><span class="hs-identifier hs-var">computePeersToShare</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount
+</span><a href="#local-6989586621679215867"><span class="hs-identifier hs-var">amount</span></a></span><span>
+</span><span id="line-102"></span><span>                                          </span><span class="annot"><span class="annottext">m (PeerSharingServer peer m -&gt; ([peer], PeerSharingServer peer m))
+-&gt; m (PeerSharingServer peer m)
+-&gt; m ([peer], PeerSharingServer peer m)
+forall a b. m (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingServer peer m -&gt; m (PeerSharingServer peer m)
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(PeerSharingAmount -&gt; m [peer]) -&gt; PeerSharingServer peer m
+forall (m :: * -&gt; *) peer.
+Monad m =&gt;
+(PeerSharingAmount -&gt; m [peer]) -&gt; PeerSharingServer peer m
+</span><a href="Ouroboros.Network.PeerSharing.html#peerSharingServer"><span class="hs-identifier hs-var">peerSharingServer</span></a></span><span> </span><span class="annot"><span class="annottext">PeerSharingAmount -&gt; m [peer]
+</span><a href="#local-6989586621679215864"><span class="hs-identifier hs-var">computePeersToShare</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-104"></span></pre></body></html>

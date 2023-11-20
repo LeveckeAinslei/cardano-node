@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE NamedFieldPuns      #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TupleSections       #-}</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.MiniProtocol.LocalStateQuery.Server</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.MiniProtocol.LocalStateQuery.Server.html#localStateQueryServer"><span class="hs-identifier">localStateQueryServer</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Block.html"><span class="hs-identifier">Ouroboros.Consensus.Block</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HeaderValidation.html"><span class="hs-identifier">Ouroboros.Consensus.HeaderValidation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HeaderValidation.html#HasAnnTip"><span class="hs-identifier">HasAnnTip</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Extended.html"><span class="hs-identifier">Ouroboros.Consensus.Ledger.Extended</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html"><span class="hs-identifier">Ouroboros.Consensus.Ledger.Query</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Util.IOLike.html"><span class="hs-identifier">Ouroboros.Consensus.Util.IOLike</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.LocalStateQuery.Server</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Ouroboros.Network.Protocol.LocalStateQuery.Type</span></span><span>
+</span><span id="line-13"></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AcquireFailure</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="annot"><a href="Ouroboros.Consensus.MiniProtocol.LocalStateQuery.Server.html#localStateQueryServer"><span class="hs-identifier hs-type">localStateQueryServer</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-16"></span><span>     </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679865354"><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679865356"><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Util.IOLike.html#IOLike"><span class="hs-identifier hs-type">IOLike</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#QueryLedger"><span class="hs-identifier hs-type">QueryLedger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Config.SupportsNode.html#ConfigSupportsNode"><span class="hs-identifier hs-type">ConfigSupportsNode</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HeaderValidation.html#HasAnnTip"><span class="hs-identifier hs-type">HasAnnTip</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Extended.html#ExtLedgerCfg"><span class="hs-identifier hs-type">ExtLedgerCfg</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>     </span><span class="annot"><span class="hs-comment">-- ^ Get tip point</span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Extended.html#ExtLedgerState"><span class="hs-identifier hs-type">ExtLedgerState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>     </span><span class="annot"><span class="hs-comment">-- ^ Get a past ledger</span></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM</span></span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>     </span><span class="annot"><span class="hs-comment">-- ^ Get the immutable point</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LocalStateQueryServer</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span id="localStateQueryServer"><span class="annot"><span class="annottext">localStateQueryServer :: forall (m :: * -&gt; *) blk.
+(IOLike m, QueryLedger blk, ConfigSupportsNode blk,
+ HasAnnTip blk) =&gt;
+ExtLedgerCfg blk
+-&gt; STM m (Point blk)
+-&gt; (Point blk -&gt; STM m (Maybe (ExtLedgerState blk)))
+-&gt; STM m (Point blk)
+-&gt; LocalStateQueryServer blk (Point blk) (Query blk) m ()
+</span><a href="Ouroboros.Consensus.MiniProtocol.LocalStateQuery.Server.html#localStateQueryServer"><span class="hs-identifier hs-var hs-var">localStateQueryServer</span></a></span></span><span> </span><span id="local-6989586621679865463"><span class="annot"><span class="annottext">ExtLedgerCfg blk
+</span><a href="#local-6989586621679865463"><span class="hs-identifier hs-var">cfg</span></a></span></span><span> </span><span id="local-6989586621679865464"><span class="annot"><span class="annottext">STM m (Point blk)
+</span><a href="#local-6989586621679865464"><span class="hs-identifier hs-var">getTipPoint</span></a></span></span><span> </span><span id="local-6989586621679865465"><span class="annot"><span class="annottext">Point blk -&gt; STM m (Maybe (ExtLedgerState blk))
+</span><a href="#local-6989586621679865465"><span class="hs-identifier hs-var">getPastLedger</span></a></span></span><span> </span><span id="local-6989586621679865466"><span class="annot"><span class="annottext">STM m (Point blk)
+</span><a href="#local-6989586621679865466"><span class="hs-identifier hs-var">getImmutablePoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="annottext">m (ServerStIdle blk (Point blk) (Query blk) m ())
+-&gt; LocalStateQueryServer blk (Point blk) (Query blk) m ()
+forall block point (query :: * -&gt; *) (m :: * -&gt; *) a.
+m (ServerStIdle block point query m a)
+-&gt; LocalStateQueryServer block point query m a
+</span><span class="hs-identifier hs-var">LocalStateQueryServer</span></span><span> </span><span class="annot"><span class="annottext">(m (ServerStIdle blk (Point blk) (Query blk) m ())
+ -&gt; LocalStateQueryServer blk (Point blk) (Query blk) m ())
+-&gt; m (ServerStIdle blk (Point blk) (Query blk) m ())
+-&gt; LocalStateQueryServer blk (Point blk) (Query blk) m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+-&gt; m (ServerStIdle blk (Point blk) (Query blk) m ())
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865468"><span class="hs-identifier hs-var">idle</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="#local-6989586621679865468"><span class="hs-identifier hs-type">idle</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ServerStIdle</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>    </span><span id="local-6989586621679865468"><span class="annot"><span class="annottext">idle :: ServerStIdle blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865468"><span class="hs-identifier hs-var hs-var">idle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ServerStIdle</span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-30"></span><span>          </span><span class="annot"><span class="annottext">recvMsgAcquire :: Maybe (Point blk)
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+</span><span class="hs-identifier hs-var">recvMsgAcquire</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Point blk)
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+</span><a href="#local-6989586621679865471"><span class="hs-identifier hs-var">handleAcquire</span></a></span><span>
+</span><span id="line-31"></span><span>        </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">recvMsgDone :: m ()
+</span><span class="hs-identifier hs-var">recvMsgDone</span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="#local-6989586621679865471"><span class="hs-identifier hs-type">handleAcquire</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ServerStAcquiring</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621679865471"><span class="annot"><span class="annottext">handleAcquire :: Maybe (Point blk)
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+</span><a href="#local-6989586621679865471"><span class="hs-identifier hs-var hs-var">handleAcquire</span></a></span></span><span> </span><span id="local-6989586621679865473"><span class="annot"><span class="annottext">Maybe (Point blk)
+</span><a href="#local-6989586621679865473"><span class="hs-identifier hs-var">mpt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621679865474"><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865474"><span class="hs-identifier hs-var">pt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679865475"><span class="annot"><span class="annottext">Maybe (ExtLedgerState blk)
+</span><a href="#local-6989586621679865475"><span class="hs-identifier hs-var">mPastLedger</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679865476"><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865476"><span class="hs-identifier hs-var">immutablePoint</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+-&gt; m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+forall a. HasCallStack =&gt; STM m a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM m a -&gt; m a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+ -&gt; m (Point blk, Maybe (ExtLedgerState blk), Point blk))
+-&gt; STM m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+-&gt; m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-38"></span><span>          </span><span id="local-6989586621679865478"><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865478"><span class="hs-identifier hs-var">pt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM m (Point blk)
+-&gt; (Point blk -&gt; STM m (Point blk))
+-&gt; Maybe (Point blk)
+-&gt; STM m (Point blk)
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Maybe.html#maybe"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">STM m (Point blk)
+</span><a href="#local-6989586621679865464"><span class="hs-identifier hs-var">getTipPoint</span></a></span><span> </span><span class="annot"><span class="annottext">Point blk -&gt; STM m (Point blk)
+forall a. a -&gt; STM m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Point blk)
+</span><a href="#local-6989586621679865473"><span class="hs-identifier hs-var">mpt</span></a></span><span>
+</span><span id="line-39"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865478"><span class="hs-identifier hs-var">pt</span></a></span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (ExtLedgerState blk)
+ -&gt; Point blk -&gt; (Point blk, Maybe (ExtLedgerState blk), Point blk))
+-&gt; STM m (Maybe (ExtLedgerState blk))
+-&gt; STM
+     m (Point blk -&gt; (Point blk, Maybe (ExtLedgerState blk), Point blk))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Point blk -&gt; STM m (Maybe (ExtLedgerState blk))
+</span><a href="#local-6989586621679865465"><span class="hs-identifier hs-var">getPastLedger</span></a></span><span> </span><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865478"><span class="hs-identifier hs-var">pt</span></a></span><span> </span><span class="annot"><span class="annottext">STM
+  m (Point blk -&gt; (Point blk, Maybe (ExtLedgerState blk), Point blk))
+-&gt; STM m (Point blk)
+-&gt; STM m (Point blk, Maybe (ExtLedgerState blk), Point blk)
+forall a b. STM m (a -&gt; b) -&gt; STM m a -&gt; STM m b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">STM m (Point blk)
+</span><a href="#local-6989586621679865466"><span class="hs-identifier hs-var">getImmutablePoint</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">ServerStAcquiring blk (Point blk) (Query blk) m ()
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerStAcquiring blk (Point blk) (Query blk) m ()
+ -&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ()))
+-&gt; ServerStAcquiring blk (Point blk) (Query blk) m ()
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (ExtLedgerState blk)
+</span><a href="#local-6989586621679865475"><span class="hs-identifier hs-var">mPastLedger</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-42"></span><span>          </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679865481"><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865481"><span class="hs-identifier hs-var">pastLedger</span></a></span></span><span>
+</span><span id="line-43"></span><span>            </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServerStAcquired blk (Point blk) (Query blk) m ()
+-&gt; ServerStAcquiring blk (Point blk) (Query blk) m ()
+forall block point (query :: * -&gt; *) (m :: * -&gt; *) a.
+ServerStAcquired block point query m a
+-&gt; ServerStAcquiring block point query m a
+</span><span class="hs-identifier hs-var">SendMsgAcquired</span></span><span> </span><span class="annot"><span class="annottext">(ServerStAcquired blk (Point blk) (Query blk) m ()
+ -&gt; ServerStAcquiring blk (Point blk) (Query blk) m ())
+-&gt; ServerStAcquired blk (Point blk) (Query blk) m ()
+-&gt; ServerStAcquiring blk (Point blk) (Query blk) m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+-&gt; ServerStAcquired blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865483"><span class="hs-identifier hs-var">acquired</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865481"><span class="hs-identifier hs-var">pastLedger</span></a></span><span>
+</span><span id="line-44"></span><span>          </span><span class="annot"><span class="annottext">Maybe (ExtLedgerState blk)
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-45"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Point blk -&gt; WithOrigin SlotNo
+forall {k} (block :: k). Point block -&gt; WithOrigin SlotNo
+</span><span class="hs-identifier hs-var">pointSlot</span></span><span> </span><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865474"><span class="hs-identifier hs-var">pt</span></a></span><span> </span><span class="annot"><span class="annottext">WithOrigin SlotNo -&gt; WithOrigin SlotNo -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#%3C"><span class="hs-operator hs-var">&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">Point blk -&gt; WithOrigin SlotNo
+forall {k} (block :: k). Point block -&gt; WithOrigin SlotNo
+</span><span class="hs-identifier hs-var">pointSlot</span></span><span> </span><span class="annot"><span class="annottext">Point blk
+</span><a href="#local-6989586621679865476"><span class="hs-identifier hs-var">immutablePoint</span></a></span><span>
+</span><span id="line-46"></span><span>            </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AcquireFailure
+-&gt; ServerStIdle blk (Point blk) (Query blk) m ()
+-&gt; ServerStAcquiring blk (Point blk) (Query blk) m ()
+forall block point (query :: * -&gt; *) (m :: * -&gt; *) a.
+AcquireFailure
+-&gt; ServerStIdle block point query m a
+-&gt; ServerStAcquiring block point query m a
+</span><span class="hs-identifier hs-var">SendMsgFailure</span></span><span> </span><span class="annot"><span class="annottext">AcquireFailure
+</span><span class="hs-identifier hs-var">AcquireFailurePointTooOld</span></span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865468"><span class="hs-identifier hs-var">idle</span></a></span><span>
+</span><span id="line-47"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span>
+</span><span id="line-48"></span><span>            </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AcquireFailure
+-&gt; ServerStIdle blk (Point blk) (Query blk) m ()
+-&gt; ServerStAcquiring blk (Point blk) (Query blk) m ()
+forall block point (query :: * -&gt; *) (m :: * -&gt; *) a.
+AcquireFailure
+-&gt; ServerStIdle block point query m a
+-&gt; ServerStAcquiring block point query m a
+</span><span class="hs-identifier hs-var">SendMsgFailure</span></span><span> </span><span class="annot"><span class="annottext">AcquireFailure
+</span><span class="hs-identifier hs-var">AcquireFailurePointNotOnChain</span></span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865468"><span class="hs-identifier hs-var">idle</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="#local-6989586621679865483"><span class="hs-identifier hs-type">acquired</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Extended.html#ExtLedgerState"><span class="hs-identifier hs-type">ExtLedgerState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span>
+</span><span id="line-51"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ServerStAcquired</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621679865483"><span class="annot"><span class="annottext">acquired :: ExtLedgerState blk
+-&gt; ServerStAcquired blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865483"><span class="hs-identifier hs-var hs-var">acquired</span></a></span></span><span> </span><span id="local-6989586621679865489"><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865489"><span class="hs-identifier hs-var">ledgerState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ServerStAcquired</span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">recvMsgQuery :: forall result.
+Query blk result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+</span><span class="hs-identifier hs-var">recvMsgQuery</span></span><span>     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+-&gt; Query blk result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+forall result.
+ExtLedgerState blk
+-&gt; Query blk result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+</span><a href="#local-6989586621679865492"><span class="hs-identifier hs-var">handleQuery</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865489"><span class="hs-identifier hs-var">ledgerState</span></a></span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">recvMsgReAcquire :: Maybe (Point blk)
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+</span><span class="hs-identifier hs-var">recvMsgReAcquire</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Point blk)
+-&gt; m (ServerStAcquiring blk (Point blk) (Query blk) m ())
+</span><a href="#local-6989586621679865471"><span class="hs-identifier hs-var">handleAcquire</span></a></span><span>
+</span><span id="line-55"></span><span>        </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">recvMsgRelease :: m (ServerStIdle blk (Point blk) (Query blk) m ())
+</span><span class="hs-identifier hs-var">recvMsgRelease</span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+-&gt; m (ServerStIdle blk (Point blk) (Query blk) m ())
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">ServerStIdle blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865468"><span class="hs-identifier hs-var">idle</span></a></span><span>
+</span><span id="line-56"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679865416"><span class="annot"><a href="#local-6989586621679865492"><span class="hs-identifier hs-type">handleQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-59"></span><span>         </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Extended.html#ExtLedgerState"><span class="hs-identifier hs-type">ExtLedgerState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865416"><span class="hs-identifier hs-type">result</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ServerStQuerying</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Point</span></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679865356"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865354"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679865416"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621679865492"><span class="annot"><span class="annottext">handleQuery :: forall result.
+ExtLedgerState blk
+-&gt; Query blk result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+</span><a href="#local-6989586621679865492"><span class="hs-identifier hs-var hs-var">handleQuery</span></a></span></span><span> </span><span id="local-6989586621679865499"><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865499"><span class="hs-identifier hs-var">ledgerState</span></a></span></span><span> </span><span id="local-6989586621679865500"><span class="annot"><span class="annottext">Query blk result
+</span><a href="#local-6989586621679865500"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerStQuerying blk (Point blk) (Query blk) m () result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#return"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerStQuerying blk (Point blk) (Query blk) m () result
+ -&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result))
+-&gt; ServerStQuerying blk (Point blk) (Query blk) m () result
+-&gt; m (ServerStQuerying blk (Point blk) (Query blk) m () result)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">result
+-&gt; ServerStAcquired blk (Point blk) (Query blk) m ()
+-&gt; ServerStQuerying blk (Point blk) (Query blk) m () result
+forall result block point (query :: * -&gt; *) (m :: * -&gt; *) a.
+result
+-&gt; ServerStAcquired block point query m a
+-&gt; ServerStQuerying block point query m a result
+</span><span class="hs-identifier hs-var">SendMsgResult</span></span><span>
+</span><span id="line-64"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExtLedgerCfg blk
+-&gt; Query blk result -&gt; ExtLedgerState blk -&gt; result
+forall blk result.
+(QueryLedger blk, ConfigSupportsNode blk, HasAnnTip blk) =&gt;
+ExtLedgerCfg blk
+-&gt; Query blk result -&gt; ExtLedgerState blk -&gt; result
+</span><a href="Ouroboros.Consensus.Ledger.Query.html#answerQuery"><span class="hs-identifier hs-var">answerQuery</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerCfg blk
+</span><a href="#local-6989586621679865463"><span class="hs-identifier hs-var">cfg</span></a></span><span> </span><span class="annot"><span class="annottext">Query blk result
+</span><a href="#local-6989586621679865500"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865499"><span class="hs-identifier hs-var">ledgerState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExtLedgerState blk
+-&gt; ServerStAcquired blk (Point blk) (Query blk) m ()
+</span><a href="#local-6989586621679865483"><span class="hs-identifier hs-var">acquired</span></a></span><span> </span><span class="annot"><span class="annottext">ExtLedgerState blk
+</span><a href="#local-6989586621679865499"><span class="hs-identifier hs-var">ledgerState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span></pre></body></html>

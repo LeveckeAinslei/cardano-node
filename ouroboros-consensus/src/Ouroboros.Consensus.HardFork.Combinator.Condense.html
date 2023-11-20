@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleContexts      #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE QuantifiedConstraints #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications      #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances  #-}</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- | Condense instances</span><span>
+</span><span id="line-11"></span><span class="hs-comment">--</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- These are for the benefit of integration and tests. We do not rely on them</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- within consensus.</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- NOTE: No guarantees are made about what these condense instances look like.</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.Condense</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier">CondenseConstraints</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Coerce.html"><span class="hs-identifier">Data.Coerce</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html"><span class="hs-identifier">Data.Proxy</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.BasicFunctors</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Constraint</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Strict</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.html"><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html"><span class="hs-identifier">Ouroboros.Consensus.Ledger.SupportsMempool</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html"><span class="hs-identifier">Ouroboros.Consensus.TypeFamilyWrappers</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html"><span class="hs-identifier">Ouroboros.Consensus.Util.Condense</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Infrastructure
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906030"><span class="hs-identifier hs-type">blk</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Block.Abstract.html#Header"><span class="hs-identifier hs-type">Header</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906030"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTx"><span class="hs-identifier hs-type">GenTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906030"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTxId"><span class="hs-identifier hs-type">GenTxId</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906030"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="CondenseConstraints"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-var">CondenseConstraints</span></a></span></span><span> </span><span id="local-6989586621679906030"><span class="annot"><a href="#local-6989586621679906030"><span class="hs-identifier hs-type">blk</span></a></span></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#pCondense"><span class="hs-identifier hs-type">pCondense</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-type">Proxy</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span>
+</span><span id="line-39"></span><span id="pCondense"><span class="annot"><span class="annottext">pCondense :: Proxy CondenseConstraints
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#pCondense"><span class="hs-identifier hs-var hs-var">pCondense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy CondenseConstraints
+forall {k} (t :: k). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span id="local-6989586621679906039"><span id="local-6989586621679906042"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-type">defaultCondenseNS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906039"><span class="hs-identifier hs-type">xs</span></a></span><span>
+</span><span id="line-42"></span><span>                     </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679906041"><span class="annot"><a href="#local-6989586621679906041"><span class="hs-identifier hs-type">blk</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906041"><span class="hs-identifier hs-type">blk</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679906042"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906041"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>                     </span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>                  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-type">Proxy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906042"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NS</span></span><span> </span><span class="annot"><a href="#local-6989586621679906042"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906039"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#String"><span class="hs-identifier hs-type">String</span></a></span></span></span><span>
+</span><span id="line-45"></span><span id="defaultCondenseNS"><span class="annot"><span class="annottext">defaultCondenseNS :: forall (xs :: [*]) (f :: * -&gt; *).
+(All CondenseConstraints xs,
+ forall blk. CondenseConstraints blk =&gt; Condense (f blk)) =&gt;
+Proxy f -&gt; NS f xs -&gt; String
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-var hs-var">defaultCondenseNS</span></a></span></span><span> </span><span class="annot"><span class="annottext">Proxy f
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NS (K String) xs -&gt; String
+NS (K String) xs -&gt; CollapseTo NS String
+forall (xs :: [*]) a.
+SListIN NS xs =&gt;
+NS (K a) xs -&gt; CollapseTo NS a
+forall k l (h :: (k -&gt; *) -&gt; l -&gt; *) (xs :: l) a.
+(HCollapse h, SListIN h xs) =&gt;
+h (K a) xs -&gt; CollapseTo h a
+</span><span class="hs-identifier hs-var">hcollapse</span></span><span> </span><span class="annot"><span class="annottext">(NS (K String) xs -&gt; String)
+-&gt; (NS f xs -&gt; NS (K String) xs) -&gt; NS f xs -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy CondenseConstraints
+-&gt; (forall a. CondenseConstraints a =&gt; f a -&gt; K String a)
+-&gt; NS f xs
+-&gt; NS (K String) xs
+forall {k} {l} (h :: (k -&gt; *) -&gt; l -&gt; *) (c :: k -&gt; Constraint)
+       (xs :: l) (proxy :: (k -&gt; Constraint) -&gt; *) (f :: k -&gt; *)
+       (f' :: k -&gt; *).
+(AllN (Prod h) c xs, HAp h) =&gt;
+proxy c
+-&gt; (forall (a :: k). c a =&gt; f a -&gt; f' a) -&gt; h f xs -&gt; h f' xs
+</span><span class="hs-identifier hs-var">hcmap</span></span><span> </span><span class="annot"><span class="annottext">Proxy CondenseConstraints
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#pCondense"><span class="hs-identifier hs-var">pCondense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; K String a
+forall k a (b :: k). a -&gt; K a b
+</span><span class="hs-identifier hs-var">K</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; K String a) -&gt; (f a -&gt; String) -&gt; f a -&gt; K String a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">f a -&gt; String
+forall a. Condense a =&gt; a -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var">condense</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Instances
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906083"><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906083"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Basics.html#HardForkBlock"><span class="hs-identifier hs-type">HardForkBlock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906083"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679906133"><span class="annot"><span class="annottext">condense :: HardForkBlock xs -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy I -&gt; NS I xs -&gt; String
+forall (xs :: [*]) (f :: * -&gt; *).
+(All CondenseConstraints xs,
+ forall blk. CondenseConstraints blk =&gt; Condense (f blk)) =&gt;
+Proxy f -&gt; NS f xs -&gt; String
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-var">defaultCondenseNS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: * -&gt; *). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">I</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NS I xs -&gt; String)
+-&gt; (HardForkBlock xs -&gt; NS I xs) -&gt; HardForkBlock xs -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">HardForkBlock xs -&gt; NS I xs
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906089"><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906089"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Block.Abstract.html#Header"><span class="hs-identifier hs-type">Header</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Basics.html#HardForkBlock"><span class="hs-identifier hs-type">HardForkBlock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906089"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679906140"><span class="annot"><span class="annottext">condense :: Header (HardForkBlock xs) -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy Header -&gt; NS Header xs -&gt; String
+forall (xs :: [*]) (f :: * -&gt; *).
+(All CondenseConstraints xs,
+ forall blk. CondenseConstraints blk =&gt; Condense (f blk)) =&gt;
+Proxy f -&gt; NS f xs -&gt; String
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-var">defaultCondenseNS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: * -&gt; *). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Consensus.Block.Abstract.html#Header"><span class="hs-identifier hs-type">Header</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NS Header xs -&gt; String)
+-&gt; (Header (HardForkBlock xs) -&gt; NS Header xs)
+-&gt; Header (HardForkBlock xs)
+-&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Header (HardForkBlock xs) -&gt; NS Header xs
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906091"><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906091"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTx"><span class="hs-identifier hs-type">GenTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Basics.html#HardForkBlock"><span class="hs-identifier hs-type">HardForkBlock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906091"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621679906147"><span class="annot"><span class="annottext">condense :: GenTx (HardForkBlock xs) -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy GenTx -&gt; NS GenTx xs -&gt; String
+forall (xs :: [*]) (f :: * -&gt; *).
+(All CondenseConstraints xs,
+ forall blk. CondenseConstraints blk =&gt; Condense (f blk)) =&gt;
+Proxy f -&gt; NS f xs -&gt; String
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-var">defaultCondenseNS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: * -&gt; *). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTx"><span class="hs-identifier hs-type">GenTx</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NS GenTx xs -&gt; String)
+-&gt; (GenTx (HardForkBlock xs) -&gt; NS GenTx xs)
+-&gt; GenTx (HardForkBlock xs)
+-&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">GenTx (HardForkBlock xs) -&gt; NS GenTx xs
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906094"><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#CondenseConstraints"><span class="hs-identifier hs-type">CondenseConstraints</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906094"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#TxId"><span class="hs-identifier hs-type">TxId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTx"><span class="hs-identifier hs-type">GenTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.Basics.html#HardForkBlock"><span class="hs-identifier hs-type">HardForkBlock</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906094"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679906154"><span class="annot"><span class="annottext">condense :: TxId (GenTx (HardForkBlock xs)) -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy WrapGenTxId -&gt; NS WrapGenTxId xs -&gt; String
+forall (xs :: [*]) (f :: * -&gt; *).
+(All CondenseConstraints xs,
+ forall blk. CondenseConstraints blk =&gt; Condense (f blk)) =&gt;
+Proxy f -&gt; NS f xs -&gt; String
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.Condense.html#defaultCondenseNS"><span class="hs-identifier hs-var">defaultCondenseNS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+forall (t :: * -&gt; *). Proxy t
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Proxy.html#Proxy"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html#WrapGenTxId"><span class="hs-identifier hs-type">WrapGenTxId</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NS WrapGenTxId xs -&gt; String)
+-&gt; (TxId (GenTx (HardForkBlock xs)) -&gt; NS WrapGenTxId xs)
+-&gt; TxId (GenTx (HardForkBlock xs))
+-&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">TxId (GenTx (HardForkBlock xs)) -&gt; NS WrapGenTxId xs
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Prim.html#coerce"><span class="hs-identifier hs-var">coerce</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Forwarding
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906097"><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906097"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">I</span></span><span> </span><span class="annot"><a href="#local-6989586621679906097"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679906159"><span class="annot"><span class="annottext">condense :: I a -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; String
+forall a. Condense a =&gt; a -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var">condense</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; String) -&gt; (I a -&gt; a) -&gt; I a -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">I a -&gt; a
+forall a. I a -&gt; a
+</span><span class="hs-identifier hs-var">unI</span></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679906100"><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.Ledger.SupportsMempool.html#GenTxId"><span class="hs-identifier hs-type">GenTxId</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906100"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Util.Condense.html#Condense"><span class="hs-identifier hs-type">Condense</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.TypeFamilyWrappers.html#WrapGenTxId"><span class="hs-identifier hs-type">WrapGenTxId</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679906100"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621679906165"><span class="annot"><span class="annottext">condense :: WrapGenTxId blk -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var hs-var hs-var hs-var">condense</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GenTxId blk -&gt; String
+forall a. Condense a =&gt; a -&gt; String
+</span><a href="Ouroboros.Consensus.Util.Condense.html#condense"><span class="hs-identifier hs-var">condense</span></a></span><span> </span><span class="annot"><span class="annottext">(GenTxId blk -&gt; String)
+-&gt; (WrapGenTxId blk -&gt; GenTxId blk) -&gt; WrapGenTxId blk -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">WrapGenTxId blk -&gt; GenTxId blk
+forall blk. WrapGenTxId blk -&gt; GenTxId blk
+</span><a href="Ouroboros.Consensus.TypeFamilyWrappers.html#unwrapGenTxId"><span class="hs-identifier hs-var">unwrapGenTxId</span></a></span><span>
+</span><span id="line-72"></span></pre></body></html>

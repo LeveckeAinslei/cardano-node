@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass      #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric       #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts    #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators       #-}</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Ouroboros.Consensus.HardFork.Combinator.State.Types</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Main types</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier">Current</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier">HardForkState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Past"><span class="hs-identifier">Past</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#sequenceHardForkState"><span class="hs-identifier">sequenceHardForkState</span></a></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Supporting types</span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#CrossEraForecaster"><span class="hs-identifier">CrossEraForecaster</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionInfo"><span class="hs-identifier">TransitionInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Translate"><span class="hs-identifier">Translate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/mtl-2.3.1/src/Control.Monad.Except.html"><span class="hs-identifier">Control.Monad.Except</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.BasicFunctors</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Constraint</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Strict</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.SOP.Telescope</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Telescope</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.SOP.Telescope</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Telescope</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">NoThunks.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NoThunks</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Block.html"><span class="hs-identifier">Ouroboros.Consensus.Block</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.Forecast.html"><span class="hs-identifier">Ouroboros.Consensus.Forecast</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.html"><span class="hs-identifier">Ouroboros.Consensus.HardFork.History</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.Summary.html#Bound"><span class="hs-identifier">Bound</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Prelude.html"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Types
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | Generic hard fork state</span><span>
+</span><span id="line-37"></span><span class="hs-comment">--</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- This is used both for the consensus state and the ledger state.</span><span>
+</span><span id="line-39"></span><span class="hs-comment">--</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- By using a telescope with @f ~ LedgerState@, we will keep track of 'Past'</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- information for eras before the current one:</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- &gt; TZ currentByronState</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &gt; TZ pastByronState $ TZ currentShelleyState</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- &gt; TZ pastByronState $ TS pastShelleyState $ TZ currentAllegraState</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- &gt; ...</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- These are some intuitions on how the Telescope operations behave for this</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- type:</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- = @extend@</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- Suppose we have a telescope containing the ledger state. The &quot;how to extend&quot;</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- argument would take, say, the final Byron state to the initial Shelley state;</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- and &quot;where to extend from&quot; argument would indicate when we want to extend:</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- when the current slot number has gone past the end of the Byron era.</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- = @retract@</span><span>
+</span><span id="line-59"></span><span class="hs-comment">--</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- Suppose we have a telescope containing the consensus state. When we rewind</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- the consensus state, we might cross a hard fork transition point. So we first</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- /retract/ the telescope /to/ the era containing the slot number that we want</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- to rewind to, and only then call 'rewindChainDepState' on that era. Of course,</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- retraction may fail (we might not /have/ past consensus state to rewind to</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- anymore); this failure would require a choice for a particular monad @m@.</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- = @align@</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- Suppose we have one telescope containing the already-ticked ledger state, and</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- another telescope containing the consensus state. Since the ledger state has</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- already been ticked, it might have been advanced to the next era. If this</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- happens, we should then align the consensus state with the ledger state,</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- moving /it/ also to the next era, before we can do the consensus header</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- validation check. Note that in this particular example, the ledger state will</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- always be ahead of the consensus state, never behind; 'alignExtend' can be</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- used in this case.</span><span>
+</span><span id="line-77"></span><span class="hs-keyword">newtype</span><span> </span><span id="HardForkState"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-var">HardForkState</span></a></span></span><span> </span><span id="local-6989586621679844393"><span class="annot"><a href="#local-6989586621679844393"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679844394"><span class="annot"><a href="#local-6989586621679844394"><span class="hs-identifier hs-type">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HardForkState"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-var">HardForkState</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-78"></span><span>      </span><span id="getHardForkState"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) (xs :: [*]).
+HardForkState f xs -&gt; Telescope (K Past) (Current f) xs
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#getHardForkState"><span class="hs-identifier hs-var hs-var">getHardForkState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Telescope</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">K</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Past"><span class="hs-identifier hs-type">Past</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-type">Current</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844393"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679844394"><span class="hs-identifier hs-type">xs</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="annot"><span class="hs-comment">-- | Information about the current era</span></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">data</span><span> </span><span id="Current"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-var">Current</span></a></span></span><span> </span><span id="local-6989586621679844402"><span class="annot"><a href="#local-6989586621679844402"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679844403"><span class="annot"><a href="#local-6989586621679844403"><span class="hs-identifier hs-type">blk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Current"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-var">Current</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-83"></span><span>      </span><span id="currentStart"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) blk. Current f blk -&gt; Bound
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#currentStart"><span class="hs-identifier hs-var hs-var">currentStart</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.Summary.html#Bound"><span class="hs-identifier hs-type">Bound</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="currentState"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) blk. Current f blk -&gt; f blk
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#currentState"><span class="hs-identifier hs-var hs-var">currentState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679844402"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844403"><span class="hs-identifier hs-type">blk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679844546"><span id="local-6989586621679844548"><span class="annot"><span class="annottext">(forall x. Current f blk -&gt; Rep (Current f blk) x)
+-&gt; (forall x. Rep (Current f blk) x -&gt; Current f blk)
+-&gt; Generic (Current f blk)
+forall x. Rep (Current f blk) x -&gt; Current f blk
+forall x. Current f blk -&gt; Rep (Current f blk) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (f :: * -&gt; *) blk x. Rep (Current f blk) x -&gt; Current f blk
+forall (f :: * -&gt; *) blk x. Current f blk -&gt; Rep (Current f blk) x
+$cfrom :: forall (f :: * -&gt; *) blk x. Current f blk -&gt; Rep (Current f blk) x
+from :: forall x. Current f blk -&gt; Rep (Current f blk) x
+$cto :: forall (f :: * -&gt; *) blk x. Rep (Current f blk) x -&gt; Current f blk
+to :: forall x. Rep (Current f blk) x -&gt; Current f blk
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="annot"><span class="hs-comment">-- | Information about a past era</span></span><span>
+</span><span id="line-89"></span><span class="hs-keyword">data</span><span> </span><span id="Past"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Past"><span class="hs-identifier hs-var">Past</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Past"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Past"><span class="hs-identifier hs-var">Past</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-90"></span><span>      </span><span id="pastStart"><span class="annot"><span class="annottext">Past -&gt; Bound
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#pastStart"><span class="hs-identifier hs-var hs-var">pastStart</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.Summary.html#Bound"><span class="hs-identifier hs-type">Bound</span></a></span><span>
+</span><span id="line-91"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="pastEnd"><span class="annot"><span class="annottext">Past -&gt; Bound
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#pastEnd"><span class="hs-identifier hs-var hs-var">pastEnd</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.Summary.html#Bound"><span class="hs-identifier hs-type">Bound</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679844554"><span id="local-6989586621679844559"><span class="annot"><span class="annottext">Past -&gt; Past -&gt; Bool
+(Past -&gt; Past -&gt; Bool) -&gt; (Past -&gt; Past -&gt; Bool) -&gt; Eq Past
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Past -&gt; Past -&gt; Bool
+== :: Past -&gt; Past -&gt; Bool
+$c/= :: Past -&gt; Past -&gt; Bool
+/= :: Past -&gt; Past -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679844564"><span id="local-6989586621679844571"><span id="local-6989586621679844575"><span class="annot"><span class="annottext">Int -&gt; Past -&gt; ShowS
+[Past] -&gt; ShowS
+Past -&gt; String
+(Int -&gt; Past -&gt; ShowS)
+-&gt; (Past -&gt; String) -&gt; ([Past] -&gt; ShowS) -&gt; Show Past
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Past -&gt; ShowS
+showsPrec :: Int -&gt; Past -&gt; ShowS
+$cshow :: Past -&gt; String
+show :: Past -&gt; String
+$cshowList :: [Past] -&gt; ShowS
+showList :: [Past] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679844579"><span id="local-6989586621679844581"><span class="annot"><span class="annottext">(forall x. Past -&gt; Rep Past x)
+-&gt; (forall x. Rep Past x -&gt; Past) -&gt; Generic Past
+forall x. Rep Past x -&gt; Past
+forall x. Past -&gt; Rep Past x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Past -&gt; Rep Past x
+from :: forall x. Past -&gt; Rep Past x
+$cto :: forall x. Rep Past x -&gt; Past
+to :: forall x. Rep Past x -&gt; Past
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679844584"><span id="local-6989586621679844588"><span id="local-6989586621679844594"><span class="annot"><span class="annottext">Context -&gt; Past -&gt; IO (Maybe ThunkInfo)
+Proxy Past -&gt; String
+(Context -&gt; Past -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; Past -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy Past -&gt; String)
+-&gt; NoThunks Past
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; Past -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; Past -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; Past -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; Past -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy Past -&gt; String
+showTypeOf :: Proxy Past -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="annot"><span class="hs-comment">-- | Thin wrapper around 'Telescope.sequence'</span></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#sequenceHardForkState"><span class="hs-identifier hs-type">sequenceHardForkState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679844461"><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679844462"><span class="annot"><a href="#local-6989586621679844462"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679844459"><span class="annot"><a href="#local-6989586621679844459"><span class="hs-identifier hs-type">xs</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">All</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Top</span></span><span> </span><span class="annot"><a href="#local-6989586621679844459"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>                      </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-type">HardForkState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:.:</span></span><span> </span><span class="annot"><a href="#local-6989586621679844462"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679844459"><span class="hs-identifier hs-type">xs</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-type">HardForkState</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844462"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844459"><span class="hs-identifier hs-type">xs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span id="sequenceHardForkState"><span class="annot"><span class="annottext">sequenceHardForkState :: forall (m :: * -&gt; *) (f :: * -&gt; *) (xs :: [*]).
+(All Top xs, Functor m) =&gt;
+HardForkState (m :.: f) xs -&gt; m (HardForkState f xs)
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#sequenceHardForkState"><span class="hs-identifier hs-var hs-var">sequenceHardForkState</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-type">HardForkState</span></a></span><span> </span><span id="local-6989586621679844632"><span class="annot"><span class="annottext">Telescope (K Past) (Current (m :.: f)) xs
+</span><a href="#local-6989586621679844632"><span class="hs-identifier hs-var">tel</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">(Telescope (K Past) (Current f) xs -&gt; HardForkState f xs)
+-&gt; m (Telescope (K Past) (Current f) xs) -&gt; m (HardForkState f xs)
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Telescope (K Past) (Current f) xs -&gt; HardForkState f xs
+forall (f :: * -&gt; *) (xs :: [*]).
+Telescope (K Past) (Current f) xs -&gt; HardForkState f xs
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#HardForkState"><span class="hs-identifier hs-var">HardForkState</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">(m (Telescope (K Past) (Current f) xs) -&gt; m (HardForkState f xs))
+-&gt; m (Telescope (K Past) (Current f) xs) -&gt; m (HardForkState f xs)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Telescope (K Past) (m :.: Current f) xs
+-&gt; m (Telescope (K Past) (Current f) xs)
+forall {k} (m :: * -&gt; *) (g :: k -&gt; *) (f :: k -&gt; *) (xs :: [k]).
+Functor m =&gt;
+Telescope g (m :.: f) xs -&gt; m (Telescope g f xs)
+</span><span class="hs-identifier hs-var">Telescope.sequence</span></span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">(Telescope (K Past) (m :.: Current f) xs
+ -&gt; m (Telescope (K Past) (Current f) xs))
+-&gt; Telescope (K Past) (m :.: Current f) xs
+-&gt; m (Telescope (K Past) (Current f) xs)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(forall a. Current (m :.: f) a -&gt; (:.:) m (Current f) a)
+-&gt; Telescope (K Past) (Current (m :.: f)) xs
+-&gt; Telescope (K Past) (m :.: Current f) xs
+forall {k} {l} (h :: (k -&gt; *) -&gt; l -&gt; *) (xs :: l) (f :: k -&gt; *)
+       (f' :: k -&gt; *).
+(SListIN (Prod h) xs, HAp h) =&gt;
+(forall (a :: k). f a -&gt; f' a) -&gt; h f xs -&gt; h f' xs
+</span><span class="hs-identifier hs-var">hmap</span></span><span> </span><span class="annot"><span class="annottext">Current (m :.: f) a -&gt; (:.:) m (Current f) a
+forall a. Current (m :.: f) a -&gt; (:.:) m (Current f) a
+</span><a href="#local-6989586621679844634"><span class="hs-identifier hs-var">sequenceCurrent</span></a></span><span> </span><span class="annot"><span class="annottext">Telescope (K Past) (Current (m :.: f)) xs
+</span><a href="#local-6989586621679844632"><span class="hs-identifier hs-var">tel</span></a></span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621679844635"><span class="annot"><a href="#local-6989586621679844634"><span class="hs-identifier hs-type">sequenceCurrent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-type">Current</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:.:</span></span><span> </span><span class="annot"><a href="#local-6989586621679844462"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679844635"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679844461"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:.:</span></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-type">Current</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844462"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679844635"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-104"></span><span>    </span><span id="local-6989586621679844634"><span class="annot"><span class="annottext">sequenceCurrent :: forall a. Current (m :.: f) a -&gt; (:.:) m (Current f) a
+</span><a href="#local-6989586621679844634"><span class="hs-identifier hs-var hs-var">sequenceCurrent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-type">Current</span></a></span><span> </span><span id="local-6989586621679844637"><span class="annot"><span class="annottext">Bound
+</span><a href="#local-6989586621679844637"><span class="hs-identifier hs-var">start</span></a></span></span><span> </span><span id="local-6989586621679844638"><span class="annot"><span class="annottext">(:.:) m f a
+</span><a href="#local-6989586621679844638"><span class="hs-identifier hs-var">state</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span>      </span><span class="annot"><span class="annottext">m (Current f a) -&gt; (:.:) m (Current f) a
+forall l k (f :: l -&gt; *) (g :: k -&gt; l) (p :: k).
+f (g p) -&gt; (:.:) f g p
+</span><span class="hs-identifier hs-var">Comp</span></span><span> </span><span class="annot"><span class="annottext">(m (Current f a) -&gt; (:.:) m (Current f) a)
+-&gt; m (Current f a) -&gt; (:.:) m (Current f) a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bound -&gt; f a -&gt; Current f a
+forall (f :: * -&gt; *) blk. Bound -&gt; f blk -&gt; Current f blk
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Current"><span class="hs-identifier hs-var">Current</span></a></span><span> </span><span class="annot"><span class="annottext">Bound
+</span><a href="#local-6989586621679844637"><span class="hs-identifier hs-var">start</span></a></span><span> </span><span class="annot"><span class="annottext">(f a -&gt; Current f a) -&gt; m (f a) -&gt; m (Current f a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">(:.:) m f a -&gt; m (f a)
+forall {l} {k} (f :: l -&gt; *) (g :: k -&gt; l) (p :: k).
+(:.:) f g p -&gt; f (g p)
+</span><span class="hs-identifier hs-var">unComp</span></span><span> </span><span class="annot"><span class="annottext">(:.:) m f a
+</span><a href="#local-6989586621679844638"><span class="hs-identifier hs-var">state</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-comment">{-------------------------------------------------------------------------------
+  Supporting types
+-------------------------------------------------------------------------------}</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- | Translate @f x@ to @f y@ across an era transition</span><span>
+</span><span id="line-112"></span><span class="hs-comment">--</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- Typically @f@ will be 'LedgerState' or 'WrapChainDepState'.</span><span>
+</span><span id="line-114"></span><span class="hs-keyword">newtype</span><span> </span><span id="Translate"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Translate"><span class="hs-identifier hs-var">Translate</span></a></span></span><span> </span><span id="local-6989586621679844505"><span class="annot"><a href="#local-6989586621679844505"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621679844506"><span class="annot"><a href="#local-6989586621679844506"><span class="hs-identifier hs-type">x</span></a></span></span><span> </span><span id="local-6989586621679844507"><span class="annot"><a href="#local-6989586621679844507"><span class="hs-identifier hs-type">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Translate"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#Translate"><span class="hs-identifier hs-var">Translate</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-115"></span><span>      </span><span id="translateWith"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) x y. Translate f x y -&gt; EpochNo -&gt; f x -&gt; f y
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#translateWith"><span class="hs-identifier hs-var hs-var">translateWith</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">EpochNo</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679844505"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844506"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679844505"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844507"><span class="hs-identifier hs-type">y</span></a></span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- | Forecast a @view y@ from a @state x@ across an era transition.</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- In addition to the 'Bound' of the transition, this is also told the</span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- 'SlotNo' we're constructing a forecast for. This enables the translation</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- function to take into account any scheduled changes that the final ledger</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- view in the preceding era might have.</span><span>
+</span><span id="line-124"></span><span class="hs-keyword">newtype</span><span> </span><span id="CrossEraForecaster"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#CrossEraForecaster"><span class="hs-identifier hs-var">CrossEraForecaster</span></a></span></span><span> </span><span id="local-6989586621679844513"><span class="annot"><a href="#local-6989586621679844513"><span class="hs-identifier hs-type">state</span></a></span></span><span> </span><span id="local-6989586621679844514"><span class="annot"><a href="#local-6989586621679844514"><span class="hs-identifier hs-type">view</span></a></span></span><span> </span><span id="local-6989586621679844515"><span class="annot"><a href="#local-6989586621679844515"><span class="hs-identifier hs-type">x</span></a></span></span><span> </span><span id="local-6989586621679844516"><span class="annot"><a href="#local-6989586621679844516"><span class="hs-identifier hs-type">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CrossEraForecaster"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#CrossEraForecaster"><span class="hs-identifier hs-var">CrossEraForecaster</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-125"></span><span>      </span><span id="crossEraForecastWith"><span class="annot"><span class="annottext">forall (state :: * -&gt; *) (view :: * -&gt; *) x y.
+CrossEraForecaster state view x y
+-&gt; Bound
+-&gt; SlotNo
+-&gt; state x
+-&gt; Except OutsideForecastRange (view y)
+</span><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#crossEraForecastWith"><span class="hs-identifier hs-var hs-var">crossEraForecastWith</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-126"></span><span>           </span><span class="annot"><a href="Ouroboros.Consensus.HardFork.History.Summary.html#Bound"><span class="hs-identifier hs-type">Bound</span></a></span><span>    </span><span class="hs-comment">-- 'Bound' of the transition (start of the new era)</span><span>
+</span><span id="line-127"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span>   </span><span class="hs-comment">-- 'SlotNo' we're constructing a forecast for</span><span>
+</span><span id="line-128"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679844513"><span class="hs-identifier hs-type">state</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844515"><span class="hs-identifier hs-type">x</span></a></span><span>
+</span><span id="line-129"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/transformers-0.6.1.0/src/Control.Monad.Trans.Except.html#Except"><span class="hs-identifier hs-type">Except</span></a></span><span> </span><span class="annot"><a href="Ouroboros.Consensus.Forecast.html#OutsideForecastRange"><span class="hs-identifier hs-type">OutsideForecastRange</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679844514"><span class="hs-identifier hs-type">view</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679844516"><span class="hs-identifier hs-type">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="annot"><span class="hs-comment">-- | Knowledge in a particular era of the transition to the next era</span></span><span>
+</span><span id="line-133"></span><span class="hs-keyword">data</span><span> </span><span id="TransitionInfo"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionInfo"><span class="hs-identifier hs-var">TransitionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span>    </span><span class="hs-comment">-- | No transition is yet known for this era</span><span>
+</span><span id="line-135"></span><span>    </span><span class="hs-comment">-- We instead record the ledger tip (which must be in /this/ era)</span><span>
+</span><span id="line-136"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-comment">-- NOTE: If we are forecasting, this will be set to the slot number of the</span><span>
+</span><span id="line-138"></span><span>    </span><span class="hs-comment">-- (past) ledger state in which the forecast was created. This means that</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-comment">-- when we construct an 'EpochInfo' using a 'HardForkLedgerView', the</span><span>
+</span><span id="line-140"></span><span>    </span><span class="hs-comment">-- range of that 'EpochInfo' will extend a safe zone from that /past/</span><span>
+</span><span id="line-141"></span><span>    </span><span class="hs-comment">-- ledger state.</span><span>
+</span><span id="line-142"></span><span>    </span><span id="TransitionUnknown"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionUnknown"><span class="hs-identifier hs-var">TransitionUnknown</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">WithOrigin</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SlotNo</span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Transition to the next era is known to happen at this 'EpochNo'</span></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TransitionKnown"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionKnown"><span class="hs-identifier hs-var">TransitionKnown</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">EpochNo</span></span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span>    </span><span class="hs-comment">-- | The transition is impossible</span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-comment">-- This can be due to one of two reasons:</span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-comment">-- * We are in the final era</span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-comment">-- * This era has not actually begun yet (we are forecasting). In this case,</span><span>
+</span><span id="line-153"></span><span>    </span><span class="hs-comment">--   we cannot look past the safe zone of this era and hence, by definition,</span><span>
+</span><span id="line-154"></span><span>    </span><span class="hs-comment">--   the transition to the /next/ era cannot happen.</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TransitionImpossible"><span class="annot"><a href="Ouroboros.Consensus.HardFork.Combinator.State.Types.html#TransitionImpossible"><span class="hs-identifier hs-var">TransitionImpossible</span></a></span></span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679844652"><span id="local-6989586621679844661"><span id="local-6989586621679844665"><span class="annot"><span class="annottext">Int -&gt; TransitionInfo -&gt; ShowS
+[TransitionInfo] -&gt; ShowS
+TransitionInfo -&gt; String
+(Int -&gt; TransitionInfo -&gt; ShowS)
+-&gt; (TransitionInfo -&gt; String)
+-&gt; ([TransitionInfo] -&gt; ShowS)
+-&gt; Show TransitionInfo
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TransitionInfo -&gt; ShowS
+showsPrec :: Int -&gt; TransitionInfo -&gt; ShowS
+$cshow :: TransitionInfo -&gt; String
+show :: TransitionInfo -&gt; String
+$cshowList :: [TransitionInfo] -&gt; ShowS
+showList :: [TransitionInfo] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679844669"><span id="local-6989586621679844671"><span class="annot"><span class="annottext">(forall x. TransitionInfo -&gt; Rep TransitionInfo x)
+-&gt; (forall x. Rep TransitionInfo x -&gt; TransitionInfo)
+-&gt; Generic TransitionInfo
+forall x. Rep TransitionInfo x -&gt; TransitionInfo
+forall x. TransitionInfo -&gt; Rep TransitionInfo x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TransitionInfo -&gt; Rep TransitionInfo x
+from :: forall x. TransitionInfo -&gt; Rep TransitionInfo x
+$cto :: forall x. Rep TransitionInfo x -&gt; TransitionInfo
+to :: forall x. Rep TransitionInfo x -&gt; TransitionInfo
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679844674"><span id="local-6989586621679844678"><span id="local-6989586621679844684"><span class="annot"><span class="annottext">Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo)
+Proxy TransitionInfo -&gt; String
+(Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy TransitionInfo -&gt; String)
+-&gt; NoThunks TransitionInfo
+forall a.
+(Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Context -&gt; a -&gt; IO (Maybe ThunkInfo))
+-&gt; (Proxy a -&gt; String)
+-&gt; NoThunks a
+$cnoThunks :: Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo)
+noThunks :: Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo)
+$cwNoThunks :: Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo)
+wNoThunks :: Context -&gt; TransitionInfo -&gt; IO (Maybe ThunkInfo)
+$cshowTypeOf :: Proxy TransitionInfo -&gt; String
+showTypeOf :: Proxy TransitionInfo -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">NoThunks</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span></pre></body></html>

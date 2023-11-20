@@ -1,0 +1,391 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveFunctor #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Cardano.Chain.UTxO.TxAux</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier">TxAux</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier">ATxAux</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#mkTxAux"><span class="hs-identifier">mkTxAux</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#annotateTxAux"><span class="hs-identifier">annotateTxAux</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier">taTx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier">taWitness</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#txaF"><span class="hs-identifier">txaF</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.Tx.html"><span class="hs-identifier">Cardano.Chain.UTxO.Tx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.Tx.html#Tx"><span class="hs-identifier">Tx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxWitness.html"><span class="hs-identifier">Cardano.Chain.UTxO.TxWitness</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxWitness.html#TxWitness"><span class="hs-identifier">TxWitness</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Ledger.Binary</span></span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier">Annotated</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier">ByteSpan</span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier">Decoded</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier">EncCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-identifier">ToCBOR</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>  </span><span class="annot"><span class="hs-identifier">annotatedDecoder</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-identifier">byronProtVer</span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier">decCBORAnnotated</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="hs-identifier">encodeListLen</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-identifier">enforceSize</span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><span class="hs-identifier">fromByronCBOR</span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier">serialize</span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="hs-identifier">slice</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier">toByronCBOR</span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><span class="hs-identifier">unsafeDeserialize</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Cardano.Prelude</span></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.html"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lazy</span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Formatting</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Format</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">bprint</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">build</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">later</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Formatting.Buildable</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><span class="hs-comment">-- | Transaction + auxiliary data</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">type</span><span> </span><span id="TxAux"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-var">TxAux</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#mkTxAux"><span class="hs-identifier hs-type">mkTxAux</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.Tx.html#Tx"><span class="hs-identifier hs-type">Tx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxWitness.html#TxWitness"><span class="hs-identifier hs-type">TxWitness</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span><span>
+</span><span id="line-53"></span><span id="mkTxAux"><span class="annot"><span class="annottext">mkTxAux :: Tx -&gt; TxWitness -&gt; TxAux
+</span><a href="Cardano.Chain.UTxO.TxAux.html#mkTxAux"><span class="hs-identifier hs-var hs-var">mkTxAux</span></a></span></span><span> </span><span id="local-6989586621679552694"><span class="annot"><span class="annottext">Tx
+</span><a href="#local-6989586621679552694"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621679552695"><span class="annot"><span class="annottext">TxWitness
+</span><a href="#local-6989586621679552695"><span class="hs-identifier hs-var">tw</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Annotated Tx () -&gt; Annotated TxWitness () -&gt; () -&gt; TxAux
+forall a. Annotated Tx a -&gt; Annotated TxWitness a -&gt; a -&gt; ATxAux a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-var">ATxAux</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tx -&gt; () -&gt; Annotated Tx ()
+forall b a. b -&gt; a -&gt; Annotated b a
+</span><span class="hs-identifier hs-var">Annotated</span></span><span> </span><span class="annot"><span class="annottext">Tx
+</span><a href="#local-6989586621679552694"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxWitness -&gt; () -&gt; Annotated TxWitness ()
+forall b a. b -&gt; a -&gt; Annotated b a
+</span><span class="hs-identifier hs-var">Annotated</span></span><span> </span><span class="annot"><span class="annottext">TxWitness
+</span><a href="#local-6989586621679552695"><span class="hs-identifier hs-var">tw</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#annotateTxAux"><span class="hs-identifier hs-type">annotateTxAux</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span>
+</span><span id="line-56"></span><span id="annotateTxAux"><span class="annot"><span class="annottext">annotateTxAux :: TxAux -&gt; ATxAux ByteString
+</span><a href="Cardano.Chain.UTxO.TxAux.html#annotateTxAux"><span class="hs-identifier hs-var hs-var">annotateTxAux</span></a></span></span><span> </span><span id="local-6989586621679552698"><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679552698"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Lazy.Internal.html#toStrict"><span class="hs-identifier hs-var">Lazy.toStrict</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
+-&gt; (ByteSpan -&gt; ByteString) -&gt; ByteSpan -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteSpan -&gt; ByteString
+</span><span class="hs-identifier hs-var">slice</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679552701"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteSpan -&gt; ByteString) -&gt; ATxAux ByteSpan -&gt; ATxAux ByteString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ATxAux ByteSpan
+</span><a href="#local-6989586621679552703"><span class="hs-identifier hs-var">ta'</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679552701"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679552701"><span class="hs-identifier hs-var hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; TxAux -&gt; ByteString
+forall a. EncCBOR a =&gt; Version -&gt; a -&gt; ByteString
+</span><span class="hs-identifier hs-var">serialize</span></span><span> </span><span class="annot"><span class="annottext">Version
+</span><span class="hs-identifier hs-var">byronProtVer</span></span><span> </span><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679552698"><span class="hs-identifier hs-var">ta</span></a></span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679552703"><span class="annot"><span class="annottext">ta' :: ATxAux ByteSpan
+</span><a href="#local-6989586621679552703"><span class="hs-identifier hs-var hs-var">ta'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; ByteString -&gt; ATxAux ByteSpan
+forall a. DecCBOR a =&gt; Version -&gt; ByteString -&gt; a
+</span><span class="hs-identifier hs-var">unsafeDeserialize</span></span><span> </span><span class="annot"><span class="annottext">Version
+</span><span class="hs-identifier hs-var">byronProtVer</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679552701"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="ATxAux"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-var">ATxAux</span></a></span></span><span> </span><span id="local-6989586621679552394"><span class="annot"><a href="#local-6989586621679552394"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ATxAux"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-var">ATxAux</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="aTaTx"><span class="annot"><span class="annottext">forall a. ATxAux a -&gt; Annotated Tx a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaTx"><span class="hs-identifier hs-var hs-var">aTaTx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Annotated</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.Tx.html#Tx"><span class="hs-identifier hs-type">Tx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679552394"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="aTaWitness"><span class="annot"><span class="annottext">forall a. ATxAux a -&gt; Annotated TxWitness a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaWitness"><span class="hs-identifier hs-var hs-var">aTaWitness</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Annotated</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxWitness.html#TxWitness"><span class="hs-identifier hs-type">TxWitness</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679552394"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="aTaAnnotation"><span class="annot"><span class="annottext">forall a. ATxAux a -&gt; a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaAnnotation"><span class="hs-identifier hs-var hs-var">aTaAnnotation</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621679552394"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679552708"><span id="local-6989586621679552710"><span class="annot"><span class="annottext">(forall x. ATxAux a -&gt; Rep (ATxAux a) x)
+-&gt; (forall x. Rep (ATxAux a) x -&gt; ATxAux a) -&gt; Generic (ATxAux a)
+forall x. Rep (ATxAux a) x -&gt; ATxAux a
+forall x. ATxAux a -&gt; Rep (ATxAux a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (ATxAux a) x -&gt; ATxAux a
+forall a x. ATxAux a -&gt; Rep (ATxAux a) x
+$cfrom :: forall a x. ATxAux a -&gt; Rep (ATxAux a) x
+from :: forall x. ATxAux a -&gt; Rep (ATxAux a) x
+$cto :: forall a x. Rep (ATxAux a) x -&gt; ATxAux a
+to :: forall x. Rep (ATxAux a) x -&gt; ATxAux a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679552715"><span id="local-6989586621679552725"><span id="local-6989586621679552729"><span class="annot"><span class="annottext">Int -&gt; ATxAux a -&gt; ShowS
+[ATxAux a] -&gt; ShowS
+ATxAux a -&gt; String
+(Int -&gt; ATxAux a -&gt; ShowS)
+-&gt; (ATxAux a -&gt; String) -&gt; ([ATxAux a] -&gt; ShowS) -&gt; Show (ATxAux a)
+forall a. Show a =&gt; Int -&gt; ATxAux a -&gt; ShowS
+forall a. Show a =&gt; [ATxAux a] -&gt; ShowS
+forall a. Show a =&gt; ATxAux a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; ATxAux a -&gt; ShowS
+showsPrec :: Int -&gt; ATxAux a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; ATxAux a -&gt; String
+show :: ATxAux a -&gt; String
+$cshowList :: forall a. Show a =&gt; [ATxAux a] -&gt; ShowS
+showList :: [ATxAux a] -&gt; ShowS
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679552738"><span id="local-6989586621679552746"><span class="annot"><span class="annottext">ATxAux a -&gt; ATxAux a -&gt; Bool
+(ATxAux a -&gt; ATxAux a -&gt; Bool)
+-&gt; (ATxAux a -&gt; ATxAux a -&gt; Bool) -&gt; Eq (ATxAux a)
+forall a. Eq a =&gt; ATxAux a -&gt; ATxAux a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a. Eq a =&gt; ATxAux a -&gt; ATxAux a -&gt; Bool
+== :: ATxAux a -&gt; ATxAux a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; ATxAux a -&gt; ATxAux a -&gt; Bool
+/= :: ATxAux a -&gt; ATxAux a -&gt; Bool
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/ghc-prim-0.10.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679552755"><span id="local-6989586621679552760"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; ATxAux a -&gt; ATxAux b)
+-&gt; (forall a b. a -&gt; ATxAux b -&gt; ATxAux a) -&gt; Functor ATxAux
+forall a b. a -&gt; ATxAux b -&gt; ATxAux a
+forall a b. (a -&gt; b) -&gt; ATxAux a -&gt; ATxAux b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b. (a -&gt; b) -&gt; ATxAux a -&gt; ATxAux b
+fmap :: forall a b. (a -&gt; b) -&gt; ATxAux a -&gt; ATxAux b
+$c&lt;$ :: forall a b. a -&gt; ATxAux b -&gt; ATxAux a
+&lt;$ :: forall a b. a -&gt; ATxAux b -&gt; ATxAux a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679552766"><span class="annot"><span class="annottext">ATxAux a -&gt; ()
+(ATxAux a -&gt; ()) -&gt; NFData (ATxAux a)
+forall a. NFData a =&gt; ATxAux a -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: forall a. NFData a =&gt; ATxAux a -&gt; ()
+rnf :: ATxAux a -&gt; ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/deepseq-1.4.8.1/src/Control.DeepSeq.html#NFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Decoded</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BaseType"><span class="annot"><span class="hs-identifier hs-var">BaseType</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/bytestring-0.11.5.2/src/Data.ByteString.Internal.Type.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621679552798"><span class="annot"><span class="annottext">recoverBytes :: ATxAux ByteString -&gt; ByteString
+</span><a href="#local-6989586621679552798"><span class="hs-identifier hs-var hs-var hs-var hs-var">recoverBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ATxAux ByteString -&gt; ByteString
+forall a. ATxAux a -&gt; a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaAnnotation"><span class="hs-identifier hs-var">aTaAnnotation</span></a></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- Used for debugging purposes only</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679552595"><span id="local-6989586621679552802"><span id="local-6989586621679552809"><span id="local-6989586621679552812"><span id="local-6989586621679552815"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621679552595"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679552595"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span id="local-6989586621679552596"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier hs-type">taTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679552596"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.Tx.html#Tx"><span class="hs-identifier hs-type">Tx</span></a></span></span><span>
+</span><span id="line-77"></span><span id="taTx"><span class="annot"><span class="annottext">taTx :: forall a. ATxAux a -&gt; Tx
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier hs-var hs-var">taTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Annotated Tx a -&gt; Tx
+forall b a. Annotated b a -&gt; b
+</span><span class="hs-identifier hs-var">unAnnotated</span></span><span> </span><span class="annot"><span class="annottext">(Annotated Tx a -&gt; Tx)
+-&gt; (ATxAux a -&gt; Annotated Tx a) -&gt; ATxAux a -&gt; Tx
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ATxAux a -&gt; Annotated Tx a
+forall a. ATxAux a -&gt; Annotated Tx a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaTx"><span class="hs-identifier hs-var">aTaTx</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621679552600"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier hs-type">taWitness</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679552600"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxWitness.html#TxWitness"><span class="hs-identifier hs-type">TxWitness</span></a></span></span><span>
+</span><span id="line-80"></span><span id="taWitness"><span class="annot"><span class="annottext">taWitness :: forall a. ATxAux a -&gt; TxWitness
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier hs-var hs-var">taWitness</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Annotated TxWitness a -&gt; TxWitness
+forall b a. Annotated b a -&gt; b
+</span><span class="hs-identifier hs-var">unAnnotated</span></span><span> </span><span class="annot"><span class="annottext">(Annotated TxWitness a -&gt; TxWitness)
+-&gt; (ATxAux a -&gt; Annotated TxWitness a) -&gt; ATxAux a -&gt; TxWitness
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ATxAux a -&gt; Annotated TxWitness a
+forall a. ATxAux a -&gt; Annotated TxWitness a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#aTaWitness"><span class="hs-identifier hs-var">aTaWitness</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="annot"><span class="hs-comment">-- | Specialized formatter for 'TxAux'</span></span><span>
+</span><span id="line-83"></span><span id="local-6989586621679552602"><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#txaF"><span class="hs-identifier hs-type">txaF</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Format</span></span><span> </span><span class="annot"><a href="#local-6989586621679552602"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679552602"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-84"></span><span id="txaF"><span class="annot"><span class="annottext">txaF :: forall r. Format r (TxAux -&gt; r)
+</span><a href="Cardano.Chain.UTxO.TxAux.html#txaF"><span class="hs-identifier hs-var hs-var">txaF</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TxAux -&gt; Builder) -&gt; Format r (TxAux -&gt; r)
+forall a r. (a -&gt; Builder) -&gt; Format r (a -&gt; r)
+</span><span class="hs-identifier hs-var">later</span></span><span> </span><span class="annot"><span class="annottext">((TxAux -&gt; Builder) -&gt; Format r (TxAux -&gt; r))
+-&gt; (TxAux -&gt; Builder) -&gt; Format r (TxAux -&gt; r)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679552952"><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679552952"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">Format Builder (Tx -&gt; TxWitness -&gt; Builder)
+-&gt; Tx -&gt; TxWitness -&gt; Builder
+forall a. Format Builder a -&gt; a
+</span><span class="hs-identifier hs-var">bprint</span></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (Tx -&gt; TxWitness -&gt; Builder)
+forall a r. Buildable a =&gt; Format r (a -&gt; r)
+</span><span class="hs-identifier hs-var">build</span></span><span> </span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (Tx -&gt; TxWitness -&gt; Builder)
+-&gt; Format Builder (TxWitness -&gt; Builder)
+-&gt; Format Builder (Tx -&gt; TxWitness -&gt; Builder)
+forall b c a. Format b c -&gt; Format a b -&gt; Format a c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (TxWitness -&gt; Builder)
+</span><span class="hs-string">&quot;\n&quot;</span></span><span> </span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (TxWitness -&gt; Builder)
+-&gt; Format Builder (TxWitness -&gt; Builder)
+-&gt; Format Builder (TxWitness -&gt; Builder)
+forall b c a. Format b c -&gt; Format a b -&gt; Format a c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (TxWitness -&gt; Builder)
+</span><span class="hs-string">&quot;witnesses: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Format (TxWitness -&gt; Builder) (TxWitness -&gt; Builder)
+-&gt; Format Builder (TxWitness -&gt; Builder)
+-&gt; Format Builder (TxWitness -&gt; Builder)
+forall b c a. Format b c -&gt; Format a b -&gt; Format a c
+forall {k} (cat :: k -&gt; k -&gt; *) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Control.Category.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Format Builder (TxWitness -&gt; Builder)
+forall (t :: * -&gt; *) a r.
+(Foldable t, Buildable a) =&gt;
+Word -&gt; Format r (t a -&gt; r)
+</span><span class="hs-identifier hs-var">listJsonIndent</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">4</span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; Tx
+forall a. ATxAux a -&gt; Tx
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier hs-var">taTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679552952"><span class="hs-identifier hs-var">ta</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; TxWitness
+forall a. ATxAux a -&gt; TxWitness
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier hs-var">taWitness</span></a></span><span> </span><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679552952"><span class="hs-identifier hs-var">ta</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.Buildable</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621679552957"><span class="annot"><span class="annottext">build :: TxAux -&gt; Builder
+</span><a href="#local-6989586621679552957"><span class="hs-identifier hs-var hs-var hs-var hs-var">build</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Format Builder (TxAux -&gt; Builder) -&gt; TxAux -&gt; Builder
+forall a. Format Builder a -&gt; a
+</span><span class="hs-identifier hs-var">bprint</span></span><span> </span><span class="annot"><span class="annottext">Format Builder (TxAux -&gt; Builder)
+forall r. Format r (TxAux -&gt; r)
+</span><a href="Cardano.Chain.UTxO.TxAux.html#txaF"><span class="hs-identifier hs-var">txaF</span></a></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679552965"><span id="local-6989586621679552969"><span class="annot"><span class="hs-identifier hs-type">ToCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621679552973"><span class="annot"><span class="annottext">toCBOR :: TxAux -&gt; Encoding
+</span><a href="#local-6989586621679552973"><span class="hs-identifier hs-var hs-var hs-var hs-var">toCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxAux -&gt; Encoding
+forall a. EncCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">toByronCBOR</span></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679552981"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621679552987"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s TxAux
+</span><a href="#local-6989586621679552987"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s TxAux
+forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">fromByronCBOR</span></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679552996"><span class="annot"><span class="hs-identifier hs-type">EncCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621679553008"><span class="annot"><span class="annottext">encCBOR :: TxAux -&gt; Encoding
+</span><a href="#local-6989586621679553008"><span class="hs-identifier hs-var hs-var hs-var hs-var">encCBOR</span></a></span></span><span> </span><span id="local-6989586621679553010"><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679553010"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Encoding
+</span><span class="hs-identifier hs-var">encodeListLen</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Tx -&gt; Encoding
+forall a. EncCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; Tx
+forall a. ATxAux a -&gt; Tx
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier hs-var">taTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679553010"><span class="hs-identifier hs-var">ta</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Encoding -&gt; Encoding -&gt; Encoding
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TxWitness -&gt; Encoding
+forall a. EncCBOR a =&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">encCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; TxWitness
+forall a. ATxAux a -&gt; TxWitness
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier hs-var">taWitness</span></a></span><span> </span><span class="annot"><span class="annottext">TxAux
+</span><a href="#local-6989586621679553010"><span class="hs-identifier hs-var">ta</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621679553021"><span class="annot"><span class="annottext">encodedSizeExpr :: (forall t. EncCBOR t =&gt; Proxy t -&gt; Size) -&gt; Proxy TxAux -&gt; Size
+</span><a href="#local-6989586621679553021"><span class="hs-identifier hs-var hs-var hs-var hs-var">encodedSizeExpr</span></a></span></span><span> </span><span id="local-6989586621679553023"><span class="annot"><span class="annottext">forall t. EncCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679553023"><span class="hs-identifier hs-var">size</span></a></span></span><span> </span><span id="local-6989586621679553024"><span class="annot"><span class="annottext">Proxy TxAux
+</span><a href="#local-6989586621679553024"><span class="hs-identifier hs-var">pxy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Size
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Size -&gt; Size -&gt; Size
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2B"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy Tx -&gt; Size
+forall t. EncCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679553023"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; Tx
+forall a. ATxAux a -&gt; Tx
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taTx"><span class="hs-identifier hs-var">taTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxAux -&gt; Tx) -&gt; Proxy TxAux -&gt; Proxy Tx
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy TxAux
+</span><a href="#local-6989586621679553024"><span class="hs-identifier hs-var">pxy</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Size -&gt; Size -&gt; Size
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Num.html#%2B"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy TxWitness -&gt; Size
+forall t. EncCBOR t =&gt; Proxy t -&gt; Size
+</span><a href="#local-6989586621679553023"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAux -&gt; TxWitness
+forall a. ATxAux a -&gt; TxWitness
+</span><a href="Cardano.Chain.UTxO.TxAux.html#taWitness"><span class="hs-identifier hs-var">taWitness</span></a></span><span> </span><span class="annot"><span class="annottext">(TxAux -&gt; TxWitness) -&gt; Proxy TxAux -&gt; Proxy TxWitness
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Proxy TxAux
+</span><a href="#local-6989586621679553024"><span class="hs-identifier hs-var">pxy</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679553032"><span id="local-6989586621679553035"><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#TxAux"><span class="hs-identifier hs-type">TxAux</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621679553042"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s TxAux
+</span><a href="#local-6989586621679553042"><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ATxAux ByteSpan -&gt; TxAux
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#void"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">(ATxAux ByteSpan -&gt; TxAux)
+-&gt; Decoder s (ATxAux ByteSpan) -&gt; Decoder s TxAux
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">decCBOR</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteSpan</span></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679553051"><span class="annot"><span class="hs-identifier hs-type">FromCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteSpan</span></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621679553055"><span class="annot"><span class="annottext">fromCBOR :: forall s. Decoder s (ATxAux ByteSpan)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder s (ATxAux ByteSpan)
+forall a s. DecCBOR a =&gt; Decoder s a
+</span><span class="hs-identifier hs-var">fromByronCBOR</span></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679553062"><span id="local-6989586621679553065"><span class="annot"><span class="hs-identifier hs-type">DecCBOR</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-type">ATxAux</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteSpan</span></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621679553083"><span class="annot"><span class="annottext">decCBOR :: forall s. Decoder s (ATxAux ByteSpan)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">decCBOR</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Annotated</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679553084"><span class="annot"><span class="annottext">Annotated Tx ByteSpan
+</span><a href="#local-6989586621679553084"><span class="hs-identifier hs-var">tx</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679553085"><span class="annot"><span class="annottext">Annotated TxWitness ByteSpan
+</span><a href="#local-6989586621679553085"><span class="hs-identifier hs-var">witness</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679553086"><span class="annot"><span class="annottext">ByteSpan
+</span><a href="#local-6989586621679553086"><span class="hs-identifier hs-var">byteSpan</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan)
+-&gt; Decoder
+     s
+     (Annotated
+        (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan) ByteSpan)
+forall s a. Decoder s a -&gt; Decoder s (Annotated a ByteSpan)
+</span><span class="hs-identifier hs-var">annotatedDecoder</span></span><span> </span><span class="annot"><span class="annottext">(Decoder s (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan)
+ -&gt; Decoder
+      s
+      (Annotated
+         (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan) ByteSpan))
+-&gt; Decoder s (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan)
+-&gt; Decoder
+     s
+     (Annotated
+        (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan) ByteSpan)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-113"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Int -&gt; Decoder s ()
+forall s. Text -&gt; Int -&gt; Decoder s ()
+</span><span class="hs-identifier hs-var">enforceSize</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TxAux&quot;</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-114"></span><span>      </span><span id="local-6989586621679553087"><span class="annot"><span class="annottext">Annotated Tx ByteSpan
+</span><a href="#local-6989586621679553087"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotated Tx ByteSpan)
+forall a s. DecCBOR a =&gt; Decoder s (Annotated a ByteSpan)
+</span><span class="hs-identifier hs-var">decCBORAnnotated</span></span><span>
+</span><span id="line-115"></span><span>      </span><span id="local-6989586621679553088"><span class="annot"><span class="annottext">Annotated TxWitness ByteSpan
+</span><a href="#local-6989586621679553088"><span class="hs-identifier hs-var">witness</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder s (Annotated TxWitness ByteSpan)
+forall a s. DecCBOR a =&gt; Decoder s (Annotated a ByteSpan)
+</span><span class="hs-identifier hs-var">decCBORAnnotated</span></span><span>
+</span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">(Annotated Tx ByteSpan, Annotated TxWitness ByteSpan)
+-&gt; Decoder s (Annotated Tx ByteSpan, Annotated TxWitness ByteSpan)
+forall a. a -&gt; Decoder s a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Annotated Tx ByteSpan
+</span><a href="#local-6989586621679553087"><span class="hs-identifier hs-var">tx</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Annotated TxWitness ByteSpan
+</span><a href="#local-6989586621679553088"><span class="hs-identifier hs-var">witness</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">ATxAux ByteSpan -&gt; Decoder s (ATxAux ByteSpan)
+forall a. a -&gt; Decoder s a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(ATxAux ByteSpan -&gt; Decoder s (ATxAux ByteSpan))
+-&gt; ATxAux ByteSpan -&gt; Decoder s (ATxAux ByteSpan)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/iq1rbfvif2j9czimi3xf9cqxpanh5494-ghc-9.6.3-doc/share/doc/ghc-9.6.3/html/libraries/base-4.18.1.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Annotated Tx ByteSpan
+-&gt; Annotated TxWitness ByteSpan -&gt; ByteSpan -&gt; ATxAux ByteSpan
+forall a. Annotated Tx a -&gt; Annotated TxWitness a -&gt; a -&gt; ATxAux a
+</span><a href="Cardano.Chain.UTxO.TxAux.html#ATxAux"><span class="hs-identifier hs-var">ATxAux</span></a></span><span> </span><span class="annot"><span class="annottext">Annotated Tx ByteSpan
+</span><a href="#local-6989586621679553084"><span class="hs-identifier hs-var">tx</span></a></span><span> </span><span class="annot"><span class="annottext">Annotated TxWitness ByteSpan
+</span><a href="#local-6989586621679553085"><span class="hs-identifier hs-var">witness</span></a></span><span> </span><span class="annot"><span class="annottext">ByteSpan
+</span><a href="#local-6989586621679553086"><span class="hs-identifier hs-var">byteSpan</span></a></span><span>
+</span><span id="line-118"></span></pre></body></html>
