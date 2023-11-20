@@ -136,9 +136,8 @@ txSubmitPost
 txSubmitPost trace metrics (AnyConsensusModeParams cModeParams) networkId socketPath txBytes =
   handle $ do
     InAnyCardanoEra era tx <- readByteStringTx txBytes
-    let cMode = AnyConsensusMode $ consensusModeOnly cModeParams
     eraInMode <- hoistMaybe
-                   (TxCmdEraConsensusModeMismatch cMode (AnyCardanoEra era))
+                   (TxCmdEraConsensusModeMismatch (AnyCardanoEra era))
                    (toEraInMode era $ consensusModeOnly cModeParams)
     let txInMode = TxInMode tx eraInMode
         localNodeConnInfo = LocalNodeConnectInfo

@@ -16,7 +16,7 @@ module Cardano.TxSubmit.Types
   , renderTxCmdError
   ) where
 
-import           Cardano.Api (AnyCardanoEra, AnyConsensusMode (..), Error (..), TxId, textShow)
+import           Cardano.Api (AnyCardanoEra, Error (..), TxId, textShow)
 import           Cardano.Binary (DecoderError)
 import           Data.Aeson (ToJSON (..), Value (..))
 import           Data.ByteString.Char8 (ByteString)
@@ -54,7 +54,7 @@ newtype EnvSocketError = CliEnvVarLookup Text deriving (Eq, Show)
 
 data TxCmdError
   = TxCmdSocketEnvError EnvSocketError
-  | TxCmdEraConsensusModeMismatch !AnyConsensusMode !AnyCardanoEra
+  | TxCmdEraConsensusModeMismatch !AnyCardanoEra
   | TxCmdTxReadError !RawCborDecodeError
   | TxCmdTxSubmitError !Text
   | TxCmdTxSubmitErrorEraMismatch !EraMismatch
@@ -67,7 +67,7 @@ convertJson = String . renderTxSubmitWebApiError
 
 renderTxCmdError :: TxCmdError -> Text
 renderTxCmdError (TxCmdSocketEnvError socketError) = "socket env error " <> textShow socketError
-renderTxCmdError (TxCmdEraConsensusModeMismatch mode era) = "era consensus mode mismatch" <> textShow mode <> " " <> textShow era
+renderTxCmdError (TxCmdEraConsensusModeMismatch era) = "era consensus mode mismatch " <> textShow era
 renderTxCmdError (TxCmdTxReadError envelopeError) = "transaction read error " <> textShow envelopeError
 renderTxCmdError (TxCmdTxSubmitError msg) = "transaction submit error " <> msg
 renderTxCmdError (TxCmdTxSubmitErrorEraMismatch eraMismatch) = "transaction submit era mismatch" <> textShow eraMismatch
