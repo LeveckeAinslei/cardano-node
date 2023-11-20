@@ -12,6 +12,7 @@ module Cardano.Node.Configuration.POM
   , NetworkP2PMode (..)
   , SomeNetworkP2PMode (..)
   , PartialNodeConfiguration(..)
+  , TimeoutOverride (..)
   , defaultPartialNodeConfiguration
   , lastOption
   , makeNodeConfiguration
@@ -75,6 +76,11 @@ instance Show SomeNetworkP2PMode where
     show (SomeNetworkP2PMode mode@Consensus.EnabledP2PMode)  = show mode
     show (SomeNetworkP2PMode mode@Consensus.DisabledP2PMode) = show mode
 
+-- | Isomorphic to a `Maybe DiffTime`, but expresses what `Nothing` means, in
+-- this case that we want to /NOT/ override the default timeout.
+data TimeoutOverride = NoTimeoutOverride | TimeoutOverride DiffTime
+  deriving (Eq, Show)
+
 data NodeConfiguration
   = NodeConfiguration
       {  ncSocketConfig    :: !SocketConfig
@@ -131,6 +137,19 @@ data NodeConfiguration
          -- 'Ouroboros.Network.Diffusion.daTimeWaitTimeout'.
          --
        , ncTimeWaitTimeout       :: DiffTime
+
+         -- | Timeout override for ChainSync, see
+         -- 'Ouroboros.Network.Protocol.ChainSync.Codec.ChainSyncTimeout'
+       , ncChainSyncCanAwaitTimeout :: TimeoutOverride
+         -- | Timeout override for ChainSync, see
+         -- 'Ouroboros.Network.Protocol.ChainSync.Codec.ChainSyncTimeout'
+       , ncChainSyncIntersectTimeout :: TimeoutOverride
+         -- | Timeout override for ChainSync, see
+         -- 'Ouroboros.Network.Protocol.ChainSync.Codec.ChainSyncTimeout'
+       , ncChainSyncMustReplyTimeout :: TimeoutOverride
+         -- | Timeout override for ChainSync, see
+         -- 'Ouroboros.Network.Protocol.ChainSync.Codec.ChainSyncTimeout'
+       , ncChainSyncIdleTimeout :: TimeoutOverride
 
          -- | Node AcceptedConnectionsLimit
        , ncAcceptedConnectionsLimit :: !AcceptedConnectionsLimit
@@ -191,6 +210,11 @@ data PartialNodeConfiguration
          -- Network timeouts
        , pncProtocolIdleTimeout   :: !(Last DiffTime)
        , pncTimeWaitTimeout       :: !(Last DiffTime)
+
+       , pncChainSyncCanAwaitTimeout  :: !(Last DiffTime)
+       , pncChainSyncIntersectTimeout :: !(Last DiffTime)
+       , pncChainSyncMustReplyTimeout :: !(Last DiffTime)
+       , pncChainSyncIdleTimeout      :: !(Last DiffTime)
 
          -- AcceptedConnectionsLimit
        , pncAcceptedConnectionsLimit :: !(Last AcceptedConnectionsLimit)
@@ -289,6 +313,11 @@ instance FromJSON PartialNodeConfiguration where
       pncTargetNumberOfEstablishedBigLedgerPeers <- Last <$> v .:? "TargetNumberOfEstablishedBigLedgerPeers"
       pncTargetNumberOfActiveBigLedgerPeers      <- Last <$> v .:? "TargetNumberOfActiveBigLedgerPeers"
 
+      pncChainSyncCanAwaitTimeout  <- Last <$> v .:? "ChainSyncCanAwaitTimeout"
+      pncChainSyncIntersectTimeout <- Last <$> v .:? "ChainSyncIntersectTimeout"
+      pncChainSyncMustReplyTimeout <- Last <$> v .:? "ChainSyncMustReplyTimeout"
+      pncChainSyncIdleTimeout      <- Last <$> v .:? "ChainSyncIdleTimeout"
+
       -- Enable P2P switch
       p2pSwitch <- v .:? "EnableP2P" .!= Just False
       let pncEnableP2P =
@@ -323,6 +352,10 @@ instance FromJSON PartialNodeConfiguration where
            , pncMaybeMempoolCapacityOverride
            , pncProtocolIdleTimeout
            , pncTimeWaitTimeout
+           , pncChainSyncCanAwaitTimeout
+           , pncChainSyncIntersectTimeout
+           , pncChainSyncMustReplyTimeout
+           , pncChainSyncIdleTimeout
            , pncAcceptedConnectionsLimit
            , pncTargetNumberOfRootPeers
            , pncTargetNumberOfKnownPeers
@@ -502,6 +535,10 @@ defaultPartialNodeConfiguration =
     , pncTargetNumberOfKnownPeers       = Last (Just 85)
     , pncTargetNumberOfEstablishedPeers = Last (Just 40)
     , pncTargetNumberOfActivePeers      = Last (Just 15)
+    , pncChainSyncCanAwaitTimeout       = mempty
+    , pncChainSyncIntersectTimeout      = mempty
+    , pncChainSyncMustReplyTimeout      = mempty
+    , pncChainSyncIdleTimeout           = mempty
     , pncTargetNumberOfKnownBigLedgerPeers       = Last (Just 15)
     , pncTargetNumberOfEstablishedBigLedgerPeers = Last (Just 10)
     , pncTargetNumberOfActiveBigLedgerPeers      = Last (Just 5)
@@ -561,6 +598,26 @@ makeNodeConfiguration pnc = do
   enableP2P <-
     lastToEither "Missing EnableP2P"
     $ pncEnableP2P pnc
+  ncChainSyncCanAwaitTimeout <-
+    Right
+    $ maybe NoTimeoutOverride TimeoutOverride
+    $ getLast
+    $ pncChainSyncCanAwaitTimeout pnc
+  ncChainSyncMustReplyTimeout <-
+    Right
+    $ maybe NoTimeoutOverride TimeoutOverride
+    $ getLast
+    $ pncChainSyncMustReplyTimeout pnc
+  ncChainSyncIntersectTimeout <-
+    Right
+    $ maybe NoTimeoutOverride TimeoutOverride
+    $ getLast
+    $ pncChainSyncIntersectTimeout pnc
+  ncChainSyncIdleTimeout <-
+    Right
+    $ maybe NoTimeoutOverride TimeoutOverride
+    $ getLast
+    $ pncChainSyncIdleTimeout pnc
 
   ncPeerSharing <-
     lastToEither "Missing PeerSharing"
@@ -599,6 +656,10 @@ makeNodeConfiguration pnc = do
              , ncMaybeMempoolCapacityOverride = getLast $ pncMaybeMempoolCapacityOverride pnc
              , ncProtocolIdleTimeout
              , ncTimeWaitTimeout
+             , ncChainSyncCanAwaitTimeout
+             , ncChainSyncMustReplyTimeout
+             , ncChainSyncIntersectTimeout
+             , ncChainSyncIdleTimeout
              , ncAcceptedConnectionsLimit
              , ncTargetNumberOfRootPeers
              , ncTargetNumberOfKnownPeers
